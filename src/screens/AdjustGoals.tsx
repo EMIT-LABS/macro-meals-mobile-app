@@ -310,7 +310,7 @@ export const AdjustGoalsFlow = () => {
       if (fitnessGoal === "Gain weight") {
         return (
           targetWeight >
-          (height_unit_preference === "imperial"
+          (weight_unit_preference === "imperial"
             ? weightLb ?? 0
             : weightKg ?? 0)
         );
@@ -318,7 +318,7 @@ export const AdjustGoalsFlow = () => {
       if (fitnessGoal === "Lose weight") {
         return (
           targetWeight <
-          (height_unit_preference === "imperial"
+          (weight_unit_preference === "imperial"
             ? weightLb ?? 0
             : weightKg ?? 0)
         );
@@ -358,7 +358,12 @@ export const AdjustGoalsFlow = () => {
         Alert.alert("Success", "Your goals have been updated!", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("SettingsScreen"),
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "SettingsScreen" }],
+              });
+            },
           },
         ]);
         return;
@@ -399,7 +404,12 @@ export const AdjustGoalsFlow = () => {
           { text: "Cancel", style: "cancel" },
           {
             text: "Exit",
-            onPress: () => navigation.navigate("SettingsScreen"),
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "SettingsScreen" }],
+              });
+            },
           },
         ]
       );
