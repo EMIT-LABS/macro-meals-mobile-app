@@ -118,8 +118,8 @@ android {
         applicationId 'com.macromeals.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 29
-        versionName "1.0.10"
+        versionCode 36
+        versionName "1.1.1"
         
         // Enable multidex
         multiDexEnabled true
