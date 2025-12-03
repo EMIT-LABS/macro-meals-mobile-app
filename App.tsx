@@ -7,11 +7,7 @@ import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { macroMealsCrashlytics } from '@macro-meals/crashlytics';
-import {
-  MPSessionReplayMask,
-  MixpanelProvider,
-  useMixpanel,
-} from '@macro-meals/mixpanel';
+import { MixpanelProvider, useMixpanel } from '@macro-meals/mixpanel';
 import { pushNotifications } from '@macro-meals/push-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { firebase } from '@react-native-firebase/messaging';
@@ -20,6 +16,7 @@ import { HasMacrosContext } from 'src/contexts/HasMacrosContext';
 import { RootStack } from './RootStack';
 import { OnboardingContext } from './src/contexts/OnboardingContext';
 import useStore from './src/store/useStore';
+
 // import { userService } from './src/services/userService';
 // import { authService } from './src/services/authService';
 import {
@@ -89,6 +86,19 @@ SplashScreen.preventAutoHideAsync();
 function MixpanelIdentifier() {
   const { isAuthenticated, userId } = useStore();
   const mixpanel = useMixpanel();
+
+  mixpanel.track({
+    name: 'app_opened',
+    properties: {
+      platform: Platform.OS,
+      app_version: Constants.expoConfig?.version || '1.0.0',
+      build_number:
+        Platform.select({
+          ios: Constants.expoConfig?.ios?.buildNumber,
+          android: Constants.expoConfig?.android?.versionCode?.toString(),
+        }) || '1',
+    },
+  });
 
   useEffect(() => {
     if (isAuthenticated && userId && mixpanel) {
@@ -450,22 +460,22 @@ export function App() {
       <MixpanelProvider
         config={{
           token: Config.MIXPANEL_TOKEN as string,
-          debug: __DEV__,
+          // debug: __DEV__,
           trackAutomaticEvents: true,
-          allowSessionReplay: true,
-          sessionReplayConfig: {
-            wifiOnly: false,
-            autoStartRecording: true,
-            recordingSessionsPercent: 100,
-            autoMaskedViews: [
-              MPSessionReplayMask.Text,
-              MPSessionReplayMask.Image,
-              MPSessionReplayMask.Map,
-              MPSessionReplayMask.Web,
-            ],
-            flushInterval: 2000,
-            enableLogging: __DEV__,
-          },
+          // allowSessionReplay: true,
+          // sessionReplayConfig: {
+          //   wifiOnly: false,
+          //   autoStartRecording: true,
+          //   recordingSessionsPercent: 100,
+          //   autoMaskedViews: [
+          //     MPSessionReplayMask.Text,
+          //     MPSessionReplayMask.Image,
+          //     MPSessionReplayMask.Map,
+          //     MPSessionReplayMask.Web,
+          //   ],
+          //   flushInterval: 2000,
+          //   enableLogging: __DEV__,
+          // },
         }}
       >
         <RemoteConfigProvider

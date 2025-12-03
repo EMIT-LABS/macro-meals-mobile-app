@@ -1,21 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StatusBar,
-  SafeAreaView,
-  Button,
   ActivityIndicator,
   Image,
-} from "react-native";
-import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { scanService } from "../services/scanService";
-import { RootStackParamList } from "../types/navigation";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useMixpanel } from "@macro-meals/mixpanel/src";
+  SafeAreaView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { scanService } from '../services/scanService';
+import { RootStackParamList } from '../types/navigation';
 
 /**
  * SnapMealScreen component allows users to take photos of their meals
@@ -28,7 +27,7 @@ const SnapMealScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
 
   const cameraRef = useRef<CameraView>(null);
-  const [facing] = useState<CameraType>("back");
+  const [facing] = useState<CameraType>('back');
 
   const [_showOverlay, setShowOverlay] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -39,9 +38,9 @@ const SnapMealScreen = () => {
 
   useEffect(() => {
     mixpanel?.track({
-      name: "meal_scan_opened",
+      name: 'meal_scan_opened',
       properties: {
-        entry_point: "add_meal",
+        entry_point: 'add_meal',
       },
     });
     const overlayTimer = setTimeout(() => {
@@ -72,11 +71,11 @@ const SnapMealScreen = () => {
 
       // Send to API
       const data = await scanService.scanImage(fileUri);
-      console.log("AI Scan Response:", data);
+      console.log('AI Scan Response:', data);
 
       if (data && data.items && data.items.length > 0) {
         mixpanel?.track({
-          name: "meal_scanned",
+          name: 'meal_scanned',
           properties: {
             match_found: true,
             meal_name: data.items[0].name,
@@ -86,7 +85,7 @@ const SnapMealScreen = () => {
             fats_g: data.items[0].fat,
           },
         });
-        navigation.navigate("ScannedMealBreakdownScreen", {
+        navigation.navigate('ScannedMealBreakdownScreen', {
           meal: {
             name: data.items[0].name,
             macros: {
@@ -97,8 +96,8 @@ const SnapMealScreen = () => {
             },
             image: photo.uri,
             restaurant: {
-              name: data.items[0].restaurant_name || "",
-              location: data.items[0].restaurant_location || "",
+              name: data.items[0].restaurant_name || '',
+              location: data.items[0].restaurant_location || '',
             },
             items: data.items,
             detected_ingredients: data.detected_ingredients || [],
@@ -125,42 +124,65 @@ const SnapMealScreen = () => {
    */
   const handleBack = () => {
     mixpanel?.track({
-      name: "meal_scan_back_to_add_meal",
+      name: 'meal_scan_back_to_add_meal',
       properties: {
-        gesture_type: "button",
+        gesture_type: 'button',
       },
     });
     navigation.goBack();
   };
 
+  // Track permission prompt
   if (!permission) {
-    return <View />;
+    return (
+      <View className="flex-1 bg-black justify-center items-center">
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
   }
 
+  // 2. Permission denied → show prompt
   if (!permission.granted) {
-    mixpanel?.track({
-      name: "meal_scan_permission_prompt_shown",
-      properties: {},
-    });
     return (
       <View className="flex-1 bg-black justify-center items-center">
         <Text className="text-white text-center mb-5">
           We need camera access to analyze your meals
         </Text>
-        <Button title="Continue" onPress={requestPermission} />
+
+        <TouchableOpacity
+          className="px-6 py-3 bg-white rounded-full"
+          onPress={requestPermission}
+        >
+          <Text className="font-semibold">Continue</Text>
+        </TouchableOpacity>
       </View>
     );
   }
-  useEffect(() => {
-    if (permission && permission.status !== undefined) {
-      mixpanel?.track({
-        name: "meal_scan_permission_response",
-        properties: {
-          granted: permission.granted,
-        },
-      });
-    }
-  }, [permission]);
+
+  // if (!permission.granted) {
+  //   mixpanel?.track({
+  //     name: "meal_scan_permission_prompt_shown",
+  //     properties: {},
+  //   });
+  //   return (
+  //     <View className="flex-1 bg-black justify-center items-center">
+  //       <Text className="text-white text-center mb-5">
+  //         We need camera access to analyze your meals
+  //       </Text>
+  //       <Button title="Continue" onPress={requestPermission} />
+  //     </View>
+  //   );
+  // }
+  // useEffect(() => {
+  //   if (permission && permission.status !== undefined) {
+  //     mixpanel?.track({
+  //       name: "meal_scan_permission_response",
+  //       properties: {
+  //         granted: permission.granted,
+  //       },
+  //     });
+  //   }
+  // }, [permission]);
 
   return (
     <SafeAreaView className="flex-1 bg-black">
@@ -169,7 +191,7 @@ const SnapMealScreen = () => {
         {loading && capturedImage ? (
           <Image
             source={{ uri: capturedImage }}
-            style={{ flex: 1, resizeMode: "cover" }}
+            style={{ flex: 1, resizeMode: 'cover' }}
           />
         ) : (
           <CameraView
@@ -194,22 +216,22 @@ const SnapMealScreen = () => {
           <View className="absolute w-[70%]" style={{ aspectRatio: 1 }}>
             <View
               className={`absolute top-0 left-0 w-12 h-12 border-t-[12px] border-l-[12px] ${
-                scanError ? "border-[#DB2F2C]" : "border-white"
+                scanError ? 'border-[#DB2F2C]' : 'border-white'
               } rounded-tl-lg`}
             />
             <View
               className={`absolute top-0 right-0 w-12 h-12 border-t-[12px] border-r-[12px] ${
-                scanError ? "border-[#DB2F2C]" : "border-white"
+                scanError ? 'border-[#DB2F2C]' : 'border-white'
               } rounded-tr-lg`}
             />
             <View
               className={`absolute bottom-0 left-0 w-12 h-12 border-b-[12px] border-l-[12px] ${
-                scanError ? "border-[#DB2F2C]" : "border-white"
+                scanError ? 'border-[#DB2F2C]' : 'border-white'
               } rounded-bl-lg`}
             />
             <View
               className={`absolute bottom-0 right-0 w-12 h-12 border-b-[12px] border-r-[12px] ${
-                scanError ? "border-[#DB2F2C]" : "border-white"
+                scanError ? 'border-[#DB2F2C]' : 'border-white'
               } rounded-br-lg`}
             />
           </View>
@@ -236,13 +258,13 @@ const SnapMealScreen = () => {
         <View className="absolute bottom-32 left-0 right-0 items-center">
           <Text
             className={`text-center text-base font-semibold ${
-              scanError ? "" : "text-white"
+              scanError ? '' : 'text-white'
             }`}
-            style={scanError ? { color: "#DB2F2C" } : {}}
+            style={scanError ? { color: '#DB2F2C' } : {}}
           >
             {scanError
-              ? "Meal scanner not recognising food item"
-              : "Center the meal within the frame to scan"}
+              ? 'Meal scanner not recognising food item'
+              : 'Center the meal within the frame to scan'}
           </Text>
           {scanError && (
             <TouchableOpacity
@@ -250,7 +272,7 @@ const SnapMealScreen = () => {
               onPress={() => {
                 setIsAlertVisible(false);
                 setScanError(false);
-                navigation.navigate("ScannedMealBreakdownScreen", { meal: {} });
+                navigation.navigate('ScannedMealBreakdownScreen', { meal: {} });
               }}
             >
               <Text className="text-white font-semibold">Add Manually</Text>

@@ -1,4 +1,4 @@
-import axiosInstance from "./axios";
+import axiosInstance from './axios';
 
 export type MacroResponse = {
   calories: number;
@@ -32,7 +32,9 @@ export async function fetchMacros(): Promise<MacroResponse> {
   }
 }
 
-export async function updateMacros(updated: Partial<Omit<MacroResponse, "calories">>): Promise<void> {
+export async function updateMacros(
+  updated: Partial<Omit<MacroResponse, 'calories'>>
+): Promise<void> {
   try {
     // Only send the macros to be updated (not calories!)
     await axiosInstance.post('/macros/adjust-macros', updated);
@@ -42,9 +44,18 @@ export async function updateMacros(updated: Partial<Omit<MacroResponse, "calorie
   }
 }
 
-export async function setupMacros(requestData: MacroSetupRequest): Promise<MacroResponse> {
+export async function setupMacros(
+  requestData: MacroSetupRequest
+): Promise<MacroResponse> {
   try {
-    const response = await axiosInstance.post('/macros/macros-setup', requestData);
+    console.log(
+      '\n\n\n\n\n\n\n\nSETUP MACROS REQUEST DATA:\n\n\n\n\n\n\n\n',
+      requestData
+    );
+    const response = await axiosInstance.post(
+      '/macros/macros-setup',
+      requestData
+    );
     return response.data;
   } catch (error) {
     console.error('Error setting up macros:', error);
@@ -54,7 +65,7 @@ export async function setupMacros(requestData: MacroSetupRequest): Promise<Macro
 export async function fetchUserPreferences(): Promise<MacroResponse> {
   // Adjust this endpoint to match your actual preferences fetch endpoint
   const response = await axiosInstance.get('/user/preferences');
-  console.log("User preferences response:", response.data);
+  console.log('User preferences response:', response.data);
   // If your preferences object is nested, adjust accordingly:
   // return response.data.macros;
   return {
@@ -63,5 +74,4 @@ export async function fetchUserPreferences(): Promise<MacroResponse> {
     fat: response.data.fat_target ?? 0,
     carbs: response.data.carbs_target ?? 0,
   };
-  
 }
