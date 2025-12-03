@@ -1,23 +1,25 @@
-import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { DashboardScreen } from "../screens/DashboardScreen";
-import { SettingsScreen } from "../screens/SettingsScreen";
-import { IMAGE_CONSTANTS } from "../constants/imageConstants";
-import { Image, View, Text, TouchableOpacity } from "react-native";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { CommonActions } from "@react-navigation/native";
+import {
+  BottomTabBarProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
+import { CommonActions } from '@react-navigation/native';
+import React from 'react';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { IMAGE_CONSTANTS } from '../constants/imageConstants';
+import { DashboardScreen } from '../screens/DashboardScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
 
-import AddMeal from "src/screens/AddMeal";
-import ProgressScreen from "src/screens/ProgressScreen";
+import AddMeal from 'src/screens/AddMeal';
+import ProgressScreen from 'src/screens/ProgressScreen';
 
 const Tab = createBottomTabNavigator();
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
-    return (
-        <View className="flex-row items-center justify-between bg-white h-[90px] px-4 pb-6">
-            {state.routes.map((route, index) => {
-                //const { options } = descriptors[route.key];
-                const isFocused = state.index === index;
+  return (
+    <View className="flex-row items-center justify-between bg-white h-[90px] px-4 pb-6">
+      {state.routes.map((route, index) => {
+        //const { options } = descriptors[route.key];
+        const isFocused = state.index === index;
 
         const icon = [
           IMAGE_CONSTANTS.dashboardIcon,
@@ -26,7 +28,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
           IMAGE_CONSTANTS.profileIcon,
         ][index];
 
-        const label = ["Dashboard", "Meals", "Progress", "Profile"][index];
+        const label = ['Dashboard', 'Meals', 'Progress', 'Profile'][index];
 
         if (index === 1) {
           return (
@@ -38,11 +40,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
                 <Image
                   source={icon}
                   className="w-6 h-6 mb-1"
-                  tintColor={isFocused ? "#009688" : "#000"}
+                  tintColor={isFocused ? '#009688' : '#000'}
                 />
                 <Text
                   className={`text-xs font-normal ${
-                    isFocused ? "text-primaryLight" : "text-black"
+                    isFocused ? 'text-primaryLight' : 'text-black'
                   }`}
                 >
                   {label}
@@ -52,7 +54,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
                 onPress={() => {
                   navigation.dispatch(
                     CommonActions.navigate({
-                      name: "ScanScreenType",
+                      name: 'ScanScreenType',
                     })
                   );
                 }}
@@ -77,11 +79,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
               <Image
                 source={icon}
                 className="w-6 h-6 mb-1"
-                tintColor={isFocused ? "#009688" : "#000"}
+                tintColor={isFocused ? '#009688' : '#000'}
               />
               <Text
                 className={`text-xs font-normal ${
-                  isFocused ? "text-primaryLight" : "text-black"
+                  isFocused ? 'text-primaryLight' : 'text-black'
                 }`}
               >
                 {label}
@@ -99,11 +101,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
             <Image
               source={icon}
               className="w-6 h-6 mb-1"
-              tintColor={isFocused ? "#009688" : "#000"}
+              tintColor={isFocused ? '#009688' : '#000'}
             />
             <Text
               className={`text-xs font-normal ${
-                isFocused ? "text-primaryLight" : "text-black"
+                isFocused ? 'text-primaryLight' : 'text-black'
               }`}
             >
               {label}
@@ -118,7 +120,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
 const CustomBottomTabs = () => {
   return (
     <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
       }}

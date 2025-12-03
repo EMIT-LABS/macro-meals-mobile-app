@@ -12,6 +12,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from 'react-native';
 import { Modalize } from 'react-native-modalize';
 import { IMAGE_CONSTANTS } from '../constants/imageConstants';
@@ -171,6 +172,8 @@ const MealFinderScreen: React.FC = () => {
   const tabOpacity = useRef(new Animated.Value(1)).current;
   const mapSearchInputRef = useRef<TextInput>(null);
   const listSearchInputRef = useRef<TextInput>(null);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -271,7 +274,11 @@ const MealFinderScreen: React.FC = () => {
             location.coords.latitude,
             location.coords.longitude
           );
-          const pins = mapPinsResponse.pins || [];
+          // Keep only restaurants within ~50km of the user (based on API distance_km)
+          const pins = (mapPinsResponse.pins || []).filter(
+            (pin: any) =>
+              typeof pin.distance_km !== 'number' || pin.distance_km <= 50
+          );
           const mealList: Meal[] = pins.map((pin: any) => ({
             id: pin.id || pin.google_place_id || String(Math.random()),
             name: pin.top_meal?.name || '',
@@ -417,7 +424,11 @@ const MealFinderScreen: React.FC = () => {
         location.latitude,
         location.longitude
       );
-      const pins = mapPinsResponse.pins || [];
+      // Keep only restaurants within ~50km of the selected location
+      const pins = (mapPinsResponse.pins || []).filter(
+        (pin: any) =>
+          typeof pin.distance_km !== 'number' || pin.distance_km <= 50
+      );
       const mealList: Meal[] = pins.map((pin: any) => ({
         id: pin.id || pin.google_place_id || String(Math.random()),
         name: pin.top_meal?.name || '',
@@ -471,9 +482,10 @@ const MealFinderScreen: React.FC = () => {
 
       {/* Header - Transparent when Map tab is active */}
       <View
-        className={`flex-row items-center justify-between px-5 pt-16 pb-5 ${
+        className={`flex-row items-center justify-between px-5 pb-5 pt-10 ${
           activeTab === 'map' ? 'bg-transparent' : 'bg-white'
         }`}
+        style={{ paddingTop: Platform.OS === 'android' ? 8 : 50 }}
       >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -485,7 +497,11 @@ const MealFinderScreen: React.FC = () => {
             className={`text-[22px] text-black`}
           ></Ionicons>
         </TouchableOpacity>
-        <Text className={`text-[20px] text-[#222] font-semibold text-center`}>
+        <Text
+          className={`text-[20px] font-semibold text-center ${
+            isDarkMode ? 'text-white' : 'text-[#222]'
+          }`}
+        >
           Meal Finder
         </Text>
         <View style={{ width: 32 }} />
@@ -589,7 +605,7 @@ const MealFinderScreen: React.FC = () => {
       {/* Bottom Tab Navigation */}
       <View className="absolute bottom-0 left-0 right-0 pb-6 px-4">
         <Animated.View
-          className={`flex-row ${Platform.OS === 'ios' ? 'bg-white rounded-[96px] p-1 shadow-lg' : 'bg-white rounded-2xl p-1'} mx-4`}
+          className={`flex-row ${Platform.OS === 'ios' ? 'bg-white rounded-[1000px] p-1 shadow-lg' : 'bg-white rounded-2xl p-1'} mx-4`}
           style={{
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 4 },
@@ -601,7 +617,7 @@ const MealFinderScreen: React.FC = () => {
         >
           <TouchableOpacity
             onPress={() => setActiveTab('map')}
-            className={`flex-1 py-3 rounded-[96px] ${
+            className={`flex-1 py-3 rounded-[1000px] ${
               activeTab === 'map'
                 ? 'bg-[#01675B1A] rounded-[96px] text-primary'
                 : 'bg-transparent'

@@ -302,7 +302,7 @@ const MealFinderBreakdownScreen: React.FC = () => {
               >
                 <Ionicons name="close" size={16} color="black" />
               </TouchableOpacity>
-              {/* <TouchableOpacity
+              <TouchableOpacity
                 onPress={toggleFavorite}
                 className="w-8 h-8 rounded-full justify-center items-center bg-[#F5F5F5]"
               >
@@ -310,13 +310,13 @@ const MealFinderBreakdownScreen: React.FC = () => {
                   source={IMAGE_CONSTANTS.starIcon}
                   className="h-[16px] w-[16px]"
                 />
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </View>
           </View>
 
           {/* Match Banner */}
           <View className="mx-5 mt-5 mb-3 flex-row items-center justify-between py-5">
-            <View className="flex-col gap-1 w-[250px]">
+            <View className="flex-col gap-1 w-[220px]">
               <Text className="text-black text-lg font-medium">
                 {meal.restaurant.name}
               </Text>
