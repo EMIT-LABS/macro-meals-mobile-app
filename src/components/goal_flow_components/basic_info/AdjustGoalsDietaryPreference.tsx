@@ -1,12 +1,14 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { IMAGE_CONSTANTS } from 'src/constants/imageConstants';
-import { useGoalsFlowStore } from 'src/store/goalsFlowStore';
+import { useAdjustGoalsFlowStore } from 'src/store/adjustGoalsFlowStore';
 import QuestionSelector from '../QuestionSelector';
 
-export const GoalsDietaryPreference: React.FC = () => {
-  const dietaryPreference = useGoalsFlowStore(state => state.dietaryPreference);
-  const setDietaryPreference = useGoalsFlowStore(
+export const AdjustGoalsDietaryPreference: React.FC = () => {
+  const dietaryPreference = useAdjustGoalsFlowStore(
+    state => state.dietaryPreference
+  );
+  const setDietaryPreference = useAdjustGoalsFlowStore(
     state => state.setDietaryPreference
   );
 
