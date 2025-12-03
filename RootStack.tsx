@@ -263,7 +263,14 @@ const DashboardNavigator = () => {
       <Stack.Screen name="VerificationScreen" component={VerificationScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="GoalsSetupFlow" component={GoalsSetupFlow} />
-      <Stack.Screen name="AdjustGoalsFlow" component={AdjustGoalsFlow} />
+      <Stack.Screen
+        name="AdjustGoalsFlow"
+        component={AdjustGoalsFlow}
+        options={{
+          // Disable iOS swipe-back gesture for this screen
+          gestureEnabled: false,
+        }}
+      />
       <Stack.Screen
         name="RequestRestaurantScreen"
         component={RequestRestaurantScreen}
