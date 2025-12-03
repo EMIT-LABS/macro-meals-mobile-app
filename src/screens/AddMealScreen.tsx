@@ -307,6 +307,7 @@ export const AddMealScreen: React.FC = () => {
         meal_time: time.toISOString(),
         amount: amountValue,
         serving_size: servingUnit,
+        serving_unit: servingUnit,
         description: mealDescription || undefined,
         logging_mode: logging_mode,
         barcode: barcodeData || undefined, // Include barcode if available
