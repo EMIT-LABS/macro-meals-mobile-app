@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Image as ExpoImage } from 'expo-image';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   Image,
   Platform,
-} from "react-native";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import useStore from "../store/useStore";
-import CustomSafeAreaView from "../components/CustomSafeAreaView";
-import { IMAGE_CONSTANTS } from "../constants/imageConstants";
-import { CircularProgress } from "../components/CircularProgress";
-import { LinearProgress } from "../components/LinearProgress";
-import { RootStackParamList } from "../types/navigation";
-import { userService } from "../services/userService";
-import { Image as ExpoImage } from "expo-image";
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { CircularProgress } from '../components/CircularProgress';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import { LinearProgress } from '../components/LinearProgress';
+import { IMAGE_CONSTANTS } from '../constants/imageConstants';
+import { userService } from '../services/userService';
+import useStore from '../store/useStore';
+import { RootStackParamList } from '../types/navigation';
 
 // type RootStackParamList = {
 //     MacroInput: undefined;
@@ -31,9 +31,9 @@ import { Image as ExpoImage } from "expo-image";
 // };
 
 // Use the Profile type from the store instead of defining a local one
-import { Profile } from "../store/useStore";
-import axiosInstance from "src/services/axios";
-import { useMixpanel } from "@macro-meals/mixpanel";
+import { useMixpanel } from '@macro-meals/mixpanel';
+import axiosInstance from 'src/services/axios';
+import { Profile } from '../store/useStore';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -56,7 +56,7 @@ interface _TodayMeal {
 }
 
 export const DashboardScreen: React.FC = () => {
-  console.log("🔍 DashboardScreen - Rendering DashboardScreen");
+  console.log('🔍 DashboardScreen - Rendering DashboardScreen');
   const navigation = useNavigation<NavigationProp>();
   const [unreadCount, setUnreadCount] = useState(0);
   const isFocused = useIsFocused();
@@ -70,8 +70,8 @@ export const DashboardScreen: React.FC = () => {
     fat: 0,
     calories: 0,
   });
-  const todayProgress = useStore((state) => state.todayProgress);
-  const fetchTodayProgress = useStore((state) => state.fetchTodayProgress);
+  const todayProgress = useStore(state => state.todayProgress);
+  const fetchTodayProgress = useStore(state => state.fetchTodayProgress);
 
   const [profile, setProfile] = useState<Profile>({
     display_name: undefined,
@@ -86,22 +86,16 @@ export const DashboardScreen: React.FC = () => {
     has_macros: undefined,
   });
 
-  const userId = useStore((state) => state.userId);
-  const token = useStore((state) => state.token);
-  const preferences = useStore((state) => state.preferences);
-  const setStoreProfile = useStore((state) => state.setProfile);
-  const setMacrosPreferences = useStore((state) => state.setMacrosPreferences);
-  const loggedMeals = useStore((state) => state.loggedMeals);
-  const refreshMeals = useStore((state) => state.refreshMeals);
-  const hasLoggedFirstMeal = useStore((state) => state.hasLoggedFirstMeal);
+  const userId = useStore(state => state.userId);
+  const token = useStore(state => state.token);
+  const preferences = useStore(state => state.preferences);
+  const setStoreProfile = useStore(state => state.setProfile);
+  const setMacrosPreferences = useStore(state => state.setMacrosPreferences);
+  const loggedMeals = useStore(state => state.loggedMeals);
+  const refreshMeals = useStore(state => state.refreshMeals);
+  const hasLoggedFirstMeal = useStore(state => state.hasLoggedFirstMeal);
   const mixpanel = useMixpanel();
   const eventsFired = useRef(false);
-
-useEffect(() => {
-  if (isFocused) {
-    fetchUserData(); // This refetches macros and profile info
-  }
-}, [isFocused]);
 
   // Calculate today's total macros from loggedMeals
   const todayMealsSum = loggedMeals.reduce(
@@ -115,13 +109,19 @@ useEffect(() => {
 
   // Consolidated mixpanel tracking useEffect - fire only once
   useEffect(() => {
-    if (!isLoading && !error && profile?.id && mixpanel && !eventsFired.current) {
+    if (
+      !isLoading &&
+      !error &&
+      profile?.id &&
+      mixpanel &&
+      !eventsFired.current
+    ) {
       eventsFired.current = true;
-      
+
       // Dashboard viewed tracking
       if (profile) {
         mixpanel.track({
-          name: "dashboard_viewed",
+          name: 'dashboard_viewed',
           properties: {
             user_id: profile?.id,
             platform: Platform.OS,
@@ -132,7 +132,7 @@ useEffect(() => {
       // Greeting displayed tracking
       if (profile?.first_name) {
         mixpanel.track({
-          name: "greeting_displayed",
+          name: 'greeting_displayed',
           properties: {
             user_id: profile?.id,
             platform: Platform.OS,
@@ -144,7 +144,7 @@ useEffect(() => {
       // Macro summary displayed tracking
       if (macros && todayProgress) {
         mixpanel.track({
-          name: "macro_summary_displayed",
+          name: 'macro_summary_displayed',
           properties: {
             user_id: profile?.id,
             platform: Platform.OS,
@@ -159,7 +159,7 @@ useEffect(() => {
       // Recently uploaded section viewed tracking
       if (loggedMeals !== undefined) {
         mixpanel.track({
-          name: "recently_uploaded_section_viewed",
+          name: 'recently_uploaded_section_viewed',
           properties: {
             user_id: profile?.id,
             platform: Platform.OS,
@@ -171,7 +171,7 @@ useEffect(() => {
       // Macro breakdown displayed tracking
       if (macros && todayMealsSum) {
         mixpanel.track({
-          name: "macro_breakdown_displayed",
+          name: 'macro_breakdown_displayed',
           properties: {
             user_id: profile?.id,
             platform: Platform.OS,
@@ -185,7 +185,16 @@ useEffect(() => {
         });
       }
     }
-  }, [isLoading, error, profile, macros, todayProgress, loggedMeals, todayMealsSum, mixpanel]);
+  }, [
+    isLoading,
+    error,
+    profile,
+    macros,
+    todayProgress,
+    loggedMeals,
+    todayMealsSum,
+    mixpanel,
+  ]);
 
   // useEffect(() => {
   //     if (preferences.calories === 0 && preferences.protein === 0) {
@@ -196,14 +205,14 @@ useEffect(() => {
   useEffect(() => {
     const fetchUnread = async () => {
       try {
-        const res = await axiosInstance.get("/notifications/?status=unread");
+        const res = await axiosInstance.get('/notifications/?status=unread');
         const data = res.data;
         const count =
           data?.pagination?.total ??
           (Array.isArray(data.results) ? data.results.length : 0);
         setUnreadCount(count);
       } catch (e) {
-        console.error("Error fetching unread notifications:", e);
+        console.error('Error fetching unread notifications:', e);
         setUnreadCount(0);
       }
     };
@@ -216,7 +225,7 @@ useEffect(() => {
 
     try {
       if (!token) {
-        throw new Error("Authentication token not available");
+        throw new Error('Authentication token not available');
       }
 
       // 1. Fetch user profile info
@@ -228,11 +237,11 @@ useEffect(() => {
       //   email: profileResponse.email,
       //   userType: profileResponse.is_pro ? 'pro' : 'free',
       // });
-      console.log("PROFILE RESPONSE", profileResponse);
+      console.log('PROFILE RESPONSE', profileResponse);
       // setUsername(profileResponse.display_name || undefined);
 
       const prefsResponse = await userService.getPreferences();
-      console.log("PREFS RESPONSE", prefsResponse);
+      console.log('PREFS RESPONSE', prefsResponse);
 
       const macrosPreferences = {
         protein_target: prefsResponse.protein_target,
@@ -265,8 +274,8 @@ useEffect(() => {
       //   navigation.navigate("PaymentScreen");
       // }
     } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError("Failed to load your data. Please try again.");
+      console.error('Error fetching user data:', error);
+      setError('Failed to load your data. Please try again.');
       setIsLoading(false);
 
       // Fallback to existing preferences from the store
@@ -283,8 +292,6 @@ useEffect(() => {
   }, [
     userId,
     token,
-    macros.calories,
-    todayProgress.calories,
     preferences,
     setStoreProfile,
     setMacrosPreferences,
@@ -296,48 +303,45 @@ useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
 
-
-
   // No longer need useFocusEffect since we're using state management
 
   const handleMacroInput = () => {
     // Do NOT call setMajorStep or setSubStep here. State should only be advanced when user completes a major step.
-    navigation.navigate("GoalSetupScreen", undefined);
+    navigation.navigate('GoalSetupScreen', undefined);
   };
 
   const handleMealLog = () => {
     mixpanel?.track({
-      name: "see_nearby_meals_clicked",
+      name: 'see_nearby_meals_clicked',
       properties: {
         user_id: profile?.id,
         platform: Platform.OS,
       },
     });
     mixpanel?.track({
-      name: "meal_finder_opened_from_dashboard",
+      name: 'meal_finder_opened_from_dashboard',
       properties: {
         user_id: profile?.id,
         platform: Platform.OS,
       },
     });
-    navigation.navigate("MealFinderScreen");
+    navigation.navigate('MealFinderScreen');
   };
 
   const handleAddMeal = () => {
     mixpanel?.track({
-      name: "log_first_meal_clicked",
+      name: 'log_first_meal_clicked',
       properties: {
         user_id: profile?.id,
         platform: Platform.OS,
       },
     });
-    navigation.navigate("ScanScreenType");
+    navigation.navigate('ScanScreenType');
   };
 
   const handleRefresh = () => {
     setIsLoading(true);
   };
-
 
   if (isLoading) {
     return (
@@ -379,24 +383,23 @@ useEffect(() => {
   //   Math.round((todayProgress.fat / macros.fat) * 100) || 0
   // );
 
-  
   function formatDate(date: Date) {
     const options: Intl.DateTimeFormatOptions = {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
     };
-    const formattedDate = date.toLocaleDateString("en-US", options);
-    const parts = formattedDate.split(", ");
+    const formattedDate = date.toLocaleDateString('en-US', options);
+    const parts = formattedDate.split(', ');
     const dayOfWeek = parts[0];
     const monthAndDate = parts[1];
-    const [month, day] = monthAndDate.split(" ");
+    const [month, day] = monthAndDate.split(' ');
     return `${dayOfWeek}, ${day} ${month}`;
   }
 
   function getGreeting(first_name?: string) {
     if (!first_name) {
-      return "Hello there 👋";
+      return 'Hello there 👋';
     }
     const hour = new Date().getHours();
     if (hour < 12) return `Good morning, ${first_name} 👋`;
@@ -406,23 +409,23 @@ useEffect(() => {
 
   function getTimeOfDayEmoji() {
     const hour = new Date().getHours();
-    if (hour < 12) return "🌞";
-    if (hour < 18) return "⛅️";
-    return "🌙";
+    if (hour < 12) return '🌞';
+    if (hour < 18) return '⛅️';
+    return '🌙';
   }
 
   function formatTime(timeString: string) {
     const date = new Date(timeString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
       hour12: true,
     });
   }
 
   return (
     <CustomSafeAreaView
-      edges={["left", "right"]}
+      edges={['left', 'right']}
       paddingOverride={{ bottom: -25 }}
     >
       <View className="flex-1">
@@ -440,14 +443,14 @@ useEffect(() => {
               <TouchableOpacity
                 onPress={() => {
                   mixpanel?.track({
-                    name: "notifications_icon_clicked",
+                    name: 'notifications_icon_clicked',
                     properties: {
                       user_id: profile?.id,
                       platform: Platform.OS,
                       unread_count: unreadCount,
                     },
                   });
-                  navigation.navigate("NotificationsScreen");
+                  navigation.navigate('NotificationsScreen');
                 }}
               >
                 <View className="relative">
@@ -458,7 +461,7 @@ useEffect(() => {
                   {unreadCount > 0 && (
                     <View className="absolute -top-2 -right-2 bg-red-600 rounded-full min-w-[18px] h-[18px] items-center justify-center px-1">
                       <Text className="text-xs text-white font-bold">
-                        {unreadCount > 99 ? "99+" : unreadCount}
+                        {unreadCount > 99 ? '99+' : unreadCount}
                       </Text>
                     </View>
                   )}
@@ -469,7 +472,7 @@ useEffect(() => {
             profile.has_macros === undefined ? (
               <View className="flex-col bg-paleCyan px-5 py-5">
                 <Image
-                  tintColor={"#8BAAA3"}
+                  tintColor={'#8BAAA3'}
                   source={IMAGE_CONSTANTS.trophy}
                   className="absolute bottom-4 tint right-4 w-[74px] h-[74px] object-fill"
                 />
@@ -587,7 +590,10 @@ useEffect(() => {
                     className="bg-primary w-[144px] h-[32px] rounded-[200px] justify-center items-center mt-4"
                     onPress={handleMealLog}
                   >
-                    <Text className="text-white text-sm font-semibold">
+                    <Text
+                      allowFontScaling={false}
+                      className="text-white text-sm font-semibold"
+                    >
                       See nearby meals
                     </Text>
                   </TouchableOpacity>
@@ -610,12 +616,15 @@ useEffect(() => {
                   <Text className="tracking-normal leading-5 text-[14px] font-medium text-center">
                     Your recently logged meals for the day will show up here
                   </Text>
-                  {!hasLoggedFirstMeal(profile.email || "") && (
+                  {!hasLoggedFirstMeal(profile.email || '') && (
                     <TouchableOpacity
                       className="bg-primary w-[144px] h-[40px] rounded-[200px] justify-center items-center mt-4"
                       onPress={handleAddMeal}
                     >
-                      <Text className="text-white text-sm font-semibold">
+                      <Text
+                        allowFontScaling={false}
+                        className="text-white text-sm font-semibold"
+                      >
                         Log your first meal
                       </Text>
                     </TouchableOpacity>
@@ -642,14 +651,14 @@ useEffect(() => {
                         }}
                         onLoad={() => {
                           console.log(
-                            "✅ ExpoImage loaded successfully for meal:",
+                            '✅ ExpoImage loaded successfully for meal:',
                             meal.name,
                             meal.photo_url
                           );
                         }}
                         onError={(error: any) => {
                           console.log(
-                            "❌ ExpoImage failed to load for meal:",
+                            '❌ ExpoImage failed to load for meal:',
                             meal.name,
                             meal.photo_url,
                             error
@@ -657,7 +666,7 @@ useEffect(() => {
                         }}
                         onLoadStart={() => {
                           console.log(
-                            "🔄 ExpoImage started loading for meal:",
+                            '🔄 ExpoImage started loading for meal:',
                             meal.name,
                             meal.photo_url
                           );
@@ -681,7 +690,7 @@ useEffect(() => {
                         </Text>
                         <TouchableOpacity
                           onPress={() => {
-                            navigation.navigate("EditMealScreen", {
+                            navigation.navigate('EditMealScreen', {
                               analyzedData: {
                                 id: meal.id,
                                 name: meal.name,
@@ -689,8 +698,8 @@ useEffect(() => {
                                 protein: meal.macros?.protein || 0,
                                 carbs: meal.macros?.carbs || 0,
                                 fat: meal.macros?.fat || 0,
-                                meal_type: meal.mealType || "lunch",
-                                serving_unit: meal.serving_unit || "grams",
+                                meal_type: meal.mealType || 'lunch',
+                                serving_unit: meal.serving_unit || 'grams',
                                 amount: meal.amount,
                                 logging_mode: meal.logging_mode,
                                 meal_time: meal.meal_time || meal.date,
@@ -717,13 +726,13 @@ useEffect(() => {
                         <Image
                           tintColor="#000000"
                           source={
-                            meal.logging_mode === "manual"
+                            meal.logging_mode === 'manual'
                               ? IMAGE_CONSTANTS.fireIcon
-                              : meal.logging_mode === "barcode"
-                              ? IMAGE_CONSTANTS.scanBarcodeIcon
-                              : meal.logging_mode === "scanned"
-                              ? IMAGE_CONSTANTS.scanMealIcon
-                              : IMAGE_CONSTANTS.fireIcon // default to fire icon
+                              : meal.logging_mode === 'barcode'
+                                ? IMAGE_CONSTANTS.scanBarcodeIcon
+                                : meal.logging_mode === 'scanned'
+                                  ? IMAGE_CONSTANTS.scanMealIcon
+                                  : IMAGE_CONSTANTS.fireIcon // default to fire icon
                           }
                           className="w-[12px] h-[12px] object-fill mr-1"
                         />
@@ -731,7 +740,7 @@ useEffect(() => {
                           {meal.logging_mode
                             ? meal.logging_mode.charAt(0).toUpperCase() +
                               meal.logging_mode.slice(1)
-                            : "Manual"}
+                            : 'Manual'}
                         </Text>
                       </View>
 
@@ -795,29 +804,29 @@ useEffect(() => {
 const styles = StyleSheet.create({
   centerContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#666",
+    color: '#666',
   },
   errorText: {
     fontSize: 16,
-    color: "#ff6b6b",
+    color: '#ff6b6b',
     marginBottom: 16,
-    textAlign: "center",
+    textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: "#19a28f",
+    backgroundColor: '#19a28f',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: "white",
-    fontWeight: "bold",
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

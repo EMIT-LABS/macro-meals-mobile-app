@@ -9,6 +9,7 @@ import {
   Image,
   ImageBackground,
   Keyboard,
+  ScrollView,
   StatusBar,
   Text,
   TextInput,
@@ -601,80 +602,85 @@ const ScanScreenType: React.FC = () => {
             ) : (
               // Show scan options, discover more, and favorites with fade animation
               <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-                <View className="mt-10 mx-5">
-                  <Text className="text-sm font-semibold text-black mb-5">
-                    SCAN OPTIONS
-                  </Text>
-                  <View className="flex-row justify-between gap-3">
-                    <TouchableOpacity
-                      className="flex-1 bg-white rounded-md items-center py-6 shadow-sm"
-                      onPress={handleScanBarcode}
-                    >
-                      <View className="flex-row items-center mb-2 justify-center mr-2 w-10 h-10 rounded-full bg-lightGreen">
-                        <Image
-                          source={IMAGE_CONSTANTS.scanBarcodeIcon}
-                          className="w-6 h-6 object-fill"
-                        />
-                      </View>
-                      <Text className="text-base font-normal text-black">
-                        Scan a barcode
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="flex-1 bg-white rounded-md items-center py-6 shadow-sm"
-                      onPress={handleOpenCamera}
-                    >
-                      <View className="flex-row items-center mb-2 justify-center mr-2 w-10 h-10 rounded-full bg-lightGreen">
-                        <Image
-                          source={IMAGE_CONSTANTS.scanMealIcon}
-                          className="w-6 h-6 object-fill"
-                        />
-                      </View>
-                      <Text className="text-base font-normal text-black">
-                        Scan a meal
-                      </Text>
-                    </TouchableOpacity>
+                <ScrollView
+                  contentContainerStyle={{ paddingBottom: 32 }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <View className="mt-10 mx-5">
+                    <Text className="text-sm font-semibold text-black mb-5">
+                      SCAN OPTIONS
+                    </Text>
+                    <View className="flex-row justify-between gap-3">
+                      <TouchableOpacity
+                        className="flex-1 bg-white rounded-md items-center py-6 shadow-sm"
+                        onPress={handleScanBarcode}
+                      >
+                        <View className="flex-row items-center mb-2 justify-center mr-2 w-10 h-10 rounded-full bg-lightGreen">
+                          <Image
+                            source={IMAGE_CONSTANTS.scanBarcodeIcon}
+                            className="w-6 h-6 object-fill"
+                          />
+                        </View>
+                        <Text className="text-base font-normal text-black">
+                          Scan a barcode
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        className="flex-1 bg-white rounded-md items-center py-6 shadow-sm"
+                        onPress={handleOpenCamera}
+                      >
+                        <View className="flex-row items-center mb-2 justify-center mr-2 w-10 h-10 rounded-full bg-lightGreen">
+                          <Image
+                            source={IMAGE_CONSTANTS.scanMealIcon}
+                            className="w-6 h-6 object-fill"
+                          />
+                        </View>
+                        <Text className="text-base font-normal text-black">
+                          Scan a meal
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
-                {/* Discover More */}
-                <View className="mt-8 mx-5">
-                  <Text className="text-sm font-semibold text-black mb-2">
-                    DISCOVER MORE
-                  </Text>
-                  <DiscoverCard
-                    icon={
-                      <Image
-                        source={IMAGE_CONSTANTS.editIcon}
-                        className="w-6 h-6 object-fill"
-                      />
-                    }
-                    title="Manual entry"
-                    description="Log your meal details including portion sizes and ingredients for precise macro tracking."
-                    onPress={handleManualEntry}
-                  />
-                  <DiscoverCard
-                    icon={
-                      <Image
-                        source={IMAGE_CONSTANTS.wandIcon}
-                        className="w-6 h-6 object-fill"
-                      />
-                    }
-                    title="AI Recipe suggestions"
-                    description="Get personalized meal recommendations based on your remaining macros."
-                    onPress={handleMealSuggestions}
-                  />
-                  <DiscoverCard
-                    icon={
-                      <Image
-                        source={IMAGE_CONSTANTS.locationIcon}
-                        className="w-6 h-6 object-fill"
-                      />
-                    }
-                    title="Meal Finder"
-                    description="Discover nearby restaurant options that align with your macro targets and dietary preferences."
-                    onPress={handleMealFinder}
-                  />
-                </View>
+                  {/* Discover More */}
+                  <View className="mt-8 mx-5">
+                    <Text className="text-sm font-semibold text-black mb-2">
+                      DISCOVER MORE
+                    </Text>
+                    <DiscoverCard
+                      icon={
+                        <Image
+                          source={IMAGE_CONSTANTS.editIcon}
+                          className="w-6 h-6 object-fill"
+                        />
+                      }
+                      title="Manual entry"
+                      description="Log your meal details including portion sizes and ingredients for precise macro tracking."
+                      onPress={handleManualEntry}
+                    />
+                    <DiscoverCard
+                      icon={
+                        <Image
+                          source={IMAGE_CONSTANTS.wandIcon}
+                          className="w-6 h-6 object-fill"
+                        />
+                      }
+                      title="AI Recipe suggestions"
+                      description="Get personalized meal recommendations based on your remaining macros."
+                      onPress={handleMealSuggestions}
+                    />
+                    <DiscoverCard
+                      icon={
+                        <Image
+                          source={IMAGE_CONSTANTS.locationIcon}
+                          className="w-6 h-6 object-fill"
+                        />
+                      }
+                      title="Meal Finder"
+                      description="Discover nearby restaurant options that align with your macro targets and dietary preferences."
+                      onPress={handleMealFinder}
+                    />
+                  </View>
+                </ScrollView>
               </Animated.View>
             )}
           </ImageBackground>
