@@ -1,32 +1,33 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { FontAwesome5 } from '@expo/vector-icons';
+import { useMixpanel } from '@macro-meals/mixpanel/src';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Platform,
+  RefreshControl,
+  ScrollView,
   Text,
   TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-} from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
-import MacroLegend from "src/components/MacroLegend";
-import MacroTableSection from "src/components/MacroTableSection";
-import { useProgressStore } from "src/store/useProgressStore";
-import VictoryStackedBarChart from "src/components/VictoryStackedBarChart";
-import { useMixpanel } from "@macro-meals/mixpanel/src";
+  View,
+} from 'react-native';
+import MacroLegend from 'src/components/MacroLegend';
+import MacroTableSection from 'src/components/MacroTableSection';
+import VictoryStackedBarChart from 'src/components/VictoryStackedBarChart';
+import { useProgressStore } from 'src/store/useProgressStore';
 
 const macroColors = {
-  calories: "#ffffff",
-  carbs: "#FFC008",
-  fat: "#E283E0",
-  protein: "#7E54D9",
+  calories: '#ffffff',
+  carbs: '#FFC008',
+  fat: '#E283E0',
+  protein: '#7E54D9',
 };
 
 const dateRanges = [
-  { label: "1w", value: "1w" },
-  { label: "1m", value: "1m" },
-  { label: "3m", value: "3m" },
-  { label: "6m", value: "6m" },
-  { label: "1y", value: "1y" },
+  { label: '1w', value: '1w' },
+  { label: '1m', value: '1m' },
+  { label: '3m', value: '3m' },
+  { label: '6m', value: '6m' },
+  { label: '1y', value: '1y' },
 ];
 
 interface MacroBarData {
@@ -60,9 +61,9 @@ const ProgressScreen = () => {
   useEffect(() => {
     if (data && macroBarData.length > 0) {
       mixpanel?.track({
-        name: "progression_screen_viewed",
+        name: 'progression_screen_viewed',
         properties: {
-          entry_point: "app_tab",
+          entry_point: 'app_tab',
           default_period: selectedRange,
           start_date: data?.start_date,
           end_date: data?.end_date,
@@ -95,14 +96,14 @@ const ProgressScreen = () => {
 
       // Check if we have any non-zero values
       hasNonZeroData = macroBarData.some(
-        (day) =>
+        day =>
           day.protein > 0 || day.carbs > 0 || day.fat > 0 || day.calories > 0
       );
 
       // Debug logging
       console.log(
-        "ProgressScreen: Processed macroBarData:",
-        macroBarData.map((d) => ({
+        'ProgressScreen: Processed macroBarData:',
+        macroBarData.map(d => ({
           date: d.date,
           period_label: d.period_label,
           day: d.day,
@@ -115,15 +116,15 @@ const ProgressScreen = () => {
     }
   } catch (err) {
     mixpanel?.track({
-      name: "progress_data_fetch_failed",
+      name: 'progress_data_fetch_failed',
       properties: {
-        error_type: "server",
+        error_type: 'server',
         period: selectedRange,
         start_date: data?.start_date,
         end_date: data?.end_date,
       },
     });
-    console.error("Error processing macro data:", err);
+    console.error('Error processing macro data:', err);
     macroBarData = [];
   }
 
@@ -148,7 +149,7 @@ const ProgressScreen = () => {
     : { protein: 0, carbs: 0, fat: 0 };
 
   // Format date range for display
-  let dateRange = "";
+  let dateRange = '';
   if (data?.start_date && data?.end_date) {
     const start = new Date(data.start_date);
     const end = new Date(data.end_date);
@@ -157,14 +158,14 @@ const ProgressScreen = () => {
   useEffect(() => {
     if (!loading && hasNonZeroData && macroBarData.length > 0) {
       mixpanel?.track({
-        name: "progress_chart_rendered",
+        name: 'progress_chart_rendered',
         properties: {
           period: selectedRange,
           start_date: data?.start_date,
           end_date: data?.end_date,
           chart_points_count: macroBarData.length,
           total_days_covered: macroBarData.length,
-          data_source: "local",
+          data_source: 'local',
         },
       });
     }
@@ -172,7 +173,7 @@ const ProgressScreen = () => {
   useEffect(() => {
     if (!loading && !hasNonZeroData && data) {
       mixpanel?.track({
-        name: "progress_chart_empty_state_shown",
+        name: 'progress_chart_empty_state_shown',
         properties: {
           period: selectedRange,
           start_date: data?.start_date,
@@ -192,12 +193,14 @@ const ProgressScreen = () => {
           refreshing={refreshing}
           onRefresh={onRefresh}
           tintColor="#fff"
-          colors={["#fff"]}
+          colors={['#fff']}
         />
       }
     >
       <View className="bg-primaryLight pb-8">
-        <Text className="mt-16 text-white text-xl font-bold text-center p-5">
+        <Text
+          className={`text-white text-xl font-bold text-center px-5 ${Platform.OS === 'ios' ? 'mt-16' : 'mt-[0px]'}`}
+        >
           Progress
         </Text>
         <View className="px-12">
@@ -228,7 +231,7 @@ const ProgressScreen = () => {
           ) : !hasNonZeroData ? (
             <View className="flex-1 h-[250px] my-2 justify-center items-center">
               <Text className="text-white text-sm text-center">
-                No macro data available for this period.{"\n"}Log your meals to
+                No macro data available for this period.{'\n'}Log your meals to
                 see your progress!
               </Text>
             </View>
@@ -237,12 +240,12 @@ const ProgressScreen = () => {
           )}
         </View>
         <View className="flex-row justify-center mb-7 px-2">
-          {dateRanges.map((r) => (
+          {dateRanges.map(r => (
             <TouchableOpacity
               key={r.value}
               onPress={() => {
                 mixpanel?.track({
-                  name: "progress_period_selected",
+                  name: 'progress_period_selected',
                   properties: {
                     from_period: selectedRange,
                     to_period: r.value,
@@ -255,7 +258,7 @@ const ProgressScreen = () => {
               }}
               className={`
                 px-4 py-1.5 mx-3 rounded-full bg-white
-                ${selectedRange === r.value ? "opacity-100" : "opacity-70"}
+                ${selectedRange === r.value ? 'opacity-100' : 'opacity-70'}
               `}
               activeOpacity={0.8}
             >
@@ -275,12 +278,12 @@ const ProgressScreen = () => {
             <View className="flex-1 bg-[#C4E7E3] mx-1 rounded-2xl items-center py-6 shadow-lg">
               <View
                 className="w-12 h-12 rounded-full justify-center items-center mb-3"
-                style={{ backgroundColor: "#253238" }}
+                style={{ backgroundColor: '#253238' }}
               >
                 <FontAwesome5 name="trophy" size={22} color="white" />
               </View>
               <Text className="text-sm text-black text-center">
-                {data?.target_macros?.calories || "-"} cal
+                {data?.target_macros?.calories || '-'} cal
               </Text>
               <Text className="text-xs opacity-65 text-black text-center">
                 Net goal
@@ -290,7 +293,7 @@ const ProgressScreen = () => {
             <View className="flex-1 bg-[#C4E7E3] mx-1 rounded-2xl items-center py-6 shadow-lg">
               <View
                 className="w-12 h-12 rounded-full justify-center items-center mb-3"
-                style={{ backgroundColor: "#253238" }}
+                style={{ backgroundColor: '#253238' }}
               >
                 <FontAwesome5 name="fire" size={22} color="white" />
               </View>

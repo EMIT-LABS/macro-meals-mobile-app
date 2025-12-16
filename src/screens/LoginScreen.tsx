@@ -1,38 +1,38 @@
 // src/screens/LoginScreen.tsx
-import React, { useState, useEffect, useRef } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import useStore from "../store/useStore";
-import { authService } from "../services/authService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { authService } from '../services/authService';
+import useStore from '../store/useStore';
 // Import the mock service instead of the real one
 // import { mockSocialAuth } from "../services/authMock";
-import { OnboardingContext } from "../contexts/OnboardingContext";
-import CustomSafeAreaView from "../components/CustomSafeAreaView";
-import CustomTouchableOpacityButton from "../components/CustomTouchableOpacityButton";
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
+import { OnboardingContext } from '../contexts/OnboardingContext';
 // import BackButton from "../components/BackButton";
-import { RootStackParamList } from "../types/navigation";
+import { RootStackParamList } from '../types/navigation';
 // import { MaterialIcons } from "@expo/vector-icons";
-import { userService } from "../services/userService";
-import { HasMacrosContext } from "src/contexts/HasMacrosContext";
-import { useGoalsFlowStore } from "../store/goalsFlowStore";
-import { useMixpanel } from "@macro-meals/mixpanel";
-import { IsProContext } from "src/contexts/IsProContext";
-import revenueCatService from "../services/revenueCatService";
-import { sentryService } from "@macro-meals/sentry_service/src";
-import { Linking } from "react-native";
-import Constants from "expo-constants";
+import { useMixpanel } from '@macro-meals/mixpanel';
+import { sentryService } from '@macro-meals/sentry_service/src';
+import Constants from 'expo-constants';
+import { Linking } from 'react-native';
+import { HasMacrosContext } from 'src/contexts/HasMacrosContext';
+import { IsProContext } from 'src/contexts/IsProContext';
+import revenueCatService from '../services/revenueCatService';
+import { userService } from '../services/userService';
+import { useGoalsFlowStore } from '../store/goalsFlowStore';
 // import { macroMealsCrashlytics } from '@macro-meals/crashlytics';
 
 // type RootStackParamList = {
@@ -45,12 +45,12 @@ import Constants from "expo-constants";
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "Login"
+  'Login'
 >;
 
 export const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   // const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +60,7 @@ export const LoginScreen: React.FC = () => {
   const { setIsPro, isPro } = React.useContext(IsProContext);
   const navigation = useNavigation<LoginScreenNavigationProp>();
   // const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const resetSteps = useGoalsFlowStore((state) => state.resetSteps);
+  const resetSteps = useGoalsFlowStore(state => state.resetSteps);
   const mixpanel = useMixpanel();
   const eventsFired = useRef(false);
 
@@ -68,23 +68,23 @@ export const LoginScreen: React.FC = () => {
     if (mixpanel && !eventsFired.current) {
       eventsFired.current = true;
       mixpanel.track({
-        name: "sign_in_screen_viewed",
+        name: 'sign_in_screen_viewed',
         properties: { platform: Platform.OS },
       });
     }
   }, [mixpanel]);
 
   const [errors, setErrors] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
 
   // Set up auth state in your Zustand store
-  const setAuthenticated = useStore((state) => state.setAuthenticated);
+  const setAuthenticated = useStore(state => state.setAuthenticated);
 
   // Debug useEffect to monitor state changes
   useEffect(() => {
-    console.log("🔍 LoginScreen - State changed:", {
+    console.log('🔍 LoginScreen - State changed:', {
       hasMacros,
       isPro,
       readyForDashboard,
@@ -94,14 +94,14 @@ export const LoginScreen: React.FC = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password");
+      Alert.alert('Error', 'Please enter both email and password');
       return;
     }
     // tracking sign in attempted
     mixpanel?.track({
-      name: "sign_in_attempted",
+      name: 'sign_in_attempted',
       properties: {
-        email_domain: email.split("@")[1] || "",
+        email_domain: email.split('@')[1] || '',
         platform: Platform.OS,
       },
     });
@@ -117,13 +117,13 @@ export const LoginScreen: React.FC = () => {
 
       // Store tokens first so axios interceptor can use them
       await Promise.all([
-        AsyncStorage.setItem("my_token", token),
-        AsyncStorage.setItem("refresh_token", loginData.refresh_token),
-        AsyncStorage.setItem("user_id", userId),
-        AsyncStorage.setItem("isOnboardingCompleted", "true"),
+        AsyncStorage.setItem('my_token', token),
+        AsyncStorage.setItem('refresh_token', loginData.refresh_token),
+        AsyncStorage.setItem('user_id', userId),
+        AsyncStorage.setItem('isOnboardingCompleted', 'true'),
       ]);
 
-      console.log("Tokens stored successfully:", {
+      console.log('Tokens stored successfully:', {
         hasAccessToken: !!token,
         hasRefreshToken: !!loginData.refresh_token,
         userId: userId,
@@ -132,7 +132,7 @@ export const LoginScreen: React.FC = () => {
       // Then get profile using the stored token
       try {
         const profile = await userService.getProfile();
-        console.log("🔍 LoginScreen - Profile received:", {
+        console.log('🔍 LoginScreen - Profile received:', {
           has_macros: profile.has_macros,
           is_pro: profile.is_pro,
           email: profile.email,
@@ -142,13 +142,13 @@ export const LoginScreen: React.FC = () => {
         // Store the profile in the store for future use
         const { setProfile } = useStore.getState();
         setProfile(profile);
-        console.log("✅ Profile stored in store after login:", profile);
+        console.log('✅ Profile stored in store after login:', profile);
 
         // Reset steps before setting other states
         resetSteps();
 
         // Set all state in the correct order - batch them together
-        console.log("🔍 LoginScreen - Setting states:", {
+        console.log('🔍 LoginScreen - Setting states:', {
           hasMacros: profile.has_macros,
           isPro: profile.is_pro,
           readyForDashboard: profile.has_macros,
@@ -173,28 +173,28 @@ export const LoginScreen: React.FC = () => {
             $email: profile.email,
             $displayName: `${profile.first_name} ${profile.last_name}`,
           });
-          console.log("✅ RevenueCat user ID set after login:", profile.id);
+          console.log('✅ RevenueCat user ID set after login:', profile.id);
 
           // Check subscription status from RevenueCat (source of truth)
           const { syncSubscriptionStatus } = await import(
-            "../services/subscriptionChecker"
+            '../services/subscriptionChecker'
           );
           const subscriptionStatus = await syncSubscriptionStatus(setIsPro);
 
           console.log(
-            "🔍 LoginScreen - RevenueCat subscription status:",
+            '🔍 LoginScreen - RevenueCat subscription status:',
             subscriptionStatus
           );
         } catch (error) {
           console.error(
-            "❌ Failed to set RevenueCat user ID or check subscription after login:",
+            '❌ Failed to set RevenueCat user ID or check subscription after login:',
             error
           );
           // Fallback to backend isPro value if RevenueCat fails
           setIsPro(!!profile.is_pro);
         }
 
-        console.log("🔍 LoginScreen - Immediately after setting states:", {
+        console.log('🔍 LoginScreen - Immediately after setting states:', {
           profileHasMacros: profile.has_macros,
           profileIsPro: profile.is_pro,
           settingHasMacros: profile.has_macros,
@@ -204,7 +204,7 @@ export const LoginScreen: React.FC = () => {
 
         // Debug: Check context values after a short delay
         setTimeout(() => {
-          console.log("🔍 LoginScreen - Context values after setting:", {
+          console.log('🔍 LoginScreen - Context values after setting:', {
             hasMacros,
             isPro,
             readyForDashboard,
@@ -227,21 +227,21 @@ export const LoginScreen: React.FC = () => {
 
         // Track successful login
         mixpanel?.track({
-          name: "sign_in_successful",
+          name: 'sign_in_successful',
           properties: {
-            login_method: "email",
+            login_method: 'email',
             has_macros: profile.has_macros,
             is_pro: profile.is_pro || false,
           },
         });
 
         // Set authenticated last to trigger navigation
-        console.log("🔍 LoginScreen - Setting authenticated state");
+        console.log('🔍 LoginScreen - Setting authenticated state');
 
         // Add a small delay to ensure context updates have propagated
         setTimeout(() => {
           console.log(
-            "🔍 LoginScreen - Setting authenticated state after delay"
+            '🔍 LoginScreen - Setting authenticated state after delay'
           );
           setAuthenticated(true, token, userId);
         }, 100);
@@ -250,14 +250,14 @@ export const LoginScreen: React.FC = () => {
         const errorDetail = profileError?.response?.data?.detail;
         if (
           errorDetail &&
-          typeof errorDetail === "string" &&
-          errorDetail.toLowerCase().includes("email verification required")
+          typeof errorDetail === 'string' &&
+          errorDetail.toLowerCase().includes('email verification required')
         ) {
           // Route to email verification screen
           await authService.resendEmailVerification({
             email,
           });
-          navigation.navigate("EmailVerificationScreen", {
+          navigation.navigate('EmailVerificationScreen', {
             email,
             password,
           });
@@ -267,16 +267,16 @@ export const LoginScreen: React.FC = () => {
         throw profileError;
       }
     } catch (error) {
-      setAuthenticated(false, "", "");
+      setAuthenticated(false, '', '');
       setHasMacros(false);
       setIsPro(false);
       setReadyForDashboard(false);
-      console.log("Login failed:", error);
+      console.log('Login failed:', error);
 
       // Extract error message from Axios error response
-      let errorMessage = "Invalid email or password. Please try again.";
+      let errorMessage = 'Invalid email or password. Please try again.';
 
-      if (error && typeof error === "object" && "response" in error) {
+      if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as any;
         if (axiosError.response?.data?.detail) {
           errorMessage = axiosError.response.data.detail;
@@ -289,32 +289,32 @@ export const LoginScreen: React.FC = () => {
         errorMessage = error.message;
       }
       mixpanel?.track({
-        name: "sign_in_failed",
+        name: 'sign_in_failed',
         properties: {
-          email_domain: email.split("@")[1] || "",
+          email_domain: email.split('@')[1] || '',
           error_type: errorMessage,
           platform: Platform.OS,
         },
       });
 
-      Alert.alert("Login Failed", errorMessage, [{ text: "OK" }]);
+      Alert.alert('Login Failed', errorMessage, [{ text: 'OK' }]);
     } finally {
       setIsLoading(false);
     }
   };
   const handleForgotPassword = () => {
     mixpanel?.track({
-      name: "forgot_password_clicked",
+      name: 'forgot_password_clicked',
       properties: { platform: Platform.OS },
     });
-    (navigation as any).navigate("ForgotPasswordScreen");
+    (navigation as any).navigate('ForgotPasswordScreen');
   };
   const handleContactSupport = () => {
-    const subject = encodeURIComponent("MacroMeals App Support Request");
+    const subject = encodeURIComponent('MacroMeals App Support Request');
     const body = encodeURIComponent(
       `Please describe your issue here.\n\nDevice Info:\nPlatform: ${
         Platform.OS
-      }\nApp Version: ${Constants.manifest.version || "unknown"}`
+      }\nApp Version: ${Constants.manifest.version || 'unknown'}`
     );
     const mailto = `mailto:support@macromealsapp.com?subject=${subject}&body=${body}`;
     Linking.openURL(mailto);
@@ -367,17 +367,17 @@ export const LoginScreen: React.FC = () => {
   //   navigation.navigate("SignupScreen");
   // };
   return (
-    <CustomSafeAreaView className="flex-1 bg-white" edges={["left", "right"]}>
+    <CustomSafeAreaView className="flex-1 bg-white" edges={['left', 'right']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
           className="flex-1 p-6"
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "space-between",
+            justifyContent: 'space-between',
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -394,7 +394,7 @@ export const LoginScreen: React.FC = () => {
             <View className="w-full">
               <View
                 className={`${
-                  errors.email ? "border border-red-500 rounded-md" : ""
+                  errors.email ? 'border border-red-500 rounded-md' : ''
                 }`}
               >
                 <TextInput
@@ -402,21 +402,21 @@ export const LoginScreen: React.FC = () => {
                   placeholder="Enter your email"
                   placeholderTextColor="#9CA3AF"
                   value={email}
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     setEmail(text);
                     // Validate email on change
                     if (!text) {
-                      setErrors((prev) => ({
+                      setErrors(prev => ({
                         ...prev,
-                        email: "Email is required",
+                        email: 'Email is required',
                       }));
                     } else if (!/\S+@\S+\.\S+/.test(text)) {
-                      setErrors((prev) => ({
+                      setErrors(prev => ({
                         ...prev,
-                        email: "Email is invalid",
+                        email: 'Email is invalid',
                       }));
                     } else {
-                      setErrors((prev) => ({ ...prev, email: "" }));
+                      setErrors(prev => ({ ...prev, email: '' }));
                     }
                   }}
                   keyboardType="email-address"
@@ -435,7 +435,7 @@ export const LoginScreen: React.FC = () => {
 
               <View
                 className={`relative mt-6 mb-4 ${
-                  errors.password ? "border border-red-500 rounded-md" : ""
+                  errors.password ? 'border border-red-500 rounded-md' : ''
                 }`}
               >
                 <TextInput
@@ -443,23 +443,23 @@ export const LoginScreen: React.FC = () => {
                   placeholder="Enter password"
                   placeholderTextColor="#9CA3AF"
                   value={password}
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     setPassword(text);
                     if (errors.password) {
-                      setErrors((prev) => ({ ...prev, password: "" }));
+                      setErrors(prev => ({ ...prev, password: '' }));
                     }
                   }}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity
-                  onPress={() => setShowPassword((v) => !v)}
+                  onPress={() => setShowPassword(v => !v)}
                   className="absolute right-4 bottom-[30%]"
                 >
                   <Image
                     source={
                       showPassword
-                        ? require("../../assets/visibility-on-icon.png")
-                        : require("../../assets/visibility-off-icon.png")
+                        ? require('../../assets/visibility-on-icon.png')
+                        : require('../../assets/visibility-off-icon.png')
                     }
                     className="w-6 h-6 ml-2"
                     resizeMode="contain"
@@ -488,8 +488,8 @@ export const LoginScreen: React.FC = () => {
                   !password ||
                   password.length < 8 ||
                   !/\S+@\S+\.\S+/.test(email)
-                    ? "opacity-50"
-                    : ""
+                    ? 'opacity-50'
+                    : ''
                 }`}
                 title="Sign in"
                 textClassName="text-white text-[17px] font-semibold"
@@ -506,10 +506,10 @@ export const LoginScreen: React.FC = () => {
             </View>
             <View className="items-center justify-center px-6 mt-2">
               <Text className="text-[17px] text-center text-gray-600 flex-wrap">
-                Don't have an account?{" "}
+                Don't have an account?{' '}
                 <Text
                   className="text-base text-primary font-medium"
-                  onPress={() => navigation.navigate("SignupScreen")}
+                  onPress={() => navigation.navigate('SignupScreen')}
                 >
                   Sign up
                 </Text>

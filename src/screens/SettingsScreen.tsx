@@ -1,32 +1,33 @@
-import React, { useState, useEffect, useRef } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import { useMixpanel } from '@macro-meals/mixpanel';
+import { useRemoteConfigContext } from '@macro-meals/remote-config-service';
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
+  Alert,
+  Linking,
+  Modal,
+  Platform,
+  ScrollView,
   Text,
   TouchableOpacity,
-  ScrollView,
-  Linking,
-  Alert,
-  Modal,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import useStore from "../store/useStore";
-import { Picker } from "@react-native-picker/picker";
-import { authService } from "../services/authService";
-import CustomSafeAreaView from "../components/CustomSafeAreaView";
-import { Ionicons } from "@expo/vector-icons";
-import { IMAGE_CONSTANTS } from "../constants/imageConstants";
-import { RootStackParamList } from "../types/navigation";
-import { appConstants } from "../../constants/appConstants";
-import ProfileSection from "src/components/ProfileSection";
-import SectionItem from "src/components/SectionItem";
-import { userService } from "../services/userService";
-import ContactSupportDrawer from "./ContactSupportDrawer";
-import EditableAvatar from "src/components/EditableAvatar";
-import { useMixpanel } from "@macro-meals/mixpanel";
-import { useRemoteConfigContext } from "@macro-meals/remote-config-service";
-import Config from "react-native-config";
-import { useGoalsFlowStore } from "src/store/goalsFlowStore";
+  View,
+} from 'react-native';
+import Config from 'react-native-config';
+import EditableAvatar from 'src/components/EditableAvatar';
+import ProfileSection from 'src/components/ProfileSection';
+import SectionItem from 'src/components/SectionItem';
+import { useGoalsFlowStore } from 'src/store/goalsFlowStore';
+import { appConstants } from '../../constants/appConstants';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import { IMAGE_CONSTANTS } from '../constants/imageConstants';
+import { authService } from '../services/authService';
+import { userService } from '../services/userService';
+import useStore from '../store/useStore';
+import { RootStackParamList } from '../types/navigation';
+import ContactSupportDrawer from './ContactSupportDrawer';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -36,43 +37,43 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
  */
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const preferences = useStore((state) => state.preferences);
-  const token = useStore((state) => state.token);
+  const preferences = useStore(state => state.preferences);
+  const token = useStore(state => state.token);
   // const updatePreferences = useStore((state) => state.updatePreferences);
-  const setAuthenticated = useStore((state) => state.setAuthenticated);
+  const setAuthenticated = useStore(state => state.setAuthenticated);
   const { getValue } = useRemoteConfigContext();
   const [showDrawer, setShowDrawer] = useState(false);
   const mixpanel = useMixpanel();
   const eventsFired = useRef(false);
-  const _devMode = getValue("dev_mode").asBoolean();
+  const _devMode = getValue('dev_mode').asBoolean();
 
   // Local state for settings
-  const [_units, setUnits] = useState<string>("g/kcal");
+  const [_units, setUnits] = useState<string>('g/kcal');
   // const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [userData, setUserData] = useState({
     age: 0,
-    avatar_url: "",
-    created_at: "",
-    display_name: "",
-    dob: "",
-    email: "",
-    fcm_token: "",
-    first_name: "",
+    avatar_url: '',
+    created_at: '',
+    display_name: '',
+    dob: '',
+    email: '',
+    fcm_token: '',
+    first_name: '',
     has_macros: false,
     height: 0,
-    id: "",
+    id: '',
     is_active: true,
     is_pro: false,
-    last_name: "",
+    last_name: '',
     meal_reminder_preferences_set: false,
-    sex: "",
-    unit_preference: "metric",
-    updated_at: "",
+    sex: '',
+    unit_preference: 'metric',
+    updated_at: '',
   });
 
   // Modal state for units selection
   const [showUnitsModal, setShowUnitsModal] = useState(false);
-  const [tempUnitPreference, setTempUnitPreference] = useState("metric");
+  const [tempUnitPreference, setTempUnitPreference] = useState('metric');
 
   /**
    * Fetch user data on component mount
@@ -83,14 +84,14 @@ export const SettingsScreen: React.FC = () => {
         const profileData = await userService.fetchUserData();
         setUserData(profileData);
       } catch (error) {
-        console.error("Failed to fetch user profile:", error);
+        console.error('Failed to fetch user profile:', error);
         // Handle error appropriately
       }
     };
     fetchUserData();
 
     if (preferences.unitSystem) {
-      setUnits(preferences.unitSystem === "Metric" ? "g/kcal" : "oz/cal");
+      setUnits(preferences.unitSystem === 'Metric' ? 'g/kcal' : 'oz/cal');
     }
   }, [token]);
 
@@ -102,12 +103,12 @@ export const SettingsScreen: React.FC = () => {
       eventsFired.current = true;
 
       mixpanel.track({
-        name: "profile_screen_viewed",
+        name: 'profile_screen_viewed',
         properties: {
           user_id: userData.id,
           email: userData.email,
           is_pro: userData.is_pro,
-          entry_point: "app_tab",
+          entry_point: 'app_tab',
         },
       });
     }
@@ -121,7 +122,7 @@ export const SettingsScreen: React.FC = () => {
       const updated = await userService.updateProfile({
         unit_preference: value,
       });
-      setUserData((prev) => ({ ...prev, ...updated }));
+      setUserData(prev => ({ ...prev, ...updated }));
 
       // Update Mixpanel user properties
       mixpanel?.setUserProperties({
@@ -130,7 +131,7 @@ export const SettingsScreen: React.FC = () => {
 
       // Track unit preference change
       mixpanel?.track({
-        name: "unit_preference_changed",
+        name: 'unit_preference_changed',
         properties: {
           new_unit_preference: value,
           previous_unit_preference: userData.unit_preference,
@@ -139,7 +140,7 @@ export const SettingsScreen: React.FC = () => {
 
       setShowUnitsModal(false);
     } catch (error) {
-      console.error("Error updating unit preference:", error);
+      console.error('Error updating unit preference:', error);
       // Optionally show error to user
     }
   };
@@ -165,21 +166,21 @@ export const SettingsScreen: React.FC = () => {
    */
   const handleLogout = async () => {
     Alert.alert(
-      "Are you sure you want to log out?",
-      "",
+      'Are you sure you want to log out?',
+      '',
       [
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Log Out",
-          style: "destructive",
+          text: 'Log Out',
+          style: 'destructive',
           onPress: async () => {
             try {
               // Track logout in Mixpanel
               mixpanel?.track({
-                name: "user_logged_out",
+                name: 'user_logged_out',
                 properties: {
                   user_id: userData.id,
                   email: userData.email,
@@ -193,13 +194,13 @@ export const SettingsScreen: React.FC = () => {
               });
 
               await authService.logout();
-              setAuthenticated(false, "", "");
+              setAuthenticated(false, '', '');
               // navigation.reset({
               //   index: 0,
               //   routes: [{ name: "Login" }],
               // });
             } catch (error) {
-              console.error("Logout error:", error);
+              console.error('Logout error:', error);
             }
           },
         },
@@ -213,7 +214,7 @@ export const SettingsScreen: React.FC = () => {
    */
   const handleHelpSupport = () => {
     mixpanel?.track({
-      name: "contact_support_clicked",
+      name: 'contact_support_clicked',
       properties: {
         // Add user_id/email if available
       },
@@ -226,7 +227,7 @@ export const SettingsScreen: React.FC = () => {
   // };
   const openEmail = () => {
     mixpanel?.track({
-      name: "submit_feedback_email_opened",
+      name: 'submit_feedback_email_opened',
       properties: {},
     });
 
@@ -236,8 +237,8 @@ export const SettingsScreen: React.FC = () => {
     const subject = `?subject=${encodeURIComponent(email.subject)}`;
     const body = `&body=${encodeURIComponent(email.body)}`;
     url += subject + body;
-    Linking.openURL(url).catch((err) =>
-      console.error("Error opening email", err)
+    Linking.openURL(url).catch(err =>
+      console.error('Error opening email', err)
     );
   };
 
@@ -246,18 +247,18 @@ export const SettingsScreen: React.FC = () => {
    */
   const _handleSendFeedback = () => {
     // Navigate to feedback screen
-    Alert.alert("Feedback ", "Feedback coming soon!");
+    Alert.alert('Feedback ', 'Feedback coming soon!');
 
     // navigation.navigate('SendFeedback' as never);
   };
 
   const handleHealthGuidelines = () => {
-    navigation.navigate("HealthGuidelinesScreen" as never);
+    navigation.navigate('HealthGuidelinesScreen' as never);
   };
 
   return (
     <CustomSafeAreaView className="flex-1 bg-white">
-      <ScrollView contentContainerStyle={{ backgroundColor: "#f8f8f8" }}>
+      <ScrollView contentContainerStyle={{ backgroundColor: '#f8f8f8' }}>
         {/* Header with back button and title */}
         {/* <View className="flex-row items-center p-4 border-b border-b-gray-200">
           <TouchableOpacity
@@ -270,7 +271,9 @@ export const SettingsScreen: React.FC = () => {
         </View> */}
 
         {/* --- Hardcoded Profile Header Start --- */}
-        <View className="bg-white pt-8 px-5">
+        <View
+          className={`bg-white ${Platform.OS === 'ios' ? 'pt-8' : 'pt-3'} px-5`}
+        >
           <Text className="text-3xl font-bold mt-1.5 mb-4 text-[#333]">
             Profile
           </Text>
@@ -297,7 +300,7 @@ export const SettingsScreen: React.FC = () => {
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
             onPress={() => {
-              navigation.navigate("AccountSettingsScreen");
+              navigation.navigate('AccountSettingsScreen');
             }}
           />
           <SectionItem
@@ -307,7 +310,7 @@ export const SettingsScreen: React.FC = () => {
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
             onPress={() => {
-              navigation.navigate("AdjustTargets");
+              navigation.navigate('AdjustTargets');
             }}
           />
           <SectionItem
@@ -318,7 +321,7 @@ export const SettingsScreen: React.FC = () => {
             }
             onPress={() => {
               useGoalsFlowStore.getState().resetToHeightMetrics();
-              navigation.navigate("AdjustGoalsFlow");
+              navigation.navigate('AdjustGoalsFlow');
             }}
           />
           <SectionItem
@@ -328,7 +331,7 @@ export const SettingsScreen: React.FC = () => {
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
             onPress={() => {
-              navigation.navigate("ChangePassword");
+              navigation.navigate('ChangePassword');
             }}
           />
         </ProfileSection>
@@ -345,7 +348,7 @@ export const SettingsScreen: React.FC = () => {
             }
             onPress={() => {}}
           />
-          {Config.ENVIRONMENT !== "production" ? (
+          {Config.ENVIRONMENT !== 'production' ? (
             <SectionItem
               title="Payment"
               image={IMAGE_CONSTANTS.restoreIcon}
@@ -353,7 +356,7 @@ export const SettingsScreen: React.FC = () => {
                 <Text className="text-xl text-gray-400 ml-1">›</Text>
               }
               onPress={() => {
-                navigation.navigate("PaymentScreen");
+                navigation.navigate('PaymentScreen');
               }}
             />
           ) : (
@@ -367,7 +370,7 @@ export const SettingsScreen: React.FC = () => {
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
             onPress={() => {
-              navigation.navigate("ManageSubscriptionsScreen");
+              navigation.navigate('ManageSubscriptionsScreen');
             }}
           />
         </ProfileSection>
@@ -380,7 +383,7 @@ export const SettingsScreen: React.FC = () => {
             rightComponent={
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
-            onPress={() => navigation.navigate("Notifications")}
+            onPress={() => navigation.navigate('Notifications')}
           />
         </ProfileSection>
 
@@ -402,7 +405,7 @@ export const SettingsScreen: React.FC = () => {
             }
             onPress={() => {
               mixpanel?.track({
-                name: "submit_feedback_clicked",
+                name: 'submit_feedback_clicked',
                 properties: {},
               });
               openEmail();
@@ -440,7 +443,7 @@ export const SettingsScreen: React.FC = () => {
             rightComponent={
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
-            onPress={() => navigation.navigate("TermsOfServiceScreen")}
+            onPress={() => navigation.navigate('TermsOfServiceScreen')}
           />
           <SectionItem
             title="Privacy Policy"
@@ -448,7 +451,7 @@ export const SettingsScreen: React.FC = () => {
             rightComponent={
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
-            onPress={() => navigation.navigate("PrivacyPolicy")}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
           />
           <SectionItem
             title="About"
@@ -457,7 +460,7 @@ export const SettingsScreen: React.FC = () => {
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
             onPress={() => {
-              navigation.navigate("About");
+              navigation.navigate('About');
             }}
           />
         </ProfileSection>
@@ -495,7 +498,7 @@ export const SettingsScreen: React.FC = () => {
               <Picker
                 selectedValue={tempUnitPreference}
                 onValueChange={setTempUnitPreference}
-                style={{ width: "100%" }}
+                style={{ width: '100%' }}
                 itemStyle={{ fontSize: 18, height: 180 }}
               >
                 <Picker.Item label="Metric" value="metric" />
