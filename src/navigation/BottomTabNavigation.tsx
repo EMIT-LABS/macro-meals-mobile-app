@@ -43,6 +43,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
                   tintColor={isFocused ? '#009688' : '#000'}
                 />
                 <Text
+                  allowFontScaling={false}
                   className={`text-xs font-normal ${
                     isFocused ? 'text-primaryLight' : 'text-black'
                   }`}
@@ -82,6 +83,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
                 tintColor={isFocused ? '#009688' : '#000'}
               />
               <Text
+                allowFontScaling={false}
                 className={`text-xs font-normal ${
                   isFocused ? 'text-primaryLight' : 'text-black'
                 }`}
@@ -104,6 +106,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
               tintColor={isFocused ? '#009688' : '#000'}
             />
             <Text
+              allowFontScaling={false}
               className={`text-xs font-normal ${
                 isFocused ? 'text-primaryLight' : 'text-black'
               }`}

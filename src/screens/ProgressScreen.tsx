@@ -282,10 +282,16 @@ const ProgressScreen = () => {
               >
                 <FontAwesome5 name="trophy" size={22} color="white" />
               </View>
-              <Text className="text-sm text-black text-center">
+              <Text
+                allowFontScaling={false}
+                className="text-sm text-black text-center"
+              >
                 {data?.target_macros?.calories || '-'} cal
               </Text>
-              <Text className="text-xs opacity-65 text-black text-center">
+              <Text
+                allowFontScaling={false}
+                className="text-xs opacity-65 text-black text-center"
+              >
                 Net goal
               </Text>
             </View>
@@ -297,10 +303,16 @@ const ProgressScreen = () => {
               >
                 <FontAwesome5 name="fire" size={22} color="white" />
               </View>
-              <Text className="text-sm text-black text-center">
+              <Text
+                allowFontScaling={false}
+                className="text-sm text-black text-center"
+              >
                 {avgCalories} cal
               </Text>
-              <Text className="text-xs opacity-65 text-black text-center">
+              <Text
+                allowFontScaling={false}
+                className="text-xs opacity-65 text-black text-center"
+              >
                 Net daily avg.
               </Text>
             </View>
