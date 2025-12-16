@@ -210,18 +210,9 @@ const SearchMealAndRestaurants: React.FC = () => {
 
   const search = async () => {
     const hasQuery = searchQuery.trim().length > 0;
-    const hasFilters = selectedCuisines.length > 0;
 
     // Increment request ID for this search
     const currentRequestId = ++searchRequestIdRef.current;
-
-    if (!hasQuery && !hasFilters) {
-      setSearchResults([]);
-      setRawPinsData([]);
-      setSearchError(null);
-      setSearchLoading(false);
-      return;
-    }
 
     if (!currentLocationCoords) {
       setSearchResults([]);
@@ -233,12 +224,16 @@ const SearchMealAndRestaurants: React.FC = () => {
     setSearchLoading(true);
     setSearchError(null);
 
+    const matchingMode: 'restaurants' | 'meals' =
+      activeTab === 'restaurants' ? 'restaurants' : 'meals';
+
     try {
       const mapPinsResponse = await mealService.getMapPins(
         currentLocationCoords.latitude,
         currentLocationCoords.longitude,
         hasQuery ? searchQuery : undefined,
-        selectedCuisines
+        selectedCuisines,
+        matchingMode
       );
 
       // Ignore if this is not the latest request
@@ -604,7 +599,11 @@ const SearchMealAndRestaurants: React.FC = () => {
           <View className="mb-4 flex-1 border border-primary rounded-[24px] flex-row items-center bg-white px-4 py-3 shadow-sm">
             <Ionicons name="search" size={20} color="#666" />
             <TextInput
-              placeholder="Search meals and restaurants"
+              placeholder={
+                activeTab === 'restaurants'
+                  ? 'Search restaurants'
+                  : 'Search meals'
+              }
               value={searchQuery}
               onChangeText={setSearchQuery}
               className="flex-1 ml-3 placeholder:text-xs placeholder:text-[#4F4F4FCC]"
@@ -648,7 +647,10 @@ const SearchMealAndRestaurants: React.FC = () => {
         {/* Tabs */}
         <View className="flex-row px-5 pb-0">
           <TouchableOpacity
-            onPress={() => setActiveTab('restaurants')}
+            onPress={() => {
+              setActiveTab('restaurants');
+              setSearchQuery('');
+            }}
             className="flex-1 items-center pb-3 relative"
           >
             <Text
@@ -663,7 +665,10 @@ const SearchMealAndRestaurants: React.FC = () => {
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setActiveTab('meals')}
+            onPress={() => {
+              setActiveTab('meals');
+              setSearchQuery('');
+            }}
             className="flex-1 items-center pb-3 relative"
           >
             <Text
