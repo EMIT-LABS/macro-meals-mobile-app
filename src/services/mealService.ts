@@ -490,7 +490,8 @@ export const mealService = {
     latitude: number,
     longitude: number,
     query?: string,
-    cuisines?: string[]
+    cuisines?: string[],
+    matchingMode?: 'restaurants' | 'meals'
   ): Promise<any> => {
     const token = useStore.getState().token;
 
@@ -505,6 +506,9 @@ export const mealService = {
       }
       if (cuisines && cuisines.length > 0) {
         url += `&cuisine_types=${encodeURIComponent(cuisines.join(','))}`;
+      }
+      if (matchingMode) {
+        url += `&matching_mode=${encodeURIComponent(matchingMode)}`;
       }
       const response = await axiosInstance.get(url);
       return response.data;
