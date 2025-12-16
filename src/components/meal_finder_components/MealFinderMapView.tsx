@@ -1,7 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { IMAGE_CONSTANTS } from 'src/constants/imageConstants';
 import { RootStackParamList } from 'src/types/navigation';
 import { GenericMapView } from '../../../packages/maps_service/src/GenericMapView';
@@ -140,11 +147,14 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
     // Special renderer for current location
     if (marker.id === 'current-location') {
       return (
-        <View className="items-center">
-          <View className="bg-blue-500 rounded-full p-3 shadow-lg border-4 border-white">
-            <Ionicons name="location" size={20} color="white" />
+        <View className="items-center" style={{ overflow: 'visible' }}>
+          <View
+            className="bg-blue-500 rounded-full shadow-lg border-2 border-white items-center justify-center"
+            style={{ width: 24, height: 24, overflow: 'visible' }}
+          >
+            <Ionicons name="location" size={14} color="white" />
           </View>
-          <View className="bg-blue-500 rounded-full w-3 h-3 mt-1" />
+          <View className="bg-blue-500 rounded-full w-2 h-2 mt-1" />
         </View>
       );
     }
@@ -152,19 +162,22 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
     // Default renderer for meal markers
     return (
       <View className="items-center">
-        <View
-          className="bg-white rounded-full p-2 shadow-lg border-2"
-          style={{ borderColor: marker.color }}
-        >
-          <Text className="text-primary text-lg">🍽️</Text>
+        <View className="rounded-full shadow-lg items-center justify-center bg-primary w-8 h-8">
+          <Image
+            source={IMAGE_CONSTANTS.restaurantPinIcon}
+            className="w-[10px] h-[13px]"
+            resizeMode="contain"
+          />
         </View>
-        {marker.data?.matchScore && marker.data.matchScore > 0 && (
-          <View className="bg-primary rounded-full px-2 py-1 mt-1">
-            <Text className="text-white text-xs font-bold">
-              {marker.data.matchScore}%
-            </Text>
-          </View>
-        )}
+        {Platform.OS !== 'android' &&
+          marker.data?.matchScore &&
+          marker.data.matchScore > 0 && (
+            <View className="bg-primary rounded-full px-2 py-1 mt-1">
+              <Text className="text-white text-xs font-bold">
+                {marker.data.matchScore}%
+              </Text>
+            </View>
+          )}
       </View>
     );
   };
@@ -176,14 +189,18 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
     }
 
     return (
-      <View className="flex-row items-center justify-between bg-primary rounded-lg p-3 gap-1 shadow-lg min-w-[200px]">
+      <View className="flex-row items-center bg-primary rounded-lg p-3 gap-1 shadow-lg min-w-[220px] max-w-[260px]">
         <Image
           tintColor={'white'}
           source={IMAGE_CONSTANTS.restaurantIcon}
           className="w-4 h-4 mr-2"
         />
-        <View className="flex-col">
-          <Text className="text-sm text-white" numberOfLines={1}>
+        <View className="flex-1 flex-col">
+          <Text
+            className="text-sm text-white"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {marker.data?.restaurant?.name || 'Restaurant'}
           </Text>
 
@@ -192,21 +209,23 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
               className="text-xs font-semibold text-white flex-shrink"
               numberOfLines={1}
               ellipsizeMode="tail"
-              style={{ maxWidth: 180 }}
+              style={{ maxWidth: 200 }}
             >
               {marker.data?.name || 'Meal'}
             </Text>
             <View className="items-center flex-row mx-1 bg-white rounded-full h-[5px] w-[5px]"></View>
             {/* Match Score */}
-            {marker.data?.matchScore && marker.data.matchScore > 0 && (
-              <View className="flex-row items-center">
-                <View className="bg-primary rounded-full">
-                  <Text className="text-white text-xs font-bold">
-                    {marker.data.matchScore}%
-                  </Text>
+            {Platform.OS !== 'android' &&
+              marker.data?.matchScore &&
+              marker.data.matchScore > 0 && (
+                <View className="flex-row items-center">
+                  <View className="bg-primary rounded-full px-1">
+                    <Text className="text-white text-xs font-bold">
+                      {marker.data.matchScore}%
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
           </View>
         </View>
         <Ionicons name="chevron-forward" size={20} color="white" />
@@ -243,9 +262,23 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
       {/* Selected Meal Info Card */}
       {selectedMarker && selectedMarker.data && (
         <View className="absolute bottom-[110px] left-4 right-4 bg-white rounded-xl p-4 shadow-lg">
-          <View className="flex-row items-start">
-            <View className="w-12 h-12 bg-cornflowerBlue rounded-full items-center justify-center mr-3">
-              <Text className="text-white text-lg">🍽️</Text>
+          <Pressable
+            className="flex-row items-start"
+            onPress={() => {
+              console.log('Selected marker:', selectedMarker);
+              if (selectedMarker && selectedMarker.data) {
+                navigation.navigate('MealFinderBreakdownScreen', {
+                  meal: selectedMarker.data,
+                });
+              }
+            }}
+          >
+            <View className="rounded-full items-center justify-center mr-1">
+              <Image
+                source={IMAGE_CONSTANTS.mealIcon}
+                className="w-12 h-12"
+                resizeMode="contain"
+              />
             </View>
             <View className="flex-1">
               <Text
@@ -285,12 +318,14 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
               </View>
             </View>
             <TouchableOpacity
-              onPress={() => selectMarker(null)}
+              onPress={() => {
+                selectMarker(null);
+              }}
               className="ml-2"
             >
               <Text className="text-gray-500 text-lg">×</Text>
             </TouchableOpacity>
-          </View>
+          </Pressable>
         </View>
       )}
     </View>

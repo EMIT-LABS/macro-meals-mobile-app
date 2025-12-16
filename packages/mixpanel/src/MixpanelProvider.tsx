@@ -1,12 +1,7 @@
 import { Mixpanel } from 'mixpanel-react-native';
 import React, { createContext, useEffect, useState } from 'react';
 import { EVENTS } from './constants';
-import {
-  MPSessionReplayMask,
-  MixpanelConfig,
-  MixpanelInstance,
-  MixpanelSessionReplayConfig,
-} from './types';
+import { MixpanelConfig, MixpanelInstance } from './types';
 
 console.log('[DEBUG] MixpanelProvider loaded');
 
@@ -37,34 +32,11 @@ export const MixpanelProvider: React.FC<{
 
     try {
       const instance = new Mixpanel(config.token, config.debug || false);
-      let initPromise: Promise<void>;
-
-      if (config.allowSessionReplay) {
-        const sessionReplayConfig: MixpanelSessionReplayConfig = {
-          wifiOnly: config.sessionReplayConfig?.wifiOnly || false,
-          autoStartRecording:
-            config.sessionReplayConfig?.autoStartRecording || false,
-          recordingSessionsPercent:
-            config.sessionReplayConfig?.recordingSessionsPercent ?? 100,
-          autoMaskedViews: config.sessionReplayConfig?.autoMaskedViews ?? [
-            MPSessionReplayMask.Text,
-            MPSessionReplayMask.Image,
-          ],
-          flushInterval: config.sessionReplayConfig?.flushInterval ?? 1000,
-          enableLogging: config.sessionReplayConfig?.enableLogging ?? true,
-        };
-        initPromise = instance.init(
-          config.trackAutomaticEvents || false,
-          sessionReplayConfig
-        );
-      } else {
-        initPromise = instance.init(config.trackAutomaticEvents || false);
-      }
-
-      initPromise
+      instance
+        .init(config.trackAutomaticEvents || false)
         .then(() => {
+          // Test event to verify tracking
           instance.track(EVENTS.APP_OPENED);
-          console.log('[MIXPANEL] ✅ Initialization successful');
           setMixpanel(instance);
           setIsInitialized(true);
         })
@@ -72,19 +44,6 @@ export const MixpanelProvider: React.FC<{
           console.error('[MIXPANEL] ❌ Initialization failed:', error);
           setIsInitialized(true);
         });
-
-      //   instance
-      //     .init(config.trackAutomaticEvents || false)
-      //     .then(() => {
-      //       // Test event to verify tracking
-      //       instance.track(EVENTS.APP_OPENED);
-      //       setMixpanel(instance);
-      //       setIsInitialized(true);
-      //     })
-      //     .catch(error => {
-      //       console.error('[MIXPANEL] ❌ Initialization failed:', error);
-      //       setIsInitialized(true);
-      //     });
     } catch (error) {
       console.error('[MIXPANEL] ❌ Failed to create instance:', error);
       setIsInitialized(true);
@@ -96,13 +55,7 @@ export const MixpanelProvider: React.FC<{
         mixpanel.reset();
       }
     };
-  }, [
-    config.token,
-    config.debug,
-    config.trackAutomaticEvents,
-    config.allowSessionReplay,
-    config.sessionReplayConfig,
-  ]);
+  }, [config.token, config.debug, config.trackAutomaticEvents]);
 
   console.log(
     '[DEBUG] MixpanelProvider rendered, mixpanel:',

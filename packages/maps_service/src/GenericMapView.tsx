@@ -112,6 +112,20 @@ const GenericMapViewComponent = <T = any,>({
         Math.min(restrictToBounds.northEast.longitude, region.longitude)
       );
 
+      // Also clamp zoom level so user can't zoom out beyond bounds box
+      const maxLatDelta =
+        restrictToBounds.northEast.latitude -
+        restrictToBounds.southWest.latitude;
+      const maxLngDelta =
+        restrictToBounds.northEast.longitude -
+        restrictToBounds.southWest.longitude;
+
+      clampedRegion.latitudeDelta = Math.min(region.latitudeDelta, maxLatDelta);
+      clampedRegion.longitudeDelta = Math.min(
+        region.longitudeDelta,
+        maxLngDelta
+      );
+
       return clampedRegion;
     },
     [restrictToBounds]
@@ -178,15 +192,18 @@ const GenericMapViewComponent = <T = any,>({
 
   const renderDefaultMarker = useCallback(
     (marker: MapMarker<T>) => (
-      <View className="items-center">
+      <View className="items-center" style={{ overflow: 'visible' }}>
         <View
-          className="bg-white rounded-full p-2 shadow-lg border-2"
-          style={{ borderColor: marker.color || '#19A28F' }}
+          className="bg-white rounded-full p-1 shadow-lg border-2"
+          style={{
+            borderColor: marker.color || '#19A28F',
+            overflow: 'visible',
+          }}
         >
           <Ionicons
             name={(marker.icon as any) || 'location'}
             size={
-              marker.size === 'small' ? 16 : marker.size === 'large' ? 28 : 24
+              marker.size === 'small' ? 14 : marker.size === 'large' ? 22 : 18
             }
             color={marker.color || '#19A28F'}
           />
