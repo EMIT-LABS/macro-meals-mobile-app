@@ -398,7 +398,9 @@ const AddMeal: React.FC = () => {
     <PaperProvider>
       <View className="flex-1 bg-[#F5F5F5]">
         {/* Top section: Range/filter and progress bars in one column */}
-        <View className="bg-primaryLight px-4 pt-[60px] pb-6 mb-4">
+        <View
+          className={`bg-primaryLight px-4 pb-6 mb-4 ${Platform.OS === 'ios' ? 'pt-[60px]' : 'pt-[0px]'}`}
+        >
           <View className="flex-row items-center justify-between mb-2">
             <View className="flex-1"></View>
 

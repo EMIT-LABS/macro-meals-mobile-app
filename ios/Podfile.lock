@@ -236,32 +236,6 @@ PODS:
   - MixpanelReactNative (3.1.2):
     - Mixpanel-swift (= 5.1.0)
     - React-Core
-  - MixpanelReactNativeSessionReplay (0.2.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - MixpanelSessionReplay (= 1.1.5)
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - MixpanelSessionReplay (1.1.5)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
     - nanopb/encode (= 3.30910.0)
@@ -2606,9 +2580,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - SDWebImage (5.21.2):
-    - SDWebImage/Core (= 5.21.2)
-  - SDWebImage/Core (5.21.2)
+  - SDWebImage (5.21.3):
+    - SDWebImage/Core (= 5.21.3)
+  - SDWebImage/Core (5.21.3)
   - SDWebImageAVIFCoder (0.11.1):
     - libavif/core (>= 0.11.0)
     - SDWebImage (~> 5.10)
@@ -2657,7 +2631,6 @@ DEPENDENCIES:
   - GoogleMaps
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - MixpanelReactNative (from `../node_modules/mixpanel-react-native`)
-  - "MixpanelReactNativeSessionReplay (from `../node_modules/@mixpanel/react-native-session-replay`)"
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2779,7 +2752,6 @@ SPEC REPOS:
     - libdav1d
     - libwebp
     - Mixpanel-swift
-    - MixpanelSessionReplay
     - nanopb
     - PromisesObjC
     - PromisesSwift
@@ -2851,8 +2823,6 @@ EXTERNAL SOURCES:
     :tag: hermes-2025-06-04-RNv0.79.3-7f9a871eefeb2c3852365ee80f0b6733ec12ac3b
   MixpanelReactNative:
     :path: "../node_modules/mixpanel-react-native"
-  MixpanelReactNativeSessionReplay:
-    :path: "../node_modules/@mixpanel/react-native-session-replay"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -3090,8 +3060,6 @@ SPEC CHECKSUMS:
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   Mixpanel-swift: 7b26468fc0e2e521104e51d65c4bbf7cab8162f8
   MixpanelReactNative: cdcfe933b8ce89aadd183f17aad3c8529daccb94
-  MixpanelReactNativeSessionReplay: 3048f9e4a1c1bc19fb3a62002e8f9e4e620c6576
-  MixpanelSessionReplay: d910faaa54e50b5b12388e45342fb4e48ed1fe4a
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
@@ -3189,7 +3157,7 @@ SPEC CHECKSUMS:
   RNSentry: 2197bb4f1b54e9d168dae50936b6eb0305b8a655
   RNSVG: 4470464e129f6bc58b78b961850b054dbbea8ef7
   RNVectorIcons: d7d40d54aa3281f36b840bc1caaefa163166af34
-  SDWebImage: 9f177d83116802728e122410fb25ad88f5c7608a
+  SDWebImage: 16309af6d214ba3f77a7c6f6fdda888cb313a50a
   SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380

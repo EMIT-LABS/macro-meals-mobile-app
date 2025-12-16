@@ -1882,11 +1882,6 @@
     "@sentry/react-native" "^6.20.0"
     expo-constants "^17.1.7"
 
-"@mixpanel/react-native-session-replay@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@mixpanel/react-native-session-replay/-/react-native-session-replay-0.2.0.tgz#511f214c63a4a917975963e3bc37e18580c36353"
-  integrity sha512-n+IXvQumX8RKaUIM7wIGLERg9siVHryktpBFM3CBl30ltf2DkM2STWcdx0r4tZ1AeQ21eSWRwQN3XFnYLMYUoQ==
-
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -9307,10 +9302,10 @@ vary@~1.1.2:
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-victory-native@^41.17.4:
-  version "41.17.4"
-  resolved "https://registry.yarnpkg.com/victory-native/-/victory-native-41.17.4.tgz#44613195e27602752b6708f006c78703bb6b09d6"
-  integrity sha512-qOdOp7PvfF+hRFFLyhbfRN879oGKDAXM0pT5JobhVsfsg/v3WRXIiLYgT5Wa+7S2HXJgrrKPxUHzrYO4E18OQA==
+victory-native@^41.20.2:
+  version "41.20.2"
+  resolved "https://registry.yarnpkg.com/victory-native/-/victory-native-41.20.2.tgz#02166f7c6c951db5da5f85dfcfe318cbb323aaa3"
+  integrity sha512-gc6DPnfoAHYnaWndXfrITlBvKdLKtoq3J4muBn/Sawu528+MfByAI8LlJBboDGHE1rLBWsgiS58h67D3Ulmtqg==
   dependencies:
     d3-scale "^4.0.2"
     d3-shape "^3.2.0"

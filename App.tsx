@@ -460,22 +460,6 @@ export function App() {
       <MixpanelProvider
         config={{
           token: Config.MIXPANEL_TOKEN as string,
-          // debug: __DEV__,
-          trackAutomaticEvents: true,
-          // allowSessionReplay: true,
-          // sessionReplayConfig: {
-          //   wifiOnly: false,
-          //   autoStartRecording: true,
-          //   recordingSessionsPercent: 100,
-          //   autoMaskedViews: [
-          //     MPSessionReplayMask.Text,
-          //     MPSessionReplayMask.Image,
-          //     MPSessionReplayMask.Map,
-          //     MPSessionReplayMask.Web,
-          //   ],
-          //   flushInterval: 2000,
-          //   enableLogging: __DEV__,
-          // },
         }}
       >
         <RemoteConfigProvider

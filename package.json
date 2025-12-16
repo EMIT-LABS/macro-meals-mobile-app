@@ -10,7 +10,7 @@
     "start": "expo start",
     "start:dev": "ENVFILE=.env.development expo start",
     "start:stg": "ENVFILE=.env.staging expo start",
-    "start:prod": "ENVFILE=.env.production expo start",
+    "start:prod": "ENVFILE=.env.production NODE_ENV=production expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -48,7 +48,6 @@
     "@macro-meals/push-notifications": "file:./packages/push_notifications",
     "@macro-meals/remote-config-service": "file:./packages/remote_config_service",
     "@macro-meals/sentry-service": "file:./packages/sentry_service",
-    "@mixpanel/react-native-session-replay": "^0.2.0",
     "@notifee/react-native": "^9.1.8",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
@@ -112,7 +111,7 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-webview": "13.13.5",
     "tailwindcss": "^3.4.17",
-    "victory-native": "^41.17.4",
+    "victory-native": "^41.20.2",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
