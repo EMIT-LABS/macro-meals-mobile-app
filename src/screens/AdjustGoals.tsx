@@ -16,7 +16,7 @@ import { LinearProgress } from 'src/components/LinearProgress';
 import { AdjustGoalBodyMetricsHeight } from 'src/components/goal_flow_components/basic_info/AdjustGoalBodyMetricsHeight';
 import { AdjustGoalBodyMetricsWeight } from 'src/components/goal_flow_components/basic_info/AdjustGoalBodyMetricsWeight';
 import { AdjustGoalsDailyActivityLevel } from 'src/components/goal_flow_components/basic_info/AdjustGoalsDailyActivityLevel';
-import { AdjustGoalsDietryPreference } from 'src/components/goal_flow_components/basic_info/AdjustGoalsDietaryPreference';
+import { AdjustGoalsDietaryPreference } from 'src/components/goal_flow_components/basic_info/AdjustGoalsDietaryPreference';
 import { AdjustGoalsFitnessGoal } from 'src/components/goal_flow_components/your_goal/AdjustGoalsFitnessGoal';
 import { AdjustGoalsProgressRate } from 'src/components/goal_flow_components/your_goal/AdjustGoalsProgressRate';
 import { AdjustGoalsTargetWeight } from 'src/components/goal_flow_components/your_goal/AdjustGoalsTargetWeight';
@@ -49,7 +49,7 @@ export const AdjustGoalsFlow = () => {
     weightLb,
     weightKg,
     dailyActivityLevel,
-    dietryPreference,
+    dietaryPreference,
     fitnessGoal,
     targetWeight,
     progressRate,
@@ -188,7 +188,7 @@ export const AdjustGoalsFlow = () => {
     const {
       dailyActivityLevel,
       dateOfBirth,
-      dietryPreference,
+      dietaryPreference,
       fitnessGoal,
       height_unit_preference,
       heightFt,
@@ -277,7 +277,7 @@ export const AdjustGoalsFlow = () => {
     return {
       activity_level: activityLevelApi,
       age: calculateAge(dateOfBirth),
-      dietary_preference: dietryPreference ?? '',
+      dietary_preference: dietaryPreference ?? '',
       dob: dobApi,
       goal_type: goalTypeMap[fitnessGoal] || 'maintain',
       height,
@@ -331,7 +331,7 @@ export const AdjustGoalsFlow = () => {
       <AdjustGoalsDailyActivityLevel />
     </View>,
     <View key="diet" style={{ flex: 1 }}>
-      <AdjustGoalsDietryPreference />
+      <AdjustGoalsDietaryPreference />
     </View>,
   ];
 
@@ -408,7 +408,7 @@ export const AdjustGoalsFlow = () => {
     }
     if (majorStep === 0 && subSteps[majorStep] === 3) {
       // Dietary preference validation
-      return !!dietryPreference;
+      return !!dietaryPreference;
     }
 
     // Your Goal Steps
