@@ -490,44 +490,13 @@ const PaymentScreen = () => {
                   <Text className="font-medium text-[15px]">
                     {monthlyProductInfo?.pricePerPeriod || '£9.99/mo'}
                   </Text>
-                  <Text className="font-medium text-[15px]"></Text>
                 </View>
-                <Text className="mt-3 mb-3 text-[12px] text-[#4F4F4F]">
+                <Text className="mt-3 mb-3 text-[11px] text-[#4F4F4F]">
                   Billed {monthlyProductInfo?.period || 'monthly'} after free
                   trial.
                 </Text>
               </View>
             </TouchableOpacity>
-
-            {/* <TouchableOpacity
-              activeOpacity={0.8}
-              className={`flex-1 items-center bg-white rounded-2xl ${
-                selectedPlan === "yearly"
-                  ? "border-primary border-2"
-                  : "border border-[#F2F2F2]"
-              }`}
-              onPress={(e) => {
-                e.preventDefault();
-                setSelectedPlan("yearly");
-                setAmount(yearlyProductInfo?.price || 69.99);
-                mixpanel?.track({
-                  name: "subscription_plan_selected",
-                  properties: {
-                    plan: "yearly",
-                    price: yearlyProductInfo?.price,
-                    platform: Platform.OS,
-                  },
-                });
-              }}
-            >
-              <View className="absolute px-2 py-2 top-[-10px] flex-row bg-primaryLight rounded-2xl">
-                <Text className="text-white text-xs font-medium justify-center items-center">
-                  30% savings
-                </Text>
-                </View>
-               
-                
-              </TouchableOpacity> */}
 
             <TouchableOpacity
               activeOpacity={0.8}
@@ -546,7 +515,7 @@ const PaymentScreen = () => {
                 });
               }}
             >
-              <View className="absolute px-2 py-2 top-[-10px] flex-row bg-primaryLight rounded-2xl">
+              <View className="absolute px-2 py-1.5 top-[-10px] flex-row bg-primaryLight rounded-3xl">
                 <Text className="text-white text-xs font-medium justify-center items-center">
                   30% savings
                 </Text>
@@ -573,7 +542,7 @@ const PaymentScreen = () => {
                     </Text>
                   )}
                 </View>
-                <Text className="mt-3 mb-3 text-[12px] text-[#4F4F4F]">
+                <Text className="mt-3 mb-3 text-[11px] text-[#4F4F4F]">
                   Billed {yearlyProductInfo?.period || 'yearly'} after free
                   trial.
                 </Text>
@@ -601,7 +570,7 @@ const PaymentScreen = () => {
               disabled={isLoading}
               className={isLoading ? 'opacity-70' : 'mt-5'}
             >
-              <View className="bg-primaryLight h-[56px] w-full flex-row items-center justify-center rounded-[100px]">
+              <View className="bg-primaryLight h-[50px] w-full flex-row items-center justify-center rounded-[100px]">
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (

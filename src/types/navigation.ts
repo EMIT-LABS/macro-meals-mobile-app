@@ -1,7 +1,8 @@
+import { Meal } from '../types';
+
 /**
  * Type definitions for navigation in the app.
  */
-
 /**
  * Root stack parameter list for the main navigation stack.
  */
@@ -63,7 +64,7 @@ export type RootStackParamList = {
   About: undefined;
   MealFinderScreen: undefined;
   MealFinderBreakdownScreen: { meal: any };
-  SearchMealAndRestaurants: undefined;
+  SearchMealAndRestaurants: { defaultResults?: Meal[] } | undefined;
   PrivacyPolicy: undefined;
   AiMealSuggestionsScreen: undefined;
   GoalsSetupFlow: undefined;
