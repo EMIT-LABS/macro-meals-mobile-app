@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -73,7 +73,15 @@ const SearchMealAndRestaurants: React.FC = () => {
     useNavigation<
       NativeStackNavigationProp<RootStackParamList, 'SearchMealAndRestaurants'>
     >();
+  const route =
+    useRoute<
+      import('@react-navigation/native').RouteProp<
+        RootStackParamList,
+        'SearchMealAndRestaurants'
+      >
+    >();
   const macrosPreferences = useStore(state => state.macrosPreferences);
+  const defaultResultsFromRoute = route.params?.defaultResults;
   const [activeTab, setActiveTab] = useState<TabType>('restaurants');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [macroData, setMacroData] = useState<MacroData[]>(defaultMacroData);
@@ -84,7 +92,9 @@ const SearchMealAndRestaurants: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [contactSupportDrawerVisible, setContactSupportDrawerVisible] =
     useState(false);
-  const [searchResults, setSearchResults] = useState<Meal[]>([]);
+  const [searchResults, setSearchResults] = useState<Meal[]>(
+    defaultResultsFromRoute || []
+  );
   const [rawPinsData, setRawPinsData] = useState<any[]>([]); // Store raw pins from API
   const [searchLoading, setSearchLoading] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -213,6 +223,17 @@ const SearchMealAndRestaurants: React.FC = () => {
 
     // Increment request ID for this search
     const currentRequestId = ++searchRequestIdRef.current;
+
+    // If we have default results from MealFinder and no query/filters,
+    // don't override them with another call
+    const hasFilters = selectedCuisines.length > 0;
+    const hasDefaultFromRoute =
+      Array.isArray(defaultResultsFromRoute) &&
+      defaultResultsFromRoute.length > 0;
+
+    if (!hasQuery && !hasFilters && hasDefaultFromRoute) {
+      return;
+    }
 
     if (!currentLocationCoords) {
       setSearchResults([]);
@@ -700,8 +721,12 @@ const SearchMealAndRestaurants: React.FC = () => {
           />
         </View>
 
-        {/* Search Results List - Show when search or filters are active */}
-        {(searchQuery.trim().length > 0 || selectedCuisines.length > 0) && (
+        {/* Search Results List - Show default or filtered results */}
+        {(searchQuery.trim().length > 0 ||
+          selectedCuisines.length > 0 ||
+          searchResults.length > 0 ||
+          searchLoading ||
+          searchError) && (
           <View
             className={`mt-4 ${!searchLoading && !searchError && searchResults.length === 0 ? 'flex-1' : ''}`}
           >
@@ -759,8 +784,9 @@ const SearchMealAndRestaurants: React.FC = () => {
                     No Restaurants found
                   </Text>
                   <Text className="mx-5 mb-5 text-sm text-center tracking-tighter font-normal text-[#b7b3b3]">
-                    We couldn't find "{searchQuery}" in your area. Try searching
-                    a different restaurant or location.
+                    {searchQuery.trim().length > 0
+                      ? `We couldn't find "${searchQuery}" in your area. Try searching a different restaurant or location.`
+                      : 'We could not find restaurants near you at the moment. Try searching a different location or restaurant.'}
                   </Text>
                   <TouchableOpacity
                     className="bg-primaryLight flex-row items-center justify-center rounded-[1000px] h-[52px] px-4 w-full mx-5"

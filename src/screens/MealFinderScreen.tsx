@@ -174,6 +174,7 @@ const MealFinderScreen: React.FC = () => {
   const listSearchInputRef = useRef<TextInput>(null);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const isDataLoaded = !locationLoading && meals.length > 0;
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -272,7 +273,10 @@ const MealFinderScreen: React.FC = () => {
         try {
           const mapPinsResponse = await mealService.getMapPins(
             location.coords.latitude,
-            location.coords.longitude
+            location.coords.longitude,
+            undefined,
+            undefined,
+            'restaurants'
           );
           // Keep only restaurants within ~50km of the user (based on API distance_km)
           const pins = (mapPinsResponse.pins || []).filter(
@@ -387,9 +391,11 @@ const MealFinderScreen: React.FC = () => {
     listSearchInputRef.current?.blur();
     // Small delay to ensure blur completes before navigation
     setTimeout(() => {
-      navigation.navigate('SearchMealAndRestaurants');
+      navigation.navigate('SearchMealAndRestaurants', {
+        defaultResults: meals,
+      });
     }, 100);
-  }, [navigation]);
+  }, [navigation, meals]);
 
   const handleSelectCurrentLocation = async () => {
     closeLocationSheet();
@@ -422,7 +428,10 @@ const MealFinderScreen: React.FC = () => {
     try {
       const mapPinsResponse = await mealService.getMapPins(
         location.latitude,
-        location.longitude
+        location.longitude,
+        undefined,
+        undefined,
+        'restaurants'
       );
       // Keep only restaurants within ~50km of the selected location
       const pins = (mapPinsResponse.pins || []).filter(
@@ -507,8 +516,8 @@ const MealFinderScreen: React.FC = () => {
         <View style={{ width: 32 }} />
       </View>
 
-      {/* Search Bar - Only show when Map tab is active */}
-      {activeTab === 'map' && (
+      {/* Search Bar - Only show when Map tab is active and data has loaded */}
+      {activeTab === 'map' && isDataLoaded && (
         <View className="px-5">
           <View className="flex-row items-center bg-white/90 rounded-3xl px-4 py-3 shadow-lg">
             <Ionicons name="search" size={20} color="#666" />
@@ -524,8 +533,8 @@ const MealFinderScreen: React.FC = () => {
         </View>
       )}
 
-      {/* List View - Only show when List tab is active */}
-      {activeTab === 'list' && (
+      {/* List View - Only show when List tab is active and data has loaded */}
+      {activeTab === 'list' && isDataLoaded && (
         <View className="flex-1 px-5 mt-8">
           {/* Search Bar for List Tab */}
           <View className="mb-4">
