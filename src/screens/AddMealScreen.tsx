@@ -661,7 +661,7 @@ export const AddMealScreen: React.FC = () => {
               className="border border-[#e0e0e0] rounded-sm px-3 h-[4.25rem] placeholder:text-lightGrey text-base flex-row items-center justify-between bg-white"
               onPress={() => {
                 setTempTime(time);
-                handleOpenTimeModal;
+                handleOpenTimeModal();
               }}
               activeOpacity={0.8}
             >
