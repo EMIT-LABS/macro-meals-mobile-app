@@ -270,10 +270,23 @@ export default function AccountSettingsScreen() {
   );
 
   const handleFieldChange = (field: string, value: any) => {
+   // Validate first_name and last_name fields
+  if (field === 'first_name' || field === 'last_name') {
+    // Remove emojis and allow only letters, spaces, hyphens, and apostrophes
+    const sanitized = value.replace(/[^\p{L}\s'-]/gu, '');
+    
+    // Prevent only whitespace
+    if (sanitized.trim().length === 0 && sanitized.length > 0) {
+      return; // Don't update if it's only spaces
+    }
+    
+    setLocalValues((prev) => ({ ...prev, [field]: sanitized }));
+    getDebouncedPatch(field)(sanitized.trim()); // Trim before sending to backend
+  } else {
     setLocalValues((prev) => ({ ...prev, [field]: value }));
     getDebouncedPatch(field)(value);
-  };
-
+  }
+};
   // When field loses focus, update the user state
   const handleFieldBlur = (field: string) => {
     console.log("[HANDLE FIELD BLUR] Field:", field);

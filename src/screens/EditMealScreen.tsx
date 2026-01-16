@@ -43,6 +43,7 @@ interface RouteParams {
     photo_url?: string;
     serving_unit?: string;
     read_only?: boolean;
+    logging_mode?: string;
     description?: string;
   };
 }
@@ -110,6 +111,7 @@ export const EditMealScreen: React.FC = () => {
   const [servingUnit, setServingUnit] = useState<string>('g');
   const [showServingUnitModal, setShowServingUnitModal] = useState(false);
   const [tempServingUnit, setTempServingUnit] = useState('g');
+  const [loggingMode, setLoggingMode] = useState<string>('manual');
 
   // Initialize form with analyzed data if available
   React.useEffect(() => {
@@ -132,6 +134,7 @@ export const EditMealScreen: React.FC = () => {
       setServingUnit(analyzedData.serving_unit || 'g');
       setIsReadOnly(analyzedData.read_only || false);
       setMealDescription(analyzedData.description || '');
+      setLoggingMode(analyzedData.logging_mode || 'manual');
       if (analyzedData.photo_url) {
         setMealImage(analyzedData.photo_url);
         console.log('🔄 ExpoImage started loading FOR Meal:', mealImage);
@@ -295,7 +298,7 @@ export const EditMealScreen: React.FC = () => {
         serving_unit: servingUnit,
         description: mealDescription || undefined,
         favorite: isFavorite,
-        logging_mode: 'manual',
+        logging_mode: loggingMode,
         notes: undefined,
         photo: mealImage
           ? {
