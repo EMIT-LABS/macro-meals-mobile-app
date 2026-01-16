@@ -1,21 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useMixpanel } from "@macro-meals/mixpanel/src";
 import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { scanService } from "../services/scanService";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
-import { useMixpanel } from "@macro-meals/mixpanel/src";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { scanService } from "../services/scanService";
 
 type RootStackParamList = {
   Dashboard: undefined;
@@ -194,73 +193,73 @@ const BarcodeScanScreen = () => {
     });
   };
 
-  const handleManualCapture = async () => {
-    if (!cameraRef.current || isProcessing) return;
+  // const handleManualCapture = async () => {
+  //   if (!cameraRef.current || isProcessing) return;
 
-    setIsProcessing(true);
+  //   setIsProcessing(true);
 
-    try {
-      // Take a picture with better quality settings
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.9,
-        base64: false,
-        skipProcessing: false,
-      });
+  //   try {
+  //     // Take a picture with better quality settings
+  //     const photo = await cameraRef.current.takePictureAsync({
+  //       quality: 0.9,
+  //       base64: false,
+  //       skipProcessing: false,
+  //     });
 
-      // Process the image for barcode
-      try {
-        const response = await scanService.scanImage(photo.uri);
+  //     // Process the image for barcode
+  //     try {
+  //       const response = await scanService.scanImage(photo.uri);
 
-        if (response.items && response.items.length > 0) {
-          const product = response.items[0];
-          navigation.navigate("AddMealScreen", {
-            barcodeData: "",
-            analyzedData: {
-              name: product.name,
-              calories: product.calories,
-              protein: product.protein,
-              carbs: product.carbs,
-              fat: product.fat,
-              amount: product.amount,
-              serving_unit: product.serving_unit,
-              logging_mode: "barcode",
-              read_only: product.read_only,
-              hideImage: true, // Flag to hide the image section
-            },
-          });
-        } else {
-          Alert.alert(
-            "No Barcode Detected",
-            "We couldn't find a readable barcode in this image. Please try again or enter details manually.",
-            [
-              {
-                text: "Try Again",
-                onPress: () => setIsProcessing(false),
-              },
-              {
-                text: "Add Manually",
-                onPress: () => navigation.navigate("AddMealScreen", {}),
-              },
-            ]
-          );
-        }
-      } catch (error) {
-        console.error("Image processing error:", error);
-        setIsProcessing(false);
-        Alert.alert(
-          "Processing Error",
-          "There was an error processing the image. Please try again."
-        );
-      }
-    } catch (error) {
-      console.error("Camera capture error:", error);
-      setIsProcessing(false);
-      Alert.alert(
-        "Camera Error",
-        "There was an error taking the picture. Please try again."
-      );
-    }
-  };
+  //       if (response.items && response.items.length > 0) {
+  //         const product = response.items[0];
+  //         navigation.navigate("AddMealScreen", {
+  //           barcodeData: "",
+  //           analyzedData: {
+  //             name: product.name,
+  //             calories: product.calories,
+  //             protein: product.protein,
+  //             carbs: product.carbs,
+  //             fat: product.fat,
+  //             amount: product.amount,
+  //             serving_unit: product.serving_unit,
+  //             logging_mode: "barcode",
+  //             read_only: product.read_only,
+  //             hideImage: true, // Flag to hide the image section
+  //           },
+  //         });
+  //       } else {
+  //         Alert.alert(
+  //           "No Barcode Detected",
+  //           "We couldn't find a readable barcode in this image. Please try again or enter details manually.",
+  //           [
+  //             {
+  //               text: "Try Again",
+  //               onPress: () => setIsProcessing(false),
+  //             },
+  //             {
+  //               text: "Add Manually",
+  //               onPress: () => navigation.navigate("AddMealScreen", {}),
+  //             },
+  //           ]
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error("Image processing error:", error);
+  //       setIsProcessing(false);
+  //       Alert.alert(
+  //         "Processing Error",
+  //         "There was an error processing the image. Please try again."
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Camera capture error:", error);
+  //     setIsProcessing(false);
+  //     Alert.alert(
+  //       "Camera Error",
+  //       "There was an error taking the picture. Please try again."
+  //     );
+  //   }
+  // };
 
   const _openGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -455,7 +454,7 @@ const BarcodeScanScreen = () => {
             : "Center the barcode within the frame to scan"}
         </Text>
       </View>
-      <View className="flex-1 bg-white items-center justify-center">
+      {/* <View className="flex-1 bg-white items-center justify-center">
         <TouchableOpacity
           className="w-20 h-20 bg-teal-600 rounded-full items-center justify-center"
           activeOpacity={0.8}
@@ -465,7 +464,7 @@ const BarcodeScanScreen = () => {
         >
           <MaterialCommunityIcons name="barcode-scan" size={40} color="#fff" />
         </TouchableOpacity>
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };
