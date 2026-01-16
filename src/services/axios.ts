@@ -1,9 +1,13 @@
-import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import useStore from '../store/useStore';
 
-import { clearSession } from './sessionService';
 import Config from 'react-native-config';
+import { clearSession } from './sessionService';
 
 // Define non-authenticated endpoints
 const nonAuthEndpoints = [
@@ -27,7 +31,7 @@ const axiosInstance = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
 });
 
@@ -36,15 +40,33 @@ axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
       const token = await AsyncStorage.getItem('my_token');
-      
+
       // Only add token if endpoint requires auth and we have a token
-      if (token && !nonAuthEndpoints.some(endpoint => config.url?.includes(endpoint))) {
+      if (
+        token &&
+        !nonAuthEndpoints.some(endpoint => config.url?.includes(endpoint))
+      ) {
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
-        console.log('Adding auth token to request:', config.url);
-      } else if (!token && !nonAuthEndpoints.some(endpoint => config.url?.includes(endpoint))) {
-        console.log('No auth token available for protected endpoint:', config.url);
+      } else if (
+        !token &&
+        !nonAuthEndpoints.some(endpoint => config.url?.includes(endpoint))
+      ) {
+        console.log(
+          'No auth token available for protected endpoint:',
+          config.url
+        );
       }
+
+      // Log full request details for debugging
+      // const fullUrl = config.baseURL + config.url;
+      // const params = config.params;
+      // console.log('📤 Request:', {
+      //   method: config.method?.toUpperCase(),
+      //   url: fullUrl,
+      //   params: params ? JSON.stringify(params, null, 2) : 'none',
+      //   hasAuth: !!config.headers?.Authorization,
+      // });
     } catch (error) {
       console.error('Error getting token from storage:', error);
     }
@@ -64,68 +86,108 @@ axiosInstance.interceptors.response.use(
     if (!error.response) {
       console.error('Network error:', error.message);
       // Create a user-friendly network error
-      const networkError = new Error('Oops! Something went wrong. Please check your internet connection and try again.');
+      const networkError = new Error(
+        'Oops! Something went wrong. Please check your internet connection and try again.'
+      );
       return Promise.reject(networkError);
+    }
+
+    // Log error response details for debugging
+    if (error.response) {
+      console.error('📥 Error Response:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        url: error.config?.url,
+        method: error.config?.method,
+        params: error.config?.params
+          ? JSON.stringify(error.config.params, null, 2)
+          : 'none',
+        data: error.response.data,
+      });
     }
 
     // Handle 502 Bad Gateway errors
     if (error.response?.status === 502) {
       console.error('502 Bad Gateway error:', error.message);
-      const badGatewayError = new Error('Unable to connect to server. Please try again later.');
+      const badGatewayError = new Error(
+        'Unable to connect to server. Please try again later.'
+      );
       return Promise.reject(badGatewayError);
     }
 
     // Handle other 5xx server errors
     if (error.response?.status >= 500 && error.response?.status < 600) {
       console.error(`${error.response.status} Server error:`, error.message);
-      const serverError = new Error('Server is temporarily unavailable. Please try again later.');
+      const serverError = new Error(
+        'Server is temporarily unavailable. Please try again later.'
+      );
       return Promise.reject(serverError);
     }
 
     // Handle 401/403 errors
     if (error.response?.status === 401 || error.response?.status === 403) {
       // Don't handle auth errors for login/register endpoints
-      if (nonAuthEndpoints.some(endpoint => originalRequest?.url?.includes(endpoint))) {
+      if (
+        nonAuthEndpoints.some(endpoint =>
+          originalRequest?.url?.includes(endpoint)
+        )
+      ) {
         return Promise.reject(error);
       }
 
       // Special handling for email verification required error
       const errorDetail = (error.response?.data as any)?.detail;
-      if (errorDetail && typeof errorDetail === 'string' && 
-          errorDetail.toLowerCase().includes('email verification required')) {
-        console.log('Email verification required - letting component handle routing');
+      if (
+        errorDetail &&
+        typeof errorDetail === 'string' &&
+        errorDetail.toLowerCase().includes('email verification required')
+      ) {
+        console.log(
+          'Email verification required - letting component handle routing'
+        );
         return Promise.reject(error);
       }
 
       try {
         const refreshToken = await AsyncStorage.getItem('refresh_token');
-        
+
         // If we have a refresh token, try to refresh
         if (refreshToken) {
           try {
-            console.log('Attempting token refresh with token:', refreshToken.substring(0, 10) + '...');
+            console.log(
+              'Attempting token refresh with token:',
+              refreshToken.substring(0, 10) + '...'
+            );
             const response = await axiosInstance.post('/auth/refresh', {
-              refresh_token: refreshToken
+              refresh_token: refreshToken,
             });
 
-            const { access_token, refresh_token: newRefreshToken, user } = response.data;
-            
+            const {
+              access_token,
+              refresh_token: newRefreshToken,
+              user,
+            } = response.data;
+
             console.log('Token refresh successful:', {
               hasAccessToken: !!access_token,
               hasNewRefreshToken: !!newRefreshToken,
-              userId: user?.id
+              userId: user?.id,
             });
-            
+
             // Update tokens in storage
             await AsyncStorage.setItem('my_token', access_token);
             if (newRefreshToken) {
               await AsyncStorage.setItem('refresh_token', newRefreshToken);
             }
-            
+
             // Update store with new authentication state
             const store = useStore.getState();
-            store.setAuthenticated(true, access_token, user?.id || store.userId || '');
-            
+            store.setAuthenticated(
+              true,
+              access_token,
+              user?.id || store.userId || ''
+            );
+
             // Retry original request
             if (originalRequest) {
               originalRequest.headers = originalRequest.headers || {};
@@ -151,7 +213,10 @@ axiosInstance.interceptors.response.use(
           return Promise.reject(error);
         }
       } catch (storageError) {
-        console.error('Error accessing storage during token refresh:', storageError);
+        console.error(
+          'Error accessing storage during token refresh:',
+          storageError
+        );
         await handleLogout();
         return Promise.reject(error);
       }
@@ -166,11 +231,11 @@ const handleLogout = async () => {
   try {
     // Clear session using the session service
     await clearSession();
-    
+
     // Update store state
     const store = useStore.getState();
     store.logout();
-    
+
     console.log('User logged out due to token expiration');
   } catch (error) {
     console.error('Error during logout:', error);
@@ -178,7 +243,11 @@ const handleLogout = async () => {
 };
 
 // Helper function to set auth tokens
-export const setAuthTokens = async (accessToken: string, refreshToken?: string, userId?: string) => {
+export const setAuthTokens = async (
+  accessToken: string,
+  refreshToken?: string,
+  userId?: string
+) => {
   try {
     await AsyncStorage.setItem('my_token', accessToken);
     if (refreshToken) {

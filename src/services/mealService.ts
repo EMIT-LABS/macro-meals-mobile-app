@@ -483,6 +483,8 @@ export const mealService = {
    * @param latitude - The latitude coordinate
    * @param longitude - The longitude coordinate
    * @param query - Optional search query term
+   * @param cuisines - Optional array of cuisine types to filter by
+   * @param matchingMode - Optional matching mode ('restaurant' or 'meal')
    * @returns Promise with map pins data
    * @throws Error if the request fails
    */
@@ -491,7 +493,7 @@ export const mealService = {
     longitude: number,
     query?: string,
     cuisines?: string[],
-    matchingMode?: 'restaurants' | 'meals'
+    matchingMode?: 'restaurant' | 'meal'
   ): Promise<any> => {
     const token = useStore.getState().token;
 

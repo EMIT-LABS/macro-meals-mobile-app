@@ -1,20 +1,20 @@
+import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Platform,
   Linking,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import CustomSafeAreaView from "../components/CustomSafeAreaView";
 // import { paymentService } from '../services/paymentService';
 // import { useMixpanel } from '@macro-meals/mixpanel';
-import revenueCatService from "../services/revenueCatService";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import revenueCatService from "../services/revenueCatService";
 
 interface SubscriptionDetails {
   amount: number;

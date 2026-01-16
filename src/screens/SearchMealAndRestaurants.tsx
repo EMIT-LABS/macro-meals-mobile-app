@@ -245,8 +245,8 @@ const SearchMealAndRestaurants: React.FC = () => {
     setSearchLoading(true);
     setSearchError(null);
 
-    const matchingMode: 'restaurants' | 'meals' =
-      activeTab === 'restaurants' ? 'restaurants' : 'meals';
+    const matchingMode: 'restaurant' | 'meal' =
+      activeTab === 'restaurants' ? 'restaurant' : 'meal';
 
     try {
       const mapPinsResponse = await mealService.getMapPins(

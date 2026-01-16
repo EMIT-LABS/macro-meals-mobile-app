@@ -273,10 +273,7 @@ const MealFinderScreen: React.FC = () => {
         try {
           const mapPinsResponse = await mealService.getMapPins(
             location.coords.latitude,
-            location.coords.longitude,
-            undefined,
-            undefined,
-            'restaurants'
+            location.coords.longitude
           );
           // Keep only restaurants within ~50km of the user (based on API distance_km)
           const pins = (mapPinsResponse.pins || []).filter(
@@ -428,10 +425,7 @@ const MealFinderScreen: React.FC = () => {
     try {
       const mapPinsResponse = await mealService.getMapPins(
         location.latitude,
-        location.longitude,
-        undefined,
-        undefined,
-        'restaurants'
+        location.longitude
       );
       // Keep only restaurants within ~50km of the selected location
       const pins = (mapPinsResponse.pins || []).filter(
