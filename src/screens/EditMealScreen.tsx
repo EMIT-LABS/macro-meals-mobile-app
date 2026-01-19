@@ -404,8 +404,13 @@ export const EditMealScreen: React.FC = () => {
   };
   const handleTimeCancel = () => setShowTimeModal(false);
   const handleTimeDone = () => {
-    if (tempTime) setTime(tempTime);
+    if (tempTime){
+
+    setTime(tempTime);
+     const updatedMealType = getMealTypeByTime(tempTime);
+        setSelectedMealType(updatedMealType);
     setShowTimeModal(false);
+    }
   };
   const formattedTime = time.toLocaleTimeString([], {
     hour: '2-digit',
