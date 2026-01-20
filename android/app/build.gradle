@@ -116,10 +116,12 @@ android {
     
     defaultConfig {
         applicationId 'com.macromeals.app'
-        minSdkVersion rootProject.ext.minSdkVersion
+        minSdkVersion 24
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 38
         versionName "1.1.2"
+        testBuildType System.getProperty('testBuildType', 'debug')
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         
         // Enable multidex
         multiDexEnabled true
@@ -208,6 +210,7 @@ android {
             minifyEnabled true
             shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFile "${rootProject.projectDir}/../node_modules/detox/android/detox/proguard-rules-app.pro"
             
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
@@ -309,6 +312,7 @@ task verifyBuildEnv {
 }
 
 dependencies {
+    androidTestImplementation('com.wix:detox:+')
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation platform('com.google.firebase:firebase-bom:32.2.0')

@@ -32,6 +32,7 @@ import { RootStackParamList } from '../types/navigation';
 
 // Use the Profile type from the store instead of defining a local one
 import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import axiosInstance from 'src/services/axios';
 import { Profile } from '../store/useStore';
 
@@ -95,7 +96,9 @@ export const DashboardScreen: React.FC = () => {
   const refreshMeals = useStore(state => state.refreshMeals);
   const hasLoggedFirstMeal = useStore(state => state.hasLoggedFirstMeal);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
   const eventsFired = useRef(false);
+  const userIdentified = useRef(false); // Track if user has been identified in PostHog
 
   // Calculate today's total macros from loggedMeals
   const todayMealsSum = loggedMeals.reduce(
@@ -120,9 +123,29 @@ export const DashboardScreen: React.FC = () => {
 
       // Dashboard viewed tracking
       if (profile) {
+        // Track screen view for PostHog (populates the screen/URL field)
+        posthog.track({
+          name: '$screen',
+          properties: {
+            $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            user_id: profile?.id,
+            platform: Platform.OS,
+          },
+        });
+        
+        // Track regular events
         mixpanel.track({
           name: 'dashboard_viewed',
           properties: {
+            user_id: profile?.id,
+            platform: Platform.OS,
+          },
+        });
+        posthog.track({
+          name: 'dashboard_viewed',
+          properties: {
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
           },
@@ -134,6 +157,16 @@ export const DashboardScreen: React.FC = () => {
         mixpanel.track({
           name: 'greeting_displayed',
           properties: {
+            user_id: profile?.id,
+            platform: Platform.OS,
+            first_name: profile?.first_name,
+          },
+        });
+
+        posthog.track({
+          name: 'greeting_displayed',
+          properties: {
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
             first_name: profile?.first_name,
@@ -154,6 +187,19 @@ export const DashboardScreen: React.FC = () => {
             fat_target: macros.fat,
           },
         });
+
+        posthog.track({
+          name: 'macro_summary_displayed',
+          properties: {
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            user_id: profile?.id,
+            platform: Platform.OS,
+            calorie_target: macros.calories,
+            protein_target: macros.protein,
+            carbs_target: macros.carbs,
+            fat_target: macros.fat,
+          },
+        });
       }
 
       // Recently uploaded section viewed tracking
@@ -161,6 +207,16 @@ export const DashboardScreen: React.FC = () => {
         mixpanel.track({
           name: 'recently_uploaded_section_viewed',
           properties: {
+            user_id: profile?.id,
+            platform: Platform.OS,
+            meal_count: loggedMeals.length,
+          },
+        });
+
+        posthog.track({
+          name: 'recently_uploaded_section_viewed',
+          properties: {
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
             meal_count: loggedMeals.length,
@@ -230,6 +286,20 @@ export const DashboardScreen: React.FC = () => {
 
       // 1. Fetch user profile info
       const profileResponse = await userService.getProfile();
+      
+      // Identify user in PostHog only once per session
+      if (!userIdentified.current && profileResponse.id) {
+        userIdentified.current = true;
+        posthog.identify(profileResponse.id, {
+          email: profileResponse.email,
+          name: profileResponse.display_name || profileResponse.first_name,
+          signup_date: profileResponse.created_at || new Date().toISOString(),
+          has_macros: profileResponse.has_macros,
+          is_pro: profileResponse.is_pro || false,
+          meal_reminder_preferences_set: profileResponse.meal_reminder_preferences_set || false,
+        });
+      }
+      
       setStoreProfile(profileResponse);
       setProfile(profileResponse);
       // macroMealsCrashlytics.setUserAttributes({
