@@ -37,6 +37,15 @@ export const usePosthog = () => {
         track: (event: TrackEvent) => {
             try{
                 console.log('[POSTHOG] 📊 Tracking event:', event.name, event.properties);
+                
+                // Verify session ID is being attached
+                const sessionId = (posthog as any).getSessionId?.();
+                if (sessionId) {
+                    console.log('[POSTHOG] ✅ Session ID:', sessionId);
+                } else {
+                    console.warn('[POSTHOG] ⚠️ No session ID found!');
+                }
+                
                 posthog.capture(event.name, event.properties);
                 console.log('[POSTHOG] ✅ Event sent successfully');
             } catch (error) {
@@ -46,10 +55,10 @@ export const usePosthog = () => {
         },
 
         // identify user
-        identify: (distinctId: string) => {
+        identify: (distinctId: string, properties?: Record<string, any>) => {
             try{
                 console.log('[POSTHOG] 👤 Identifying user:', distinctId);
-                posthog.identify(distinctId);
+                posthog.identify(distinctId, properties);
             } catch (error) {
                 console.error('[POSTHOG] ❌ Error identifying user:', error);
             }

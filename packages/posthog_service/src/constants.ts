@@ -7,4 +7,4 @@ export const POSTHOG_HOSTS = {
     EU: 'https://eu.i.posthog.com',
 } as const;
 
-export const DEFAULT_HOST = POSTHOG_HOSTS.US;
+export const DEFAULT_HOST = POSTHOG_HOSTS.EU;

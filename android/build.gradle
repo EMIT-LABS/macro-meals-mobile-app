@@ -33,10 +33,23 @@ allprojects {
 
     google()
     mavenCentral()
+    maven {
+      url("$rootDir/../node_modules/detox/Detox-android")
+    }
     maven { url 'https://www.jitpack.io' }
         maven {
             url "$rootDir/../node_modules/@notifee/react-native/android/libs"
         }
+  }
+  
+  // Force all subprojects to use minSdkVersion 24 (required for React Native 0.79.5)
+  afterEvaluate { project ->
+    if (project.hasProperty('android')) {
+      def android = project.android
+      if (android.hasProperty('defaultConfig')) {
+        android.defaultConfig.minSdkVersion = 24
+      }
+    }
   }
 }
 

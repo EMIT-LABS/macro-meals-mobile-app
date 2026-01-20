@@ -25,6 +25,7 @@ import { OnboardingContext } from '../contexts/OnboardingContext';
 import { RootStackParamList } from '../types/navigation';
 // import { MaterialIcons } from "@expo/vector-icons";
 import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import { sentryService } from '@macro-meals/sentry_service/src';
 import Constants from 'expo-constants';
 import { Linking } from 'react-native';
@@ -63,16 +64,29 @@ export const LoginScreen: React.FC = () => {
   const resetSteps = useGoalsFlowStore(state => state.resetSteps);
   const mixpanel = useMixpanel();
   const eventsFired = useRef(false);
+  const posthog = usePosthog();
 
   useEffect(() => {
     if (mixpanel && !eventsFired.current) {
       eventsFired.current = true;
+      
+      // Track screen view for PostHog
+      posthog.track({
+        name: '$screen',
+        properties: {
+          $screen_name: 'LoginScreen',
+          $current_url: 'LoginScreen',
+          platform: Platform.OS,
+        },
+      });
+      
+      // Track event for Mixpanel
       mixpanel.track({
         name: 'sign_in_screen_viewed',
         properties: { platform: Platform.OS },
       });
     }
-  }, [mixpanel]);
+  }, [mixpanel, posthog]);
 
   const [errors, setErrors] = useState({
     email: '',
@@ -216,6 +230,16 @@ export const LoginScreen: React.FC = () => {
         // Identify user in Mixpanel
         mixpanel?.identify(userId);
         mixpanel?.setUserProperties({
+          email: profile.email || email,
+          name: profile.display_name || profile.first_name,
+          signup_date: profile.created_at || new Date().toISOString(),
+          has_macros: profile.has_macros,
+          is_pro: profile.is_pro || false,
+          meal_reminder_preferences_set:
+            profile.meal_reminder_preferences_set || false,
+        });
+
+        posthog.identify(userId, {
           email: profile.email || email,
           name: profile.display_name || profile.first_name,
           signup_date: profile.created_at || new Date().toISOString(),

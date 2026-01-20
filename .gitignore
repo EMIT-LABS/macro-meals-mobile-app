@@ -184,3 +184,4 @@ stallion-temp-*/
 proguard-merged-config.txt
 .cursor/
 .env.local
+gradle.zip
