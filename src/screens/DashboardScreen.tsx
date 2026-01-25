@@ -163,15 +163,7 @@ export const DashboardScreen: React.FC = () => {
           },
         });
 
-        posthog.track({
-          name: 'greeting_displayed',
-          properties: {
-            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
-            user_id: profile?.id,
-            platform: Platform.OS,
-            first_name: profile?.first_name,
-          },
-        });
+    
       }
 
       // Macro summary displayed tracking
@@ -240,6 +232,21 @@ export const DashboardScreen: React.FC = () => {
           },
         });
       }
+        if (macros && todayMealsSum) {
+        posthog.track({
+          name: 'macro_breakdown_displayed',
+          properties: {
+            user_id: profile?.id,
+            platform: Platform.OS,
+            carbs: todayMealsSum.carbs,
+            carbs_goal: macros.carbs,
+            fat: todayMealsSum.fat,
+            fat_goal: macros.fat,
+            protein: todayMealsSum.protein,
+            protein_goal: macros.protein,
+          },
+        });
+      }
     }
   }, [
     isLoading,
@@ -250,6 +257,7 @@ export const DashboardScreen: React.FC = () => {
     loggedMeals,
     todayMealsSum,
     mixpanel,
+    posthog
   ]);
 
   // useEffect(() => {
@@ -388,9 +396,27 @@ export const DashboardScreen: React.FC = () => {
         platform: Platform.OS,
       },
     });
+     posthog?.track({
+      name: 'see_nearby_meals_clicked',
+      properties: {
+      $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+      $screen_name: 'DashboardScreen',
+        user_id: profile?.id,
+        platform: Platform.OS,
+      },
+    });
     mixpanel?.track({
       name: 'meal_finder_opened_from_dashboard',
       properties: {
+        user_id: profile?.id,
+        platform: Platform.OS,
+      },
+    });
+      posthog?.track({
+      name: 'meal_finder_opened_from_dashboard',
+      properties: {
+       $current_url: 'DashboardScreen', 
+        $screen_name: 'DashboardScreen',
         user_id: profile?.id,
         platform: Platform.OS,
       },
@@ -402,6 +428,16 @@ export const DashboardScreen: React.FC = () => {
     mixpanel?.track({
       name: 'log_first_meal_clicked',
       properties: {
+        user_id: profile?.id,
+        platform: Platform.OS,
+      },
+    });
+   posthog?.track({
+      name: 'log_first_meal_clicked',
+      properties: {
+        $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+        $screen_name: 'dashboard',
+        meal_count: loggedMeals.length,
         user_id: profile?.id,
         platform: Platform.OS,
       },
@@ -513,6 +549,14 @@ export const DashboardScreen: React.FC = () => {
               <TouchableOpacity
                 onPress={() => {
                   mixpanel?.track({
+                    name: 'notifications_icon_clicked',
+                    properties: {
+                      user_id: profile?.id,
+                      platform: Platform.OS,
+                      unread_count: unreadCount,
+                    },
+                  });
+                   posthog?.track({
                     name: 'notifications_icon_clicked',
                     properties: {
                       user_id: profile?.id,
