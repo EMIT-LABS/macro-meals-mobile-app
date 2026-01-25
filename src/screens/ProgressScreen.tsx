@@ -1,5 +1,6 @@
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -45,6 +46,8 @@ const ProgressScreen = () => {
     useProgressStore();
   const [refreshing, setRefreshing] = useState(false);
   const mixpanel = useMixpanel();
+    const posthog = usePosthog();
+
 
   useEffect(() => {
     console.log(`ProgressScreen: Fetching data for period: ${selectedRange}`);
@@ -61,6 +64,16 @@ const ProgressScreen = () => {
   useEffect(() => {
     if (data && macroBarData.length > 0) {
       mixpanel?.track({
+        name: 'progression_screen_viewed',
+        properties: {
+          entry_point: 'app_tab',
+          default_period: selectedRange,
+          start_date: data?.start_date,
+          end_date: data?.end_date,
+          chart_points_count: macroBarData.length,
+        },
+      });
+      posthog?.track({
         name: 'progression_screen_viewed',
         properties: {
           entry_point: 'app_tab',
@@ -124,6 +137,15 @@ const ProgressScreen = () => {
         end_date: data?.end_date,
       },
     });
+      posthog?.track({
+      name: 'progress_data_fetch_failed',
+      properties: {
+        error_type: 'server',
+        period: selectedRange,
+        start_date: data?.start_date,
+        end_date: data?.end_date,
+      },
+    });
     console.error('Error processing macro data:', err);
     macroBarData = [];
   }
@@ -168,11 +190,30 @@ const ProgressScreen = () => {
           data_source: 'local',
         },
       });
+        posthog?.track({
+        name: 'progress_chart_rendered',
+        properties: {
+          period: selectedRange,
+          start_date: data?.start_date,
+          end_date: data?.end_date,
+          chart_points_count: macroBarData.length,
+          total_days_covered: macroBarData.length,
+          data_source: 'local',
+        },
+      });
     }
   }, [loading, hasNonZeroData, macroBarData.length, selectedRange, data]);
   useEffect(() => {
     if (!loading && !hasNonZeroData && data) {
       mixpanel?.track({
+        name: 'progress_chart_empty_state_shown',
+        properties: {
+          period: selectedRange,
+          start_date: data?.start_date,
+          end_date: data?.end_date,
+        },
+      });
+      posthog?.track({
         name: 'progress_chart_empty_state_shown',
         properties: {
           period: selectedRange,
@@ -245,6 +286,16 @@ const ProgressScreen = () => {
               key={r.value}
               onPress={() => {
                 mixpanel?.track({
+                  name: 'progress_period_selected',
+                  properties: {
+                    from_period: selectedRange,
+                    to_period: r.value,
+                    start_date: data?.start_date,
+                    end_date: data?.end_date,
+                    chart_points_count: macroBarData.length,
+                  },
+                });
+                posthog?.track({
                   name: 'progress_period_selected',
                   properties: {
                     from_period: selectedRange,
