@@ -28,6 +28,7 @@ import { getMeals, mealService } from '../services/mealService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
 import { usePosthog } from '@macro-meals/posthog_service/src';
+import DeviceInfo from 'react-native-device-info';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -108,6 +109,21 @@ const AddMeal: React.FC = () => {
   const mixpanel = useMixpanel();
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
+        posthog?.track({
+          name: 'meals_page_viewed',
+            properties: {
+                      platform: Platform.OS,
+                      app_version: DeviceInfo.getVersion(),
+                      selected_date: selectedRange,
+                      date_range_start:customRange.endDate,
+                       date_range_end:customRange.endDate,
+                       total_meals_count:meals.length,
+
+                    }
+           
+          
+          });
+
    
   }, []);
 
@@ -171,6 +187,13 @@ const AddMeal: React.FC = () => {
         name: 'meals_day_summary_displayed',
         properties: {
           days_displayed: Object.keys(mealsByMonth).length,
+        },
+      });
+       posthog?.track({
+        name: 'meals_day_summary_displayed',
+        properties: {
+          days_displayed: Object.keys(mealsByMonth).length,
+          // remaining_calories:
         },
       });
     }
@@ -316,7 +339,11 @@ const AddMeal: React.FC = () => {
               await mealService.deleteMeal(mealId);
               mixpanel?.track({
                 name: 'meal_deleted',
-                properties: { meal_id: mealId },
+                properties: { meal_id: mealId, selected_date:selectedRange },
+              });
+               posthog?.track({
+                name: 'meal_deleted',
+                properties: { meal_id: mealId, selected_date:selectedRange  },
               });
               // Remove meal from store immediately
               deleteLoggedMeal(mealId);
@@ -364,6 +391,12 @@ const AddMeal: React.FC = () => {
 
   const showFilterSheet = () => {
     mixpanel?.track({ name: 'meals_filter_icon_clicked' });
+        posthog?.track({ name: 'meals_filter_icon_clicked',
+          properties:{
+
+          }
+         });
+
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -421,6 +454,15 @@ const AddMeal: React.FC = () => {
                   setSelectedRange(newRange);
                   if (newRange === 'custom') {
                     mixpanel?.track({
+                      name: 'custom_date_picker_opened',
+                      properties: {
+                        current_view_period: selectedRange,
+                        prefilled_start_date: customRange.startDate,
+                        prefilled_end_date: customRange.endDate,
+                        entry_point: 'meals_page',
+                      },
+                    });
+                      posthog?.track({
                       name: 'custom_date_picker_opened',
                       properties: {
                         current_view_period: selectedRange,
@@ -722,6 +764,14 @@ const AddMeal: React.FC = () => {
                                               <TouchableOpacity
                                                 onPress={() => {
                                                   mixpanel?.track({
+                                                    name: 'edit_meal_from_meals_clicked',
+                                                    properties: {
+                                                      meal_id: meal.id,
+                                                      selected_date:
+                                                        meal.meal_time,
+                                                    },
+                                                  });
+                                                  posthog?.track({
                                                     name: 'edit_meal_from_meals_clicked',
                                                     properties: {
                                                       meal_id: meal.id,
@@ -1221,6 +1271,20 @@ const AddMeal: React.FC = () => {
           setCustomPickerOpen(false);
           setCustomRange({ startDate, endDate });
           mixpanel?.track({
+            name: 'custom_date_range_selected',
+            properties: {
+              date_range_start: startDate?.toISOString() ?? null,
+              date_range_end: endDate?.toISOString() ?? null,
+              total_days:
+                startDate && endDate
+                  ? Math.ceil(
+                      (endDate.getTime() - startDate.getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    ) + 1
+                  : null,
+            },
+          });
+           posthog?.track({
             name: 'custom_date_range_selected',
             properties: {
               date_range_start: startDate?.toISOString() ?? null,
