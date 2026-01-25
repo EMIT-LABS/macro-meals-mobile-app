@@ -23,6 +23,7 @@ import DiscoverCard from '../components/DiscoverCard';
 import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 // Interface for the search API response
 interface SearchMealResponse {
@@ -72,9 +73,17 @@ const ScanScreenType: React.FC = () => {
 
   const profile = useStore(state => state?.profile) || null;
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   useEffect(() => {
     mixpanel?.track({
+      name: 'add_meal_screen_opened',
+      properties: {
+        entry_point: 'main_hub', // or actual value
+        // is_first_time_user: isFirstTimeUser, // should be boolean
+      },
+    });
+     posthog?.track({
       name: 'add_meal_screen_opened',
       properties: {
         entry_point: 'main_hub', // or actual value
@@ -134,6 +143,13 @@ const ScanScreenType: React.FC = () => {
                     results_count: results.length,
                   },
                 });
+                  posthog?.track({
+                  name: 'local_search_results_viewed',
+                  properties: {
+                    query: trimmedQuery,
+                    results_count: results.length,
+                  },
+                });
               } catch (error) {
                 console.error('Error in local search:', error);
                 if (
@@ -169,9 +185,22 @@ const ScanScreenType: React.FC = () => {
                     results_count: results.length,
                   },
                 });
+                posthog?.track({
+                  name: 'global_search_results_viewed',
+                  properties: {
+                    query: trimmedQuery,
+                    results_count: results.length,
+                  },
+                });
 
                 // Track combined search query
                 mixpanel?.track({
+                  name: 'search_query_submitted',
+                  properties: {
+                    query: trimmedQuery,
+                  },
+                });
+                 posthog?.track({
                   name: 'search_query_submitted',
                   properties: {
                     query: trimmedQuery,
@@ -232,6 +261,10 @@ const ScanScreenType: React.FC = () => {
    */
   const handleOpenCamera = () => {
     mixpanel?.track({
+      name: 'add_meal_option_selected',
+      properties: { option_type: 'scan_meal' },
+    });
+     posthog?.track({
       name: 'add_meal_option_selected',
       properties: { option_type: 'scan_meal' },
     });
@@ -349,6 +382,13 @@ const ScanScreenType: React.FC = () => {
 
   const handleClose = () => {
     mixpanel?.track({
+      name: 'add_meal_closed',
+      properties: {
+        entry_point: 'main_hub',
+        // return_destination: destination,
+      },
+    });
+    posthog?.track({
       name: 'add_meal_closed',
       properties: {
         entry_point: 'main_hub',
@@ -558,6 +598,19 @@ const ScanScreenType: React.FC = () => {
                                     <TouchableOpacity
                                       onPress={() => {
                                         mixpanel?.track({
+                                          name: isLocal
+                                            ? 'local_search_result_add_clicked'
+                                            : 'global_search_result_add_clicked',
+                                          properties: {
+                                            result_id: item.id,
+                                            meal_name: item.name,
+                                            calories: item.calories,
+                                            protein_g: item.protein,
+                                            carbs_g: item.carbs,
+                                            fats_g: item.fat,
+                                          },
+                                        });
+                                         posthog?.track({
                                           name: isLocal
                                             ? 'local_search_result_add_clicked'
                                             : 'global_search_result_add_clicked',

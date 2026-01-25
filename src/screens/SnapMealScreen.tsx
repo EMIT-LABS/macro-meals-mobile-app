@@ -6,6 +6,7 @@ import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Button,
   Image,
   SafeAreaView,
   StatusBar,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { scanService } from '../services/scanService';
 import { RootStackParamList } from '../types/navigation';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 /**
  * SnapMealScreen component allows users to take photos of their meals
@@ -35,9 +37,16 @@ const SnapMealScreen = () => {
   const [_isAlertVisible, setIsAlertVisible] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   useEffect(() => {
     mixpanel?.track({
+      name: 'meal_scan_opened',
+      properties: {
+        entry_point: 'add_meal',
+      },
+    });
+    posthog?.track({
       name: 'meal_scan_opened',
       properties: {
         entry_point: 'add_meal',
@@ -75,6 +84,17 @@ const SnapMealScreen = () => {
 
       if (data && data.items && data.items.length > 0) {
         mixpanel?.track({
+          name: 'meal_scanned',
+          properties: {
+            match_found: true,
+            meal_name: data.items[0].name,
+            calories: data.items[0].calories,
+            protein_g: data.items[0].protein,
+            carbs_g: data.items[0].carbs,
+            fats_g: data.items[0].fat,
+          },
+        });
+           posthog?.track({
           name: 'meal_scanned',
           properties: {
             match_found: true,
@@ -124,6 +144,12 @@ const SnapMealScreen = () => {
    */
   const handleBack = () => {
     mixpanel?.track({
+      name: 'meal_scan_back_to_add_meal',
+      properties: {
+        gesture_type: 'button',
+      },
+    });
+     posthog?.track({
       name: 'meal_scan_back_to_add_meal',
       properties: {
         gesture_type: 'button',

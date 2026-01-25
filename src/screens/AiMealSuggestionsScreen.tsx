@@ -15,6 +15,7 @@ import useStore from "../store/useStore";
 import { CircularProgress } from "src/components/CircularProgress";
 import { mealService } from "../services/mealService";
 import { useMixpanel } from "@macro-meals/mixpanel";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type RootStackParamList = {
   AddMeal: { analyzedData?: any };
@@ -66,6 +67,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
   };
   const [macroData, setMacroData] = useState<MacroData[]>(defaultMacroData);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   const trackAIRecipeViewed = async () => {
     if (!mixpanel) return;
@@ -86,6 +88,10 @@ const AiMealSuggestionsScreen: React.FC = () => {
     }
 
     mixpanel.track({
+      name: "ai_recipe_viewed",
+      properties,
+    });
+   posthog.track({
       name: "ai_recipe_viewed",
       properties,
     });
@@ -116,6 +122,12 @@ const AiMealSuggestionsScreen: React.FC = () => {
 
   const handleRecipeSelect = (recipe: Recipe) => {
     mixpanel?.track({
+      name: "ai_recipe_selected",
+      properties: {
+        recipe_id: recipe.name,
+      },
+    });
+       posthog?.track({
       name: "ai_recipe_selected",
       properties: {
         recipe_id: recipe.name,
