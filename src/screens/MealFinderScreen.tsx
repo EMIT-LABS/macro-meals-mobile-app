@@ -25,6 +25,8 @@ import { MealFinderMapView } from '../components/meal_finder_components/MealFind
 import { RemainingTodayView } from '../components/meal_finder_components/RemainingTodayView';
 import { mealService } from '../services/mealService';
 import { Meal } from '../types';
+import { usePosthog } from '@macro-meals/posthog_service/src';
+
 
 interface MacroData {
   label: 'Protein' | 'Carbs' | 'Fat';
@@ -175,6 +177,27 @@ const MealFinderScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const isDataLoaded = !locationLoading && meals.length > 0;
+  const posthog = usePosthog()
+
+
+
+  useEffect(()=>{
+    // Track regular events
+            posthog.track({
+              name: 'dashboard_viewed',
+              properties: {
+                entry_point:'meal_finder',
+                macros:macrosPreferences,
+                view_type:activeTab
+
+              },
+            });
+  })
+
+
+
+
+
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -392,6 +415,12 @@ const MealFinderScreen: React.FC = () => {
         defaultResults: meals,
       });
     }, 100);
+    posthog.track({
+      name:'search_bar_engaged',
+      properties:{
+        entry_point:'meal_finder_screen'
+      }
+    })
   }, [navigation, meals]);
 
   const handleSelectCurrentLocation = async () => {
@@ -512,6 +541,7 @@ const MealFinderScreen: React.FC = () => {
 
       {/* Search Bar - Only show when Map tab is active and data has loaded */}
       {activeTab === 'map' && isDataLoaded && (
+        
         <View className="px-5">
           <View className="flex-row items-center bg-white/90 rounded-3xl px-4 py-3 shadow-lg">
             <Ionicons name="search" size={20} color="#666" />
@@ -619,7 +649,17 @@ const MealFinderScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity
-            onPress={() => setActiveTab('map')}
+            onPress={() =>  { if(activeTab){
+                   posthog.track({
+              name: 'viewed_type_toggled',
+              properties: {
+                from_view:activeTab,
+                to_view:'map'
+
+              },
+            });
+            setActiveTab('map')
+              }}}
             className={`flex-1 py-3 rounded-[1000px] ${
               activeTab === 'map'
                 ? 'bg-[#01675B1A] rounded-[96px] text-primary'
@@ -643,7 +683,20 @@ const MealFinderScreen: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setActiveTab('list')}
+            onPress={() => 
+              { if(activeTab){
+                   posthog.track({
+              name: 'viewed_type_toggled',
+              properties: {
+                from_view:activeTab,
+                to_view:'list'
+
+              },
+            });
+            setActiveTab('list')
+              }}
+             
+            }
             className={`flex-1 py-3 rounded-[96px] ${
               activeTab === 'list'
                 ? 'bg-[#01675B1A] rounded-[96px]'
