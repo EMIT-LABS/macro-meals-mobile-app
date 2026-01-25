@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     View,
     Text,
@@ -21,6 +21,7 @@ import { useContext } from 'react';
 import Config from 'react-native-config';
 import { useMixpanel } from '@macro-meals/mixpanel/src';
 import { Platform } from "react-native";
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 
 
@@ -32,6 +33,7 @@ export const GoalSetupScreen: React.FC = () => {
     const { completed, majorStep, setMajorStep, setSubStep, navigateToMajorStep } = useGoalsFlowStore();
     const setHasBeenPromptedForGoals = useStore((state) => state.setHasBeenPromptedForGoals);
     const profile = useStore((state) => state.profile);
+    const posthog = usePosthog()
     
     // Debug profile state
     console.log('🔍 GoalSetup - Component render - Profile:', profile);
@@ -47,7 +49,12 @@ React.useEffect(() => {
     name: "onboarding_welcome_viewed",
     properties: { platform: Platform.OS },
   });
-}, [mixpanel]);
+   posthog?.track({
+    name: "onboarding_welcome_viewed",
+    properties: { platform: Platform.OS },
+  });
+  
+}, [mixpanel, posthog]);
     // Only allow dev_mode to bypass payment in non-production environments
     let devMode = false;
     try {
@@ -80,7 +87,8 @@ React.useEffect(() => {
         // Also log all available values
         debugLogAllValues();
     }, [getValue, debugLogAllValues]);
-    
+
+  
     return (
         <CustomSafeAreaView className="flex-1 bg-white" edges={['left', 'right']}>
             <ScrollView className="relative flex-1 mx-4" contentContainerStyle={{ flexGrow: 1 }}>
@@ -163,6 +171,12 @@ React.useEffect(() => {
                     
                     if (allCompleted) {
                         // Check subscription status from RevenueCat before routing
+                        useEffect(()=>{
+                             posthog?.track({
+                            name: "plan_confirmed",
+                            properties: { platform: Platform.OS },
+                        });
+                        })
                         try {
                             const { revenueCatService } = await import('../services/revenueCatService');
                             

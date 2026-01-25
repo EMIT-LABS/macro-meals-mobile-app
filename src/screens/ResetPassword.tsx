@@ -19,6 +19,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { RootStackParamList } from "src/types/navigation";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type ResetPasswordScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -46,9 +47,15 @@ export const ResetPasswordScreen: React.FC = () => {
   });
   const navigation = useNavigation<ResetPasswordScreenNavigationProp>();
   const mixpanel = useMixpanel();
+    const posthog = usePosthog();
+
 
   React.useEffect(() => {
     mixpanel?.track({
+      name: "reset_password_screen_viewed",
+      properties: { platform: Platform.OS },
+    });
+     posthog?.track({
       name: "reset_password_screen_viewed",
       properties: { platform: Platform.OS },
     });
@@ -84,6 +91,13 @@ export const ResetPasswordScreen: React.FC = () => {
         platform: Platform.OS,
       },
     });
+     posthog?.track({
+      name: "reset_password_attempted",
+      properties: {
+        email_domain: routeEmail?.split("@")[1] || "",
+        platform: Platform.OS,
+      },
+    });
     setIsLoading(true);
     const resetPasswordData = {
       email: routeEmail,
@@ -108,6 +122,13 @@ export const ResetPasswordScreen: React.FC = () => {
     try {
       await authService.resetPassword(resetPasswordData);
       mixpanel?.track({
+        name: "reset_password_successful",
+        properties: {
+          email_domain: routeEmail?.split("@")[1] || "",
+          platform: Platform.OS,
+        },
+      });
+       posthog?.track({
         name: "reset_password_successful",
         properties: {
           email_domain: routeEmail?.split("@")[1] || "",
@@ -179,6 +200,14 @@ export const ResetPasswordScreen: React.FC = () => {
         errorMessage = error.message;
       }
       mixpanel?.track({
+        name: "reset_password_failed",
+        properties: {
+          email_domain: routeEmail?.split("@")[1] || "",
+          error_type: errorMessage,
+          platform: Platform.OS,
+        },
+      });
+      posthog?.track({
         name: "reset_password_failed",
         properties: {
           email_domain: routeEmail?.split("@")[1] || "",

@@ -1,3 +1,4 @@
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import Slider from '@react-native-community/slider';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
@@ -14,6 +15,7 @@ export const GoalsProgressRate: React.FC = () => {
   const weightKg = useGoalsFlowStore(s => s.weightKg);
   const targetWeight = useGoalsFlowStore(s => s.targetWeight);
   const fitnessGoal = useGoalsFlowStore(s => s.fitnessGoal);
+  const posthog = usePosthog()
 
   // Get current weight based on unit
   const currentWeight =
@@ -51,6 +53,42 @@ export const GoalsProgressRate: React.FC = () => {
       recommendedMax: 0,
     };
   };
+
+
+  useEffect(()=>{
+     if (fitnessGoal) {
+            posthog?.track({
+                name: 'fitness_goal_selected',
+                properties: {
+                    platform: Platform.OS,
+                },
+            });
+        }
+         if (targetWeight) {
+            posthog?.track({
+                name: 'target_weight_selected',
+                properties: {
+                    platform: Platform.OS,
+                },
+            });
+        }
+         if (progressRate) {
+            posthog?.track({
+                name: 'progress_rate_selected',
+                properties: {
+                    platform: Platform.OS,
+                },
+            });
+        }
+           if (progressRate && targetWeight && fitnessGoal) {
+            posthog?.track({
+                name: 'goal_completed',
+                properties: {
+                    platform: Platform.OS,
+                },
+            });
+        }
+  },[fitnessGoal,targetWeight, progressRate,])
 
   // Default value if not set, otherwise use recommended rate
   const value =

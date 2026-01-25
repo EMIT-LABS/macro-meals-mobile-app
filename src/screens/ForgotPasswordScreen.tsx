@@ -16,6 +16,7 @@ import CustomTouchableOpacityButton from "../components/CustomTouchableOpacityBu
 import BackButton from "../components/BackButton";
 import { RootStackParamList } from "src/types/navigation";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type ForgotPasswordScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -36,6 +37,8 @@ export const ForgotPasswordScreen: React.FC = () => {
   const [errors, setErrors] = useState({ email: "" });
   const [touched, setTouched] = useState(false);
   const mixpanel = useMixpanel();
+    const posthog = usePosthog();
+
   const eventsFired = useRef(false);
 
   useEffect(() => {
@@ -46,7 +49,14 @@ export const ForgotPasswordScreen: React.FC = () => {
         properties: { platform: Platform.OS },
       });
     }
-  }, [mixpanel]);
+      if (posthog && !eventsFired.current) {
+      eventsFired.current = true;
+      posthog.track({
+        name: "forgot_password_screen_viewed",
+        properties: { platform: Platform.OS },
+      });
+    }
+  }, [mixpanel, posthog]);
 
   // Validation function for email
   const validateEmail = (text: string) => {
@@ -78,11 +88,25 @@ export const ForgotPasswordScreen: React.FC = () => {
         platform: Platform.OS,
       },
     });
+      posthog?.track({
+      name: "send_reset_code_attempted",
+      properties: {
+        email_domain: email.split("@")[1] || "",
+        platform: Platform.OS,
+      },
+    });
     setIsLoading(true);
 
     try {
       await authService.forgotPassword(email);
       mixpanel?.track({
+        name: "send_reset_code_successful",
+        properties: {
+          email_domain: email.split("@")[1] || "",
+          platform: Platform.OS,
+        },
+      });
+      posthog?.track({
         name: "send_reset_code_successful",
         properties: {
           email_domain: email.split("@")[1] || "",
@@ -113,6 +137,14 @@ export const ForgotPasswordScreen: React.FC = () => {
           platform: Platform.OS,
         },
       });
+       posthog?.track({
+        name: "send_reset_code_failed",
+        properties: {
+          email_domain: email.split("@")[1] || "",
+          error_type: errorMessage,
+          platform: Platform.OS,
+        },
+      });
 
       Alert.alert("Forgot Password Failed", errorMessage, [{ text: "OK" }]);
     } finally {
@@ -125,6 +157,10 @@ export const ForgotPasswordScreen: React.FC = () => {
 
 const handleBackToSignIn = () => {
   mixpanel?.track({
+    name: "back_to_sign_in_clicked",
+    properties: { platform: Platform.OS },
+  });
+   posthog?.track({
     name: "back_to_sign_in_clicked",
     properties: { platform: Platform.OS },
   });
@@ -160,7 +196,7 @@ const handleBackToSignIn = () => {
               }`}
             >
               <TextInput
-                className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                className={`border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]`}
                 placeholder="Enter your email"
                 value={email}
                 onChangeText={(text) => {

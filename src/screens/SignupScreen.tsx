@@ -20,6 +20,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { RootStackParamList } from "../types/navigation";
 import { useMixpanel } from "@macro-meals/mixpanel";
 import DeviceInfo from 'react-native-device-info';
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 
 type NavigationProp = NativeStackNavigationProp<
@@ -35,6 +36,7 @@ export const SignupScreen: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
 
   const [errors, setErrors] = useState({
     email: "",
@@ -55,6 +57,29 @@ export const SignupScreen: React.FC = () => {
       }
     });
   }
+    posthog.track({
+      name:'signup_screen_viewed' ,
+      properties:{
+        platform:Platform.OS,
+        app_version:DeviceInfo.getVersion()
+      } 
+
+      
+
+
+    })
+
+
+    console.log('Event tracked:', {
+    name: 'signup_screen_viewed',
+    properties: {
+        platform: Platform.OS,
+        app_version: DeviceInfo.getVersion()
+    }
+});
+    
+  
+
 }, []);
 
   const navigation = useNavigation<NavigationProp>();
@@ -71,12 +96,16 @@ export const SignupScreen: React.FC = () => {
       terms: "",
     };
 
+    const emailRegex = (/^[A-Za-z\._\-0-9]*[@][A-Za-z]*[\.][a-z]{2,4}$/)
+
+
+
     if (!email) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email is invalid";
-      isValid = false;
+        newErrors.email = "Email is required";
+        isValid = false;
+    } else if (!emailRegex) {
+        newErrors.email = "Email is invalid. It must end with .com or .cam";
+        isValid = false;
     }
 
     // if (nickname && nickname.length > 30) {
@@ -125,6 +154,17 @@ export const SignupScreen: React.FC = () => {
     });
   }
 
+  if (posthog) {
+    posthog.track({
+      name: "signup_attempted",
+      properties: {
+        email_domain: email.split("@")[1] || "",
+        has_referral_code: !!referralCode.trim(),
+        platform: Platform.OS,
+      }
+    });
+  }
+
   setIsLoading(true);
 
   try {
@@ -154,6 +194,20 @@ export const SignupScreen: React.FC = () => {
         },
       });
       mixpanel?.register({ signup_time: signUpTime });
+    }
+
+    if (posthog) {
+      posthog.identify(userId);
+      posthog.track({
+        name: "signup_successful",
+        properties: {
+          signup_method: "email",
+          platform: Platform.OS,
+          signup_time: signUpTime,
+          has_referral_code: !!referralCode.trim(),
+        },
+      });
+      posthog?.register({ signup_time: signUpTime });
     }
 
     navigation.navigate("EmailVerificationScreen", {
@@ -191,6 +245,17 @@ export const SignupScreen: React.FC = () => {
     // tracking signup failed
       if (mixpanel) {
         mixpanel.track({
+          name: "signup_failed",
+          properties: {
+            email_domain: email.split("@")[1] || "",
+            error_type: errorMessage,
+            platform: Platform.OS,
+          }
+        });
+      }
+
+       if (posthog) {
+        posthog.track({
           name: "signup_failed",
           properties: {
             email_domain: email.split("@")[1] || "",
@@ -251,7 +316,7 @@ export const SignupScreen: React.FC = () => {
                         ...prev,
                         email: "Email is required",
                       }));
-                    } else if (!/\S+@\S+\.\S+/.test(text)) {
+                    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com)$/i.test(text)) {
                       setErrors((prev) => ({
                         ...prev,
                         email: "Email is invalid",
