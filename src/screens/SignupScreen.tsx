@@ -74,7 +74,7 @@ export const SignupScreen: React.FC = () => {
     if (!email) {
       newErrors.email = "Email is required";
       isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(email)) {
       newErrors.email = "Email is invalid";
       isValid = false;
     }
