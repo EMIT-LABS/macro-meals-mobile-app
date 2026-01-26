@@ -1,4 +1,5 @@
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 import React, { useState } from "react";
 import {
   View,
@@ -28,9 +29,17 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
   console.log("profile is:", profile);
   const setProfile = useStore((state) => state.setProfile);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   const handleAvatarEdit = async () => {
     mixpanel?.track({
+      name: "avatar_edit_clicked",
+      properties: {
+        user_id: profile?.id,
+        email: profile?.email,
+      },
+    });
+     posthog?.track({
       name: "avatar_edit_clicked",
       properties: {
         user_id: profile?.id,
@@ -79,12 +88,29 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
                 attempted_url: avatarUrl,
               },
             });
+            posthog?.track({
+              name: "avatar_upload_failed",
+              properties: {
+                user_id: profile?.id,
+                email: profile?.email,
+                error_message: e.nativeEvent.error,
+                attempted_url: avatarUrl,
+              },
+            });
             setJustUploaded(false);
           }
         }}
         onLoad={() => {
           if (justUploaded) {
             mixpanel?.track({
+              name: "avatar_upload_success",
+              properties: {
+                user_id: profile?.id,
+                email: profile?.email,
+                avatar_url: avatarUrl,
+              },
+            });
+            posthog?.track({
               name: "avatar_upload_success",
               properties: {
                 user_id: profile?.id,

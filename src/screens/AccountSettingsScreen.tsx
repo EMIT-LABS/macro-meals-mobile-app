@@ -23,6 +23,7 @@ import { macroMealsCrashlytics } from "@macro-meals/crashlytics";
 import { useGoalsFlowStore } from "src/store/goalsFlowStore";
 import Header from "src/components/Header";
 import { useSyncBodyMetricToBackend } from "src/components/hooks/useBodyMetricsUpdate";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 function debounce(func: (...args: any[]) => void, wait: number) {
   let timeout: NodeJS.Timeout;
@@ -63,6 +64,7 @@ export default function AccountSettingsScreen() {
   const [tempWeightLb, setTempWeightLb] = useState<number | null>(null);
   const inputRefs = useRef<{ [key: string]: TextInput | null }>({});
   const userRef = useRef<any>(null);
+  const posthog = usePosthog()
   const { setAuthenticated } = useStore();
   const debouncedPatch = useRef<{ [key: string]: (...args: any[]) => void }>(
     {}
@@ -77,6 +79,15 @@ export default function AccountSettingsScreen() {
           user_id: _user.id,
           email: _user.email,
           is_pro: _user.is_pro,
+        },
+      });
+      posthog?.track({
+        name: "account_settings_screen_viewed",
+        properties: {
+          user_id: _user.id,
+          email: _user.email,
+          is_pro: _user.is_pro,
+          platform:Platform.OS
         },
       });
     }
@@ -235,6 +246,14 @@ export default function AccountSettingsScreen() {
               new_value: value,
             },
           });
+          posthog?.track({
+            name: "account_field_updated",
+            properties: {
+              user_id: userRef.current?.id,
+              field: field,
+              new_value: value,
+            },
+          });
           console.log("[PATCH] Backend update successful");
           // Update Mixpanel user properties
           updateMixpanelUserProperties(patch);
@@ -305,6 +324,14 @@ export default function AccountSettingsScreen() {
         to_unit: newUnit,
       },
     });
+      posthog?.track({
+      name: "height_unit_toggled",
+      properties: {
+        user_id: _user?.id,
+        from_unit: height_unit_preference,
+        to_unit: newUnit,
+      },
+    });
     if (
       newUnit === "imperial" &&
       typeof heightCm === "number" &&
@@ -336,6 +363,14 @@ export default function AccountSettingsScreen() {
   const handleWeightUnitChange = (newUnit: "imperial" | "metric") => {
     if (newUnit === weight_unit_preference) return;
     mixpanel?.track({
+      name: "weight_unit_toggled",
+      properties: {
+        user_id: _user?.id,
+        from_unit: weight_unit_preference,
+        to_unit: newUnit,
+      },
+    });
+     posthog?.track({
       name: "weight_unit_toggled",
       properties: {
         user_id: _user?.id,
@@ -427,6 +462,14 @@ export default function AccountSettingsScreen() {
         email: userRef.current?.email,
       },
     });
+     posthog?.track({
+      name: "delete_account_clicked",
+      properties: {
+        user_id: userRef.current?.id,
+        email: userRef.current?.email,
+        entry_point:'account_settings'
+      },
+    });
     Alert.alert(
       "Delete Account",
       "Are you sure you want to delete your account? This action cannot be undone.",
@@ -435,6 +478,13 @@ export default function AccountSettingsScreen() {
           text: "Cancel",
           style: "cancel",
           onPress: () => {
+            mixpanel?.track({
+              name: "delete_account_cancelled",
+              properties: {
+                user_id: userRef.current?.id,
+                email: userRef.current?.email,
+              },
+            });
             mixpanel?.track({
               name: "delete_account_cancelled",
               properties: {

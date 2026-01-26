@@ -28,6 +28,7 @@ import { userService } from '../services/userService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
 import ContactSupportDrawer from './ContactSupportDrawer';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -46,6 +47,7 @@ export const SettingsScreen: React.FC = () => {
   const mixpanel = useMixpanel();
   const eventsFired = useRef(false);
   const _devMode = getValue('dev_mode').asBoolean();
+  const posthog =  usePosthog()
 
   // Local state for settings
   const [_units, setUnits] = useState<string>('g/kcal');
@@ -111,8 +113,18 @@ export const SettingsScreen: React.FC = () => {
           entry_point: 'app_tab',
         },
       });
+       posthog.track({
+        name: 'profile_screen_viewed',
+        properties: {
+          user_id: userData.id,
+          email: userData.email,
+          is_pro: userData.is_pro,
+          entry_point: 'app_tab',
+          platform:Platform.OS
+        },
+      });
     }
-  }, [userData.id, mixpanel]);
+  }, [userData.id, mixpanel, posthog]);
 
   /**
    * Handle unit preference change using the same pattern as account settings
@@ -137,6 +149,16 @@ export const SettingsScreen: React.FC = () => {
           previous_unit_preference: userData.unit_preference,
         },
       });
+
+         posthog?.track({
+        name: 'unit_preference_changed',
+        properties: {
+          new_unit_preference: value,
+          previous_unit_preference: userData.unit_preference,
+        },
+      });
+      
+      
 
       setShowUnitsModal(false);
     } catch (error) {
@@ -184,6 +206,20 @@ export const SettingsScreen: React.FC = () => {
                 properties: {
                   user_id: userData.id,
                   email: userData.email,
+                  session_duration_minutes: userData.created_at
+                    ? Math.floor(
+                        (Date.now() - new Date(userData.created_at).getTime()) /
+                          (1000 * 60)
+                      )
+                    : 0,
+                },
+              });
+              posthog?.track({
+                name: 'logout_clicked',
+                properties: {
+                  user_id: userData.id,
+                  email: userData.email,
+                  entry_point:'settings_screen',
                   session_duration_minutes: userData.created_at
                     ? Math.floor(
                         (Date.now() - new Date(userData.created_at).getTime()) /
