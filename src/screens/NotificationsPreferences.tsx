@@ -12,6 +12,7 @@ import CustomSafeAreaView from "../components/CustomSafeAreaView";
 import Header from "../components/Header";
 import { userService } from "../services/userService";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type TogglesState = {
   mealReminders?: boolean;
@@ -32,6 +33,8 @@ export default function NotificationsPreferences() {
   });
   const [showDetails, setShowDetails] = useState(false);
   const mixpanel = useMixpanel();
+    const posthog = usePosthog();
+
 
   useEffect(() => {
     if (!loading.initial && typeof toggles.mealReminders !== "undefined") {
@@ -82,6 +85,13 @@ export default function NotificationsPreferences() {
         properties: {
           notification: "meal_reminders",
           enabled: value,
+        },
+      });
+        posthog?.track({
+        name: "notification_toggle_changed",
+        properties: {
+          toggle_name: "meal_reminders",
+          new_state: value,
         },
       });
     } catch {

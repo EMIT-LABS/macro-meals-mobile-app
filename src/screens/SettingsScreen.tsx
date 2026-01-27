@@ -187,6 +187,20 @@ export const SettingsScreen: React.FC = () => {
    * Handle logout action
    */
   const handleLogout = async () => {
+     posthog?.track({
+                name: 'logout_clicked',
+                properties: {
+                  user_id: userData.id,
+                  email: userData.email,
+                  entry_point:'settings_screen',
+                  session_duration_minutes: userData.created_at
+                    ? Math.floor(
+                        (Date.now() - new Date(userData.created_at).getTime()) /
+                          (1000 * 60)
+                      )
+                    : 0,
+                },
+              });
     Alert.alert(
       'Are you sure you want to log out?',
       '',
@@ -214,20 +228,7 @@ export const SettingsScreen: React.FC = () => {
                     : 0,
                 },
               });
-              posthog?.track({
-                name: 'logout_clicked',
-                properties: {
-                  user_id: userData.id,
-                  email: userData.email,
-                  entry_point:'settings_screen',
-                  session_duration_minutes: userData.created_at
-                    ? Math.floor(
-                        (Date.now() - new Date(userData.created_at).getTime()) /
-                          (1000 * 60)
-                      )
-                    : 0,
-                },
-              });
+             
 
               await authService.logout();
               setAuthenticated(false, '', '');
@@ -255,6 +256,12 @@ export const SettingsScreen: React.FC = () => {
         // Add user_id/email if available
       },
     });
+     posthog?.track({
+      name: 'contact_support_clicked',
+      properties: {
+       entry_point:'settings_screen'
+      },
+    });
     setShowDrawer(true);
   };
 
@@ -263,6 +270,10 @@ export const SettingsScreen: React.FC = () => {
   // };
   const openEmail = () => {
     mixpanel?.track({
+      name: 'submit_feedback_email_opened',
+      properties: {},
+    });
+      posthog?.track({
       name: 'submit_feedback_email_opened',
       properties: {},
     });
@@ -346,7 +357,14 @@ export const SettingsScreen: React.FC = () => {
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
             onPress={() => {
+
               navigation.navigate('AdjustTargets');
+              posthog.track({
+                name:'adjust_goals_entry_clicked',
+                properties:{
+                  entry_point:'setting_screen'
+                }
+              })
             }}
           />
           <SectionItem

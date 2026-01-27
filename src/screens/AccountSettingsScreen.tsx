@@ -232,6 +232,7 @@ export default function AccountSettingsScreen() {
         console.log(`[PATCH] Field: ${field}, Value:`, value); // <-- ADD THIS
         if (!value || value === userRef.current[field]) return;
 
+        const oldValue = userRef.current[field]; 
         setUpdating((prev) => ({ ...prev, [field]: true }));
         try {
           const patch: any = {};
@@ -251,10 +252,11 @@ export default function AccountSettingsScreen() {
             properties: {
               user_id: userRef.current?.id,
               field: field,
+              old_value:oldValue,
               new_value: value,
             },
           });
-          console.log("[PATCH] Backend update successful");
+          console.log("[PATCH] Backend update successful", oldValue);
           // Update Mixpanel user properties
           updateMixpanelUserProperties(patch);
 
@@ -485,11 +487,12 @@ export default function AccountSettingsScreen() {
                 email: userRef.current?.email,
               },
             });
-            mixpanel?.track({
+            posthog?.track({
               name: "delete_account_cancelled",
               properties: {
                 user_id: userRef.current?.id,
                 email: userRef.current?.email,
+                dialog_state:'cancel',
               },
             });
           },
@@ -501,6 +504,20 @@ export default function AccountSettingsScreen() {
             try {
               // Track account deletion in Mixpanel
               mixpanel?.track({
+                name: "delete_account_confirmed",
+                properties: {
+                  user_id: userRef.current?.id,
+                  email: userRef.current?.email,
+                  account_age_days: userRef.current?.created_at
+                    ? Math.floor(
+                        (Date.now() -
+                          new Date(userRef.current.created_at).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )
+                    : 0,
+                },
+              });
+               posthog?.track({
                 name: "delete_account_confirmed",
                 properties: {
                   user_id: userRef.current?.id,

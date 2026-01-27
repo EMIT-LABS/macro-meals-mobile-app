@@ -16,6 +16,7 @@ import { CircularProgress } from "../components/CircularProgress";
 import { fetchUserPreferences, updateMacros } from "src/services/macroService";
 import axios from "axios";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type MacroKey = "protein" | "fat" | "carbs";
 type MacroResponse = {
@@ -38,6 +39,8 @@ const AdjustTargetsScreen: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
   const mixpanel = useMixpanel();
+    const posthog = usePosthog();
+
 
   // Fetch macros on mount
   useEffect(() => {
@@ -73,6 +76,16 @@ const AdjustTargetsScreen: React.FC = () => {
         name: "adjust_targets_screen_viewed",
         properties: {},
       });
+      posthog?.track({
+        name: "adjust_targets_screen_viewed",
+        properties: {
+          current_calories:macros.calories,
+          current_protein:macros.calories,
+          current_carbs:macros.carbs,
+          current_fats:macros.fat,
+
+        },
+      });
     }
   }, [macros]);
 
@@ -86,6 +99,15 @@ const AdjustTargetsScreen: React.FC = () => {
       properties: {
         field: macro.key,
         label: macro.label,
+      },
+    });
+     posthog?.track({
+      name: "targets_field_updated",
+      properties: {
+        field_name: macro.key,
+        label: macro.label,
+        old_value:selectedMacro,
+        new_value:''
       },
     });
     setSelectedMacro(macro);
@@ -118,6 +140,13 @@ const AdjustTargetsScreen: React.FC = () => {
       };
       await updateMacros(updatedMacros);
       mixpanel?.track({
+        name: "targets_saved",
+        properties: {
+          updated_field: selectedMacro.key,
+          new_value: num,
+        },
+      });
+       posthog?.track({
         name: "targets_saved",
         properties: {
           updated_field: selectedMacro.key,

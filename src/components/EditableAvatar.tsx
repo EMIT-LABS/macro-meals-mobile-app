@@ -44,6 +44,7 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
       properties: {
         user_id: profile?.id,
         email: profile?.email,
+        avatar_current_state:avatarUrl
       },
     });
     await handleEditAvatar((newProfile: any) => {
@@ -57,6 +58,8 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
   const avatarUrl = profile?.avatar_url
     ? `${profile.avatar_url}?t=${avatarVersion}` //cache busting to force reload
     : undefined;
+
+
 
   return (
     <TouchableOpacity
@@ -116,6 +119,9 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
                 user_id: profile?.id,
                 email: profile?.email,
                 avatar_url: avatarUrl,
+                file_type:'',
+                file_size:"",
+                source:''
               },
             });
             setJustUploaded(false);

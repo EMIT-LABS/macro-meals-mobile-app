@@ -16,6 +16,7 @@ import CustomTouchableOpacityButton from "../components/CustomTouchableOpacityBu
 import BackButton from "../components/BackButton";
 import { RootStackParamList } from "src/types/navigation";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type ForgotPasswordScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -37,6 +38,7 @@ export const ForgotPasswordScreen: React.FC = () => {
   const [touched, setTouched] = useState(false);
   const mixpanel = useMixpanel();
   const eventsFired = useRef(false);
+  const posthog = usePosthog()
 
   useEffect(() => {
     if (mixpanel && !eventsFired.current) {
