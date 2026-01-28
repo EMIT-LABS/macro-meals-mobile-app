@@ -193,7 +193,12 @@ const AddMeal: React.FC = () => {
         name: 'meals_day_summary_displayed',
         properties: {
           days_displayed: Object.keys(mealsByMonth).length,
-          // remaining_calories:
+          remaining_calories:macros.calories - periodMealsSum,
+          consumed_calories:periodMealsSum,
+          goal_calories:macros.calories,
+          protein_g: macros.protein,
+          carbs_g:macros.carbs,
+          fat_g:macros.fat
         },
       });
     }
@@ -391,11 +396,7 @@ const AddMeal: React.FC = () => {
 
   const showFilterSheet = () => {
     mixpanel?.track({ name: 'meals_filter_icon_clicked' });
-        posthog?.track({ name: 'meals_filter_icon_clicked',
-          properties:{
-
-          }
-         });
+        
 
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -425,6 +426,14 @@ const AddMeal: React.FC = () => {
           // Cancel does nothing
         }
       );
+      posthog?.track({ name: 'meals_filter_icon_clicked',
+          properties:{
+            current_view_period:selectedRange,
+            current_selected_date:selectedRange,
+            total_meals_count:meals.length,
+            entry_point :'meal_screen' 
+          }
+         });
     } else {
       setModalVisible(true); // fallback to your custom modal for Android
     }
@@ -443,6 +452,7 @@ const AddMeal: React.FC = () => {
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={() => {
+                  
                   const currentIndex = FILTER_OPTIONS.findIndex(
                     opt => opt.value === selectedRange
                   );
@@ -471,6 +481,16 @@ const AddMeal: React.FC = () => {
                         entry_point: 'meals_page',
                       },
                     });
+                    posthog.track({
+                    name:'meals_period_navigated',
+                    properties:{
+                      from_period:prevIndex,
+                      to_period:currentIndex,
+                      direction:'backward',
+                      from_date:selectedRange,
+                      to_date:newRange
+                    }
+                  })
                     setCustomPickerOpen(true);
                   }
                 }}
@@ -497,7 +517,18 @@ const AddMeal: React.FC = () => {
                   if (newRange === 'custom') {
                     setCustomPickerOpen(true);
                   }
+                     posthog.track({
+                    name:'meals_period_navigated',
+                    properties:{
+                      from_period:currentIndex,
+                      to_period:nextIndex,
+                      direction:'forward',
+                      from_date:selectedRange,
+                      to_date:newRange
+                    }
+                  })
                 }}
+                
               >
                 <Text className="text-white text-2xl font-bold">›</Text>
               </TouchableOpacity>
