@@ -108,7 +108,7 @@ const AddMeal: React.FC = () => {
   const posthog = usePosthog()
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
-     posthog?.track({ name: 'add_a_meal_screen_opened' });
+     posthog?.track({ name: 'add_meal_screen_opened' });
 
   }, []);
 

@@ -219,6 +219,7 @@ export const EditMealScreen: React.FC = () => {
       name: 'quick_add_from_favorites_clicked',
       properties: {
         meal_id: meal.id,
+        replaced_existing:meal.name
         
       },
     });
@@ -378,8 +379,8 @@ export const EditMealScreen: React.FC = () => {
       posthog?.track({
       name: 'meal_field_updated',
       properties: {
-        field,
-        value,
+        fiel_name:field,
+        new_value:value,
         meal_id: mealId,
       },
     });
@@ -506,6 +507,7 @@ export const EditMealScreen: React.FC = () => {
           name: 'meal_favorited_from_edit',
           properties: {
             meal_id: mealId,
+             favourite_state:isFavorite
           
           },
         });
