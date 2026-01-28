@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { IMAGE_CONSTANTS } from "../constants/imageConstants";
 import CustomSafeAreaView from "../components/CustomSafeAreaView";
@@ -18,7 +18,7 @@ import { useMixpanel } from "@macro-meals/mixpanel";
 
 type RootStackParamList = {
   AddMeal: { analyzedData?: any };
-  AIRecipeDetailsScreen: { recipe: any };
+  AIRecipeDetailsScreen: { recipe: any, defaultDate?:string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList, "AddMeal">;
@@ -52,8 +52,16 @@ const defaultMacroData: MacroData[] = [
   { label: "Fat", value: 0, color: "#FF69B4" },
 ];
 
+interface RouteParams{
+    defaultDate?: string;
+
+}
+
 const AiMealSuggestionsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteProp<{ AiMealSuggestionsScreen: RouteParams }, 'AiMealSuggestionsScreen'>>();
+    const params = route.params || {};
+    const { defaultDate } = params;
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +129,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
         recipe_id: recipe.name,
       },
     });
-    navigation.navigate("AIRecipeDetailsScreen", { recipe });
+    navigation.navigate("AIRecipeDetailsScreen", { recipe, defaultDate });
   };
 
   // Update macroData when todayProgress changes

@@ -48,6 +48,7 @@ interface RouteParams {
     scanned_image?: string;
   };
   defaultDate?: string;
+
 }
 
 import { SERVING_UNITS } from 'constants/serving_units';
@@ -61,9 +62,9 @@ import { FavoriteMeal } from '../services/favoritesService';
 export const AddMealScreen: React.FC = () => {
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'AddMeal'>>();
-  const route = useRoute<RouteProp<{ AddMeal: RouteParams }, 'AddMeal'>>();
+  const route = useRoute<RouteProp<{ AddMeal: RouteParams, BarcodeScanScreen:RouteParams, SnapMeal:RouteParams }, 'AddMeal'| 'BarcodeScanScreen' | 'SnapMeal'>>();
   const params = route.params || {};
-  const { barcodeData, analyzedData, defaultDate } = params;
+  const { barcodeData, analyzedData, defaultDate,  } = params;
 
   const [mealName, setMealName] = useState<string>('');
   const [calories, setCalories] = useState<string>('0');
@@ -284,6 +285,13 @@ export const AddMealScreen: React.FC = () => {
         setLoading(false);
         return;
       }
+
+
+      if (defaultDate){
+       const yesterdayTime = new Date(defaultDate); // Convert string to Date object
+      setTime(yesterdayTime)
+      }
+
 
       // Ensure amount is at least 1 and is an integer
       const amountValue = Math.max(1, parseInt(amount) || 1);
@@ -540,7 +548,7 @@ export const AddMealScreen: React.FC = () => {
         <TouchableOpacity onPress={handleGoBack} className="p-1">
           <Text className="text-2xl text-[#1a1a1a]">←</Text>
         </TouchableOpacity>
-        <Text className="text-lg font-semibold text-[#1a1a1a]">Add Meal</Text>
+        <Text className="text-lg font-semibold text-[#1a1a1a]">Add Meal </Text>
         <FavouriteIcon isFavourite={isFavorite} onPress={toggleFavorite} />
       </View>
 

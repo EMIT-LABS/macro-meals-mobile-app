@@ -20,6 +20,7 @@ interface MealFinderListViewProps {
   navigation: NativeStackNavigationProp<RootStackParamList, 'MealFinderScreen'>;
   onScrollBegin?: () => void;
   onScrollEnd?: () => void;
+  defaultDate?:string
 }
 
 export const MealFinderListView: React.FC<MealFinderListViewProps> = ({
@@ -30,6 +31,7 @@ export const MealFinderListView: React.FC<MealFinderListViewProps> = ({
   navigation,
   onScrollBegin,
   onScrollEnd,
+  defaultDate
 }) => {
   if (locationLoading) {
     return (
@@ -88,7 +90,7 @@ export const MealFinderListView: React.FC<MealFinderListViewProps> = ({
         <TouchableOpacity
           key={idx}
           onPress={() =>
-            navigation.navigate('MealFinderBreakdownScreen', { meal })
+            navigation.navigate('MealFinderBreakdownScreen', { meal , defaultDate})
           }
           className="flex-row bg-white rounded-xl mb-6 px-4 py-4 shadow-sm"
         >

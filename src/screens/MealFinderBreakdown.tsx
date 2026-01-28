@@ -1,4 +1,4 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
@@ -58,14 +58,23 @@ const macroColors = {
 
 // type MacroColorKey = keyof typeof macroColors;
 
+interface RouteParams{
+    defaultDate?: string;
+
+}
+
+
 const MealFinderBreakdownScreen: React.FC = () => {
-  const route = useRoute();
   const navigation =
     useNavigation<
       NativeStackNavigationProp<RootStackParamList, 'MealFinderBreakdownScreen'>
     >();
+      const route = useRoute<RouteProp<{ MealFinderBreakdownScreen: RouteParams }, 'MealFinderBreakdownScreen'>>();
+          const params = route.params || {};
+          const { defaultDate } = params;
   const { meal } = route.params as { meal: Meal };
   const token = useStore(state => state.token);
+ 
 
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   // const [matchPercent] = useState<number>(98);
@@ -231,7 +240,7 @@ const MealFinderBreakdownScreen: React.FC = () => {
         fat: meal.macros.fat,
         protein: meal.macros.protein,
         description: `${meal.name} from ${meal.restaurant.name}`,
-        meal_time: new Date().toISOString(),
+        meal_time: defaultDate,
         meal_type: 'lunch', // Default to lunch, could be made configurable
       };
 

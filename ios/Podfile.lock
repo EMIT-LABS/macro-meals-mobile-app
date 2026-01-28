@@ -2110,7 +2110,7 @@ PODS:
   - RevenueCat (5.33.1)
   - RNAppleAuthentication (2.4.1):
     - React-Core
-  - RNCAsyncStorage (2.1.2):
+  - RNCAsyncStorage (2.2.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2182,7 +2182,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNDeviceInfo (14.0.4):
+  - RNDeviceInfo (15.0.1):
     - React-Core
   - RNFBApp (22.4.0):
     - Firebase/CoreOnly (= 11.15.0)
@@ -3138,10 +3138,10 @@ SPEC CHECKSUMS:
   ReactCommon: 1aa48867a0fc71a2b4f9e8a1529f5673648354f3
   RevenueCat: b0ed01125b05a45b8264a2951ad68acb61942038
   RNAppleAuthentication: c3dddf5918126c9aae85dc2e2ce9fb87835e9e04
-  RNCAsyncStorage: 646c1bf2ebfc78d6632a3b0399f471fba8101e73
+  RNCAsyncStorage: c1dca434eda758348a549efb46822b4091d76804
   RNCPicker: c424533f7747c9463b35d294328e7b2b4d2baf31
   RNDateTimePicker: cbba58b7fde72d73362a8896b9815498c8e014b2
-  RNDeviceInfo: d863506092aef7e7af3a1c350c913d867d795047
+  RNDeviceInfo: 36d7f232bfe7c9b5c494cb7793230424ed32c388
   RNFBApp: 12884d3bf9b3a0223efe4a0adce516edf72c4102
   RNFBCrashlytics: ea81b9ceb43e2e9268342d456546cf014c096b10
   RNFBMessaging: e954bfb053a5c6bb10b26bae4bbc58a4edd41131

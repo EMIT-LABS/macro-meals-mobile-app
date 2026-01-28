@@ -104,6 +104,8 @@ const AddMeal: React.FC = () => {
   const deleteLoggedMeal = useStore(state => state.deleteLoggedMeal);
   const fetchTodayProgress = useStore(state => state.fetchTodayProgress);
   const mixpanel = useMixpanel();
+  const [day, setDay] =useState<string>('')
+  
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
   }, []);
@@ -930,8 +932,10 @@ const AddMeal: React.FC = () => {
                         const defaultDate = new Date();
                         if (selectedRange === 'yesterday') {
                           defaultDate.setDate(defaultDate.getDate() - 1);
+                          navigation.navigate('ScanScreenType', {defaultDate:defaultDate.toISOString()} );
+                        
+
                         }
-                        navigation.navigate('ScanScreenType');
                       }}
                     >
                       <Text className="text-primary font-semibold">
@@ -1126,8 +1130,9 @@ const AddMeal: React.FC = () => {
                           const defaultDate = new Date();
                           if (selectedRange === 'yesterday') {
                             defaultDate.setDate(defaultDate.getDate() - 1);
+                             navigation.navigate('ScanScreenType', {defaultDate:defaultDate.toISOString()});
                           }
-                          navigation.navigate('ScanScreenType');
+                         
                         }}
                       >
                         <Text className="text-primary font-semibold">

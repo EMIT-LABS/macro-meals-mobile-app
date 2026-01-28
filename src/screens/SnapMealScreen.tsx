@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMixpanel } from '@macro-meals/mixpanel/src';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useEffect, useRef, useState } from 'react';
@@ -19,10 +19,20 @@ import { RootStackParamList } from '../types/navigation';
 /**
  * SnapMealScreen component allows users to take photos of their meals
  * for AI analysis of nutritional content
+ * 
  */
+
+
+interface RouteParams{
+    defaultDate?: string;
+
+}
 const SnapMealScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+      const route = useRoute<RouteProp<{ SnapMealScreen: RouteParams }, 'SnapMealScreen'>>();
+      const params = route.params || {};
+      const { defaultDate } = params;
 
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -103,6 +113,7 @@ const SnapMealScreen = () => {
             detected_ingredients: data.detected_ingredients || [],
             scanned_image: data.scanned_image,
           },
+          defaultDate
         });
       } else {
         setScanError(true);
@@ -272,7 +283,7 @@ const SnapMealScreen = () => {
               onPress={() => {
                 setIsAlertVisible(false);
                 setScanError(false);
-                navigation.navigate('ScannedMealBreakdownScreen', { meal: {} });
+                navigation.navigate('ScannedMealBreakdownScreen', { meal: {}, defaultDate });
               }}
             >
               <Text className="text-white font-semibold">Add Manually</Text>

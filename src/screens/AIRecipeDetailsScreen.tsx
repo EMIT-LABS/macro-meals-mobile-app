@@ -25,14 +25,11 @@ import { useMixpanel } from "@macro-meals/mixpanel/src";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type RootStackParamList = {
-  AIRecipeDetailsScreen: { recipe: any };
+  AIRecipeDetailsScreen: { recipe: any; defaultDate?: string };
   MainTabs: { screen?: string } | undefined;
 };
 
-type NavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "AIRecipeDetailsScreen"
->;
+type NavigationProp = StackNavigationProp<RootStackParamList, "AIRecipeDetailsScreen">;
 type RouteProps = RouteProp<RootStackParamList, "AIRecipeDetailsScreen">;
 
 interface MacroData {
@@ -51,7 +48,8 @@ const macroColors = {
 const AIRecipeDetailsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  const { recipe } = route.params;
+  
+  const { recipe, defaultDate } = route.params;
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [isLogging, setIsLogging] = useState<boolean>(false);
   const [macroBreakdown, setMacroBreakdown] = useState<MacroData[]>([]);
@@ -193,7 +191,7 @@ const AIRecipeDetailsScreen: React.FC = () => {
         serving_unit: "serving",
         no_of_servings: 1,
         meal_type: "other",
-        meal_time: new Date().toISOString(),
+        meal_time: defaultDate || "",
         logging_mode: "recipe",
         favorite: isFavorite,
       };
@@ -242,7 +240,7 @@ const AIRecipeDetailsScreen: React.FC = () => {
         fat: recipe.fat,
         protein: recipe.protein,
         description: recipe.description,
-        meal_time: new Date().toISOString(),
+        meal_time: defaultDate,
         meal_type: "lunch", // Default to lunch, could be made configurable
       };
       mixpanel?.track({
