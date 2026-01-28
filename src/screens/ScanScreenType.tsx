@@ -23,6 +23,7 @@ import DiscoverCard from '../components/DiscoverCard';
 import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 // Interface for the search API response
 interface SearchMealResponse {
@@ -72,6 +73,7 @@ const ScanScreenType: React.FC = () => {
 
   const profile = useStore(state => state?.profile) || null;
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   useEffect(() => {
     mixpanel?.track({
