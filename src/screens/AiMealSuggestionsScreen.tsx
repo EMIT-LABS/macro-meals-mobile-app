@@ -15,6 +15,7 @@ import useStore from "../store/useStore";
 import { CircularProgress } from "src/components/CircularProgress";
 import { mealService } from "../services/mealService";
 import { useMixpanel } from "@macro-meals/mixpanel";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type RootStackParamList = {
   AddMeal: { analyzedData?: any };
@@ -66,6 +67,21 @@ const AiMealSuggestionsScreen: React.FC = () => {
   };
   const [macroData, setMacroData] = useState<MacroData[]>(defaultMacroData);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
+
+
+  useEffect(()=>{
+    posthog.track({
+      name:'ai_recipe_suggestions_opened',
+      properties:{
+        remaining_calories:todayProgress.calories,
+        proteins_remaining_g:todayProgress.calories,
+        carbs_remaining_g:todayProgress.carbs,
+        fats_remaining_g:todayProgress.fat,
+        dietary_preference:recipes,
+      }
+    })
+  },[])
 
   const trackAIRecipeViewed = async () => {
     if (!mixpanel) return;
@@ -89,7 +105,27 @@ const AiMealSuggestionsScreen: React.FC = () => {
       name: "ai_recipe_viewed",
       properties,
     });
+   posthog.track({
+      name: "ai_recipe_viewed",
+      properties:{
+        result_count:recipes.length
+      }
+
+    });
   };
+
+  useEffect(()=>{
+    if(recipes){
+      posthog.track({
+      name: "ai_recipe_card_viewed",
+      properties:{
+        result_count:recipes.length
+      }
+
+    });
+    }
+
+  },[recipes])
 
   const fetchRecipes = async () => {
     try {
@@ -119,6 +155,13 @@ const AiMealSuggestionsScreen: React.FC = () => {
       name: "ai_recipe_selected",
       properties: {
         recipe_id: recipe.name,
+      },
+    });
+       posthog?.track({
+      name: "ai_recipe_selected",
+      properties: {
+        recipe_id: recipe.name,
+        
       },
     });
     navigation.navigate("AIRecipeDetailsScreen", { recipe });
