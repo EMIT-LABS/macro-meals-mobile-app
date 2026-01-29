@@ -73,9 +73,15 @@ const ScanScreenType: React.FC = () => {
 
   const profile = useStore(state => state?.profile) || null;
   const mixpanel = useMixpanel();
-  const posthog = usePosthog()
+  const posthog = usePosthog();
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
   useEffect(() => {
+    if (localSearchResults) {
+      setIsFirstTimeUser(true);
+    } else {
+      setIsFirstTimeUser(false);
+    }
     mixpanel?.track({
       name: 'add_meal_screen_opened',
       properties: {
@@ -83,11 +89,11 @@ const ScanScreenType: React.FC = () => {
         // is_first_time_user: isFirstTimeUser, // should be boolean
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'add_meal_screen_opened',
       properties: {
         entry_point: 'main_hub', // or actual value
-        // is_first_time_user: isFirstTimeUser, // should be boolean
+        is_first_time_user: isFirstTimeUser,
       },
     });
   }, []);
@@ -143,7 +149,7 @@ const ScanScreenType: React.FC = () => {
                     results_count: results.length,
                   },
                 });
-                  posthog?.track({
+                posthog?.track({
                   name: 'local_search_results_viewed',
                   properties: {
                     query: trimmedQuery,
@@ -200,10 +206,11 @@ const ScanScreenType: React.FC = () => {
                     query: trimmedQuery,
                   },
                 });
-                 posthog?.track({
+                posthog?.track({
                   name: 'search_query_submitted',
                   properties: {
                     query: trimmedQuery,
+                    results_count: results.length,
                   },
                 });
               } catch (error) {
@@ -264,7 +271,7 @@ const ScanScreenType: React.FC = () => {
       name: 'add_meal_option_selected',
       properties: { option_type: 'scan_meal' },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'add_meal_option_selected',
       properties: { option_type: 'scan_meal' },
     });
@@ -315,6 +322,12 @@ const ScanScreenType: React.FC = () => {
 
   const handleMealFinder = () => {
     navigation.navigate('MealFinderScreen' as never);
+    posthog.track({
+      name:'meal_finder_opened_from_add_meal',
+      properties:{
+        entry_point:'add_meal'
+      }
+    })
   };
 
   const handleSearchClear = () => {
@@ -366,6 +379,23 @@ const ScanScreenType: React.FC = () => {
           amount: meal.amount,
           serving_size_g: meal.serving_unit,
         },
+        
+      });
+       posthog?.track({
+        name: 'prefilled_form_shown_from_search',
+        properties: {
+          result_id: meal.id,
+          meal_name: meal.name,
+          meal_type: meal.meal_type,
+          time_of_day: meal.meal_time,
+          calories: meal.calories,
+          protein_g: meal.protein,
+          carbs_g: meal.carbs,
+          fats_g: meal.fat,
+          amount: meal.amount,
+          serving_size_g: meal.serving_unit,
+        },
+        
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -392,11 +422,27 @@ const ScanScreenType: React.FC = () => {
       name: 'add_meal_closed',
       properties: {
         entry_point: 'main_hub',
-        // return_destination: destination,
+        return_destination: 'main_hub',
       },
     });
     navigation.goBack();
   };
+
+  useEffect(() => {
+    if (
+      searchText &&
+      searchText.trim().length >= 2 &&
+      !localSearchLoading &&
+      !globalSearchLoading
+    ) {
+      posthog.track({
+        name: 'search_no_results_prompt_shown',
+        properties: {
+          query: searchText,
+        },
+      });
+    }
+  },[searchText, localSearchLoading,globalSearchLoading]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -610,7 +656,7 @@ const ScanScreenType: React.FC = () => {
                                             fats_g: item.fat,
                                           },
                                         });
-                                         posthog?.track({
+                                        posthog?.track({
                                           name: isLocal
                                             ? 'local_search_result_add_clicked'
                                             : 'global_search_result_add_clicked',

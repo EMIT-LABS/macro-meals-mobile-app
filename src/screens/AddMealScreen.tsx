@@ -1279,9 +1279,25 @@ export const AddMealScreen: React.FC = () => {
                   setTempServingUnit(value);
                   // Close modal after selection
                   setShowServingUnitModal(false);
+                  if(tempServingUnit){
+                    posthog.track({
+                    name:'serving_unit_selected',
+                    properties:{
+                      serving_unit:tempServingUnit
+                    }
+                  })
+                  }
                 } else {
                   // On iOS, use temp state for modal mode
                   setTempServingUnit(value);
+                  if(tempServingUnit){
+                    posthog.track({
+                    name:'serving_unit_selected',
+                    properties:{
+                      serving_unit:tempServingUnit
+                    }
+                  })
+                  }
                 }
               }}
               style={{ width: '100%', color: 'black' }}
