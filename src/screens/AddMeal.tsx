@@ -550,8 +550,10 @@ const AddMeal: React.FC = () => {
                     const defaultDate = new Date();
                     if ((selectedRange as string) === 'yesterday') {
                       defaultDate.setDate(defaultDate.getDate() - 1);
+                       navigation.navigate('ScanScreenType', {
+    defaultDate: defaultDate.toISOString() || undefined,});
                     }
-                    navigation.navigate('ScanScreenType');
+                   
                   }}
                 >
                   <Text className="text-primary font-semibold">+ ADD FOOD</Text>

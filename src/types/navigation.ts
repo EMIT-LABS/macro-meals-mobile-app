@@ -27,7 +27,7 @@ export type RootStackParamList = {
   };
   MealList: undefined;
   SettingsScreen: undefined;
-  ScanScreenType?: {defaultDate?: string;};
+  ScanScreenType: {defaultDate?: string | undefined;} ;
   MainTabs: { screen?: string } | undefined;
   BarcodeScanScreen?: {defaultDate?: string;};
   GoalSetupScreen: undefined;
