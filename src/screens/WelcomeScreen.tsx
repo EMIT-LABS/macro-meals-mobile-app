@@ -19,7 +19,10 @@ export const WelcomeScreen: React.FC = () => {
         navigation.navigate('SignupScreen');
         posthog.track({
             name:'get_started_clicked',
-            properties:{
+             properties:{
+                  $screen_name: 'WelcomeScreen',
+            $current_url: 'WelcomeScreen',
+            
                 platform:Platform.OS
             }
         })
@@ -29,7 +32,10 @@ export const WelcomeScreen: React.FC = () => {
         navigation.navigate('LoginScreen');
          posthog.track({
             name:'sign_in_clicked',
-            properties:{
+              properties:{
+                  $screen_name: 'WelcomeScreen',
+            $current_url: 'WelcomeScreen',
+            
                 platform:Platform.OS
             }
         })

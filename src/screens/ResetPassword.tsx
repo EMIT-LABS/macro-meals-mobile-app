@@ -56,8 +56,12 @@ export const ResetPasswordScreen: React.FC = () => {
       properties: { platform: Platform.OS },
     });
      posthog?.track({
+      
       name: "reset_password_screen_viewed",
-      properties: { platform: Platform.OS },
+      properties: { platform: Platform.OS,
+                 $screen_name: 'ResetPassword',
+ $current_url: 'ResetPassword',
+       },
     });
   }, [mixpanel]);
 
@@ -94,6 +98,8 @@ export const ResetPasswordScreen: React.FC = () => {
      posthog?.track({
       name: "reset_password_attempted",
       properties: {
+                 $screen_name: 'ResetPassword',
+ $current_url: 'ResetPassword',
         email_domain: routeEmail?.split("@")[1] || "",
         platform: Platform.OS,
       },
@@ -131,6 +137,8 @@ export const ResetPasswordScreen: React.FC = () => {
        posthog?.track({
         name: "reset_password_successful",
         properties: {
+                   $screen_name: 'ResetPassword',
+ $current_url: 'ResetPassword',
           email_domain: routeEmail?.split("@")[1] || "",
           platform: Platform.OS,
         },
@@ -210,6 +218,8 @@ export const ResetPasswordScreen: React.FC = () => {
       posthog?.track({
         name: "reset_password_failed",
         properties: {
+          $screen_name: 'ResetPassword',
+ $current_url: 'ResetPassword',
           email_domain: routeEmail?.split("@")[1] || "",
           error_type: errorMessage,
           platform: Platform.OS,

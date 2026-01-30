@@ -145,7 +145,8 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'dashboard_viewed',
           properties: {
-            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            $current_url: 'DashboardScreen',
+            $screen_name: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
           },
@@ -166,7 +167,8 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'greeting_displayed',
           properties: {
-            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            $current_url: 'DashboardScreen',
+            $scren_name: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
             first_name: profile?.first_name,
@@ -191,7 +193,8 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'macro_summary_displayed',
           properties: {
-            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+             $current_url: 'DashboardScreen',
+            $scren_name: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
             calorie_target: macros.calories,
@@ -216,7 +219,8 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'recently_uploaded_section_viewed',
           properties: {
-            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+             $current_url: 'DashboardScreen',
+            $scren_name: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
             meal_count: loggedMeals.length,

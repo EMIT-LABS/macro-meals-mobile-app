@@ -226,6 +226,8 @@ export const GoalsPersonalizedPlan: React.FC<{
             posthog.track({
               name: 'macro_setup_completed',
               properties: {
+                 $current_url: 'GoalsPersonalizedPlan',
+            $scren_name: 'GoalsPersonalizedPlan',
                 age,
                 gender: genderValue,
                 activity_level:
@@ -282,6 +284,8 @@ export const GoalsPersonalizedPlan: React.FC<{
       name: 'plan_viewed',
       properties: {
         platform: Platform.OS,
+         $current_url: 'GoalsPersonalizedPlan',
+            $scren_name: 'GoalsPersonalizedPlan'
       },
     });
   }, [posthog]);

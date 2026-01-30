@@ -253,7 +253,8 @@ const PaymentScreen = () => {
     });
       posthog?.track({
       name: 'paywall_viewed',
-      properties: { platform: Platform.OS },
+      properties: { platform: Platform.OS,$screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen', },
     });
   }, [mixpanel, posthog]);
   // Load RevenueCat offerings when component mounts
@@ -311,6 +312,8 @@ const PaymentScreen = () => {
           plan: selectedPlan,
           price: currentProductInfo?.price,
           platform: Platform.OS,
+          $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
         },
       });
     }
@@ -391,6 +394,8 @@ const PaymentScreen = () => {
             plan: selectedPlan,
             price: currentProductInfo?.price,
             platform: Platform.OS,
+            $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
           },
         });
 
@@ -459,6 +464,8 @@ const PaymentScreen = () => {
           plan: selectedPlan,
           error_type: errorMessage,
           platform: Platform.OS,
+          $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
         },
       });
       Alert.alert('Error', errorMessage);
@@ -501,6 +508,8 @@ const PaymentScreen = () => {
                     plan: 'monthly',
                     price: monthlyProductInfo?.price,
                     platform: Platform.OS,
+                    $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
                   },
                 });
               }}
@@ -550,6 +559,8 @@ const PaymentScreen = () => {
                     plan: 'yearly',
                     price: yearlyProductInfo?.price,
                     platform: Platform.OS,
+                    $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
                   },
                 });
               }}
