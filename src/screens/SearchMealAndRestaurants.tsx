@@ -20,6 +20,7 @@ import useStore from '../store/useStore';
 import { Meal } from '../types';
 import { RootStackParamList } from '../types/navigation';
 import ContactSupportDrawer from './ContactSupportDrawer';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 interface MacroData {
   label: 'Protein' | 'Carbs' | 'Fat';
@@ -103,6 +104,7 @@ const SearchMealAndRestaurants: React.FC = () => {
     longitude: number;
   } | null>(null);
   const searchRequestIdRef = useRef<number>(0);
+  const posthog = usePosthog()
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -139,6 +141,48 @@ const SearchMealAndRestaurants: React.FC = () => {
     fetchProgress();
   }, []);
 
+  useEffect(()=>{
+    if(searchQuery){
+      posthog.track({
+        name:'search_query_submitted',
+        properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+          query:searchQuery,
+          search_scope:searchResults.length
+        }
+      })
+    }
+    if(searchQuery && searchResults){
+      posthog.track({
+        name:'search_result_viewed',
+        properties:{
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+          query:searchQuery,
+          search_scope:searchResults.length,
+          total_restaurants:searchResults.length,
+          result_count:searchResults.length,
+          total_meals:searchResults.length,
+
+        }
+      })
+    }
+    if(!searchResults){
+      posthog.track({
+        name:'search_no_results_displayed',
+        properties:{
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+          query:searchQuery,
+          
+        }
+      })
+    }
+  },[searchQuery, searchResults])
+
+
+
   // Get current location on mount
   useEffect(() => {
     const getLocation = async () => {
@@ -164,6 +208,7 @@ const SearchMealAndRestaurants: React.FC = () => {
   // Transform raw pins data based on active tab
   const transformPinsData = (pins: any[], tab: TabType): Meal[] => {
     if (tab === 'restaurants') {
+       
       return pins.map((pin: any) => ({
         id: pin.id || pin.google_place_id || String(Math.random()),
         name: pin.name || '',
@@ -190,6 +235,7 @@ const SearchMealAndRestaurants: React.FC = () => {
         cuisineTypes: pin.cuisine_types || [],
       }));
     } else {
+      
       return pins.map((pin: any) => ({
         id: pin.id || pin.google_place_id || String(Math.random()),
         name: pin.top_meal?.name || '',
@@ -390,6 +436,17 @@ const SearchMealAndRestaurants: React.FC = () => {
   const showFilterSheet = () => {
     setTempSelectedCuisines(selectedCuisines);
     setModalVisible(true);
+      posthog.track({
+        name:'filter_icon_clicked',
+        properties:{
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+          entry_point:'search_meals_and_restaurants',
+          
+        }
+      })
+    
+
   };
 
   const handleCuisineToggle = (value: string) => {
@@ -398,22 +455,69 @@ const SearchMealAndRestaurants: React.FC = () => {
         ? prev.filter(item => item !== value)
         : [...prev, value]
     );
+    if(tempSelectedCuisines){
+      posthog.track({
+        name:'filter_category_selected',
+        properties:{
+                    category_name:tempSelectedCuisines,
+                   $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+
+        }
+      })
+    }
   };
 
   const applyCuisineFilters = () => {
     setSelectedCuisines(tempSelectedCuisines);
     setModalVisible(false);
+      posthog.track({
+        name:'filter_applied',
+        properties:{
+                    selected_categories:tempSelectedCuisines,
+                    total_selected:selectedCuisines.length,
+                    $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+
+        }
+      })
+    
   };
 
   const resetCuisineFilters = () => {
     setTempSelectedCuisines([]);
     setSelectedCuisines([]);
     setModalVisible(false);
+    posthog.track({
+        name:'filter_reset_clicked',
+        properties:{
+                  
+          total_selected_before_reset:selectedCuisines.length,
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+
+        }
+      })
   };
 
   const handleRetry = () => {
     search();
   };
+
+  useEffect(()=>{
+    if(selectedCuisines){
+      posthog.track({
+        name:'filter_modal_viewed',
+        properties:{
+                    with_categories:tempSelectedCuisines,
+                    preselected_count:tempSelectedCuisines.length,
+                    $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+
+        }
+      })
+    }
+  },[selectedCuisines])
 
   const renderRestaurantItem = (meal: Meal) => (
     <TouchableOpacity
@@ -542,13 +646,47 @@ const SearchMealAndRestaurants: React.FC = () => {
       longitude: meal.longitude,
     };
 
+    if(transformedMeal){
+      posthog.track({
+            name:'meal_detail_viewed',
+            properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+              meal_id:meal.id,
+              meal_name:meal.name,
+              restaurant_name:meal.restaurant.name,
+              match_percentage:meal.matchScore,
+              calories:meal.macros.calories,
+              proteins_g:meal.macros.protein,
+              carbs_g:meal.macros.carbs,
+              fat_g:meal.macros.fat
+
+
+            }
+          })
+    }
+
     return (
       <TouchableOpacity
         key={meal.id}
-        onPress={() =>
+        onPress={() =>{
           navigation.navigate('MealFinderBreakdownScreen', {
             meal: transformedMeal,
-          })
+          }
+         
+        )
+       posthog.track({
+            name:'meal_card_clicked',
+            properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+              meal_id:meal.id,
+              meal_name:meal.name,
+              restaurant_name:meal.restaurant.name,
+              match_percentage:meal.matchScore,
+              query_context:'meal'
+            }
+          })}
         }
         className="flex-row bg-white rounded-xl mb-4 px-4 py-4 shadow-sm"
       >
@@ -641,8 +779,10 @@ const SearchMealAndRestaurants: React.FC = () => {
         </View>
 
         {selectedCuisines.length > 0 && (
+          
           <View className="px-5 mb-2 flex-row flex-wrap items-center gap-2">
             {selectedCuisines.map(cuisine => (
+              
               <View
                 key={cuisine}
                 className="flex-row items-center bg-primaryLight px-3 py-1 rounded-full"
@@ -671,6 +811,17 @@ const SearchMealAndRestaurants: React.FC = () => {
             onPress={() => {
               setActiveTab('restaurants');
               setSearchQuery('');
+               if(activeTab){
+          posthog.track({
+            name:"search_tab_switched",
+            properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+              from_tab:'meals',
+              to_tab:'restaurants'
+            }
+          })
+        }
             }}
             className="flex-1 items-center pb-3 relative"
           >
@@ -689,6 +840,17 @@ const SearchMealAndRestaurants: React.FC = () => {
             onPress={() => {
               setActiveTab('meals');
               setSearchQuery('');
+              if(activeTab){
+          posthog.track({
+            name:"search_tab_switched",
+            properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+              from_tab:'restaurants',
+              to_tab:'meals'
+            }
+          })
+        }
             }}
             className="flex-1 items-center pb-3 relative"
           >
@@ -875,7 +1037,16 @@ const SearchMealAndRestaurants: React.FC = () => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => setModalVisible(false)}
+                onPress={() => {setModalVisible(false);
+                  posthog.track({
+                    name:'filter_cancel_clicked',
+                    properties:{
+                      $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+                      total_selected_before_cancel:selectedCuisines.length
+                    }
+                  })
+                }}
                 className="w-full py-3 mt-3 rounded-full border border-transparent"
               >
                 <Text className="text-center text-sm font-medium text-primary">

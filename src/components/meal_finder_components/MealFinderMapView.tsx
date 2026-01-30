@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Image,
   Platform,
@@ -15,6 +15,7 @@ import { GenericMapView } from '../../../packages/maps_service/src/GenericMapVie
 import { MapBounds, MapMarker } from '../../../packages/maps_service/src/types';
 import { useMap } from '../../../packages/maps_service/src/useMap';
 import { Meal } from '../../types';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 interface MealFinderMapViewProps {
   meals: Meal[];
@@ -40,6 +41,7 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
   currentLocation,
 }) => {
   const { selectedMarker, selectMarker } = useMap<Meal>();
+  const posthog = usePosthog()
 
   // Create dynamic bounds around current location
   const getBoundsForLocation = (location?: {
@@ -233,6 +235,26 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
     );
   };
 
+  useEffect(()=>{
+    if(selectedMarker && selectedMarker.data){
+               posthog.track({
+                name:'map_pin_tapped',
+                properties:{
+                    $screen_name: 'MealFinderMapView',
+                  $current_url: 'MealFinderMapView',
+                  restaurant_id:selectedMarker.data.id,
+                  restaurant_name:selectedMarker.data.restaurant,
+                  match_percentage:selectedMarker.data.matchScore,
+                  lat:selectedMarker.data.latitude,
+                  lng:selectedMarker.data.longitude,
+
+
+
+                }
+              })
+            }
+  },[selectedMarker ,])
+
   return (
     <View className="flex-1">
       <GenericMapView
@@ -258,6 +280,8 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
           console.log('Region changed to:', region);
         }}
       />
+      
+
 
       {/* Selected Meal Info Card */}
       {selectedMarker && selectedMarker.data && (
@@ -265,6 +289,22 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
           <Pressable
             className="flex-row items-start"
             onPress={() => {
+              if(selectedMarker){
+               posthog.track({
+                name:'map_pin_card_clicked',
+                properties:{
+                   $screen_name: 'MealFinderMapView',
+                  $current_url: 'MealFinderMapView',
+                  restaurant_id:selectedMarker.data.id,
+                  meal_name:selectedMarker.data.name
+                  
+
+
+
+                }
+               })
+               
+              }
               console.log('Selected marker:', selectedMarker);
               if (selectedMarker && selectedMarker.data) {
                 navigation.navigate('MealFinderBreakdownScreen', {
