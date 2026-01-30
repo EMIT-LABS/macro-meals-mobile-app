@@ -67,29 +67,29 @@ const AiMealSuggestionsScreen: React.FC = () => {
   const [macroData, setMacroData] = useState<MacroData[]>(defaultMacroData);
   const mixpanel = useMixpanel();
 
-  const trackAIRecipeViewed = async () => {
-    if (!mixpanel) return;
+  // const trackAIRecipeViewed = async () => {
+  //   if (!mixpanel) return;
 
-    const signupTime = mixpanel.getSuperProperty("signup_time");
-    const properties: Record<string, any> = {};
+  //   const signupTime = mixpanel.getSuperProperty("signup_time");
+  //   const properties: Record<string, any> = {};
 
-    const firstAIRecipeViewed = mixpanel.getSuperProperty(
-      "first_ai_recipe_viewed"
-    );
-    if (!firstAIRecipeViewed) {
-      const now = new Date();
-      const timeToFirstRecipe = signupTime
-        ? (now.getTime() - new Date(signupTime).getTime()) / 1000
-        : 0;
-      properties.time_to_first_ai_recipe_seconds = timeToFirstRecipe;
-      mixpanel.register({ first_ai_recipe_viewed: true });
-    }
+  //   const firstAIRecipeViewed = mixpanel.getSuperProperty(
+  //     "first_ai_recipe_viewed"
+  //   );
+  //   if (!firstAIRecipeViewed) {
+  //     const now = new Date();
+  //     const timeToFirstRecipe = signupTime
+  //       ? (now.getTime() - new Date(signupTime).getTime()) / 1000
+  //       : 0;
+  //     properties.time_to_first_ai_recipe_seconds = timeToFirstRecipe;
+  //     mixpanel.register({ first_ai_recipe_viewed: true });
+  //   }
 
-    mixpanel.track({
-      name: "ai_recipe_viewed",
-      properties,
-    });
-  };
+  //   mixpanel.track({
+  //     name: "ai_recipe_viewed",
+  //     properties,
+  //   });
+  // };
 
   const fetchRecipes = async () => {
     try {
@@ -100,9 +100,9 @@ const AiMealSuggestionsScreen: React.FC = () => {
       setRecipes(result.suggestions);
 
       // Track AI recipe suggestions viewed
-      if (result.suggestions && result.suggestions.length > 0) {
-        await trackAIRecipeViewed();
-      }
+      // if (result.suggestions && result.suggestions.length > 0) {
+      //   await trackAIRecipeViewed();
+      // }
     } catch {
       setError("Failed to fetch recipe suggestions");
     } finally {

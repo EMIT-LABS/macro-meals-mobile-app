@@ -27,6 +27,7 @@ import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import { getMeals, mealService } from '../services/mealService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -104,8 +105,11 @@ const AddMeal: React.FC = () => {
   const deleteLoggedMeal = useStore(state => state.deleteLoggedMeal);
   const fetchTodayProgress = useStore(state => state.fetchTodayProgress);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
+     posthog?.track({ name: 'add_meal_screen_opened' });
+
   }, []);
 
   // State for consumed calories (same as DashboardScreen)
@@ -724,6 +728,15 @@ const AddMeal: React.FC = () => {
                                                       meal_id: meal.id,
                                                       selected_date:
                                                         meal.meal_time,
+                                                    },
+                                                  });
+                                                   posthog?.track({
+                                                    name: 'edit_meal_clicked',
+                                                    properties: {
+                                                      meal_id: meal.id,
+                                                      $name:'AddMeal',
+                                                      $screen:'AddMeal'
+                                                    
                                                     },
                                                   });
                                                   navigation.navigate(

@@ -23,6 +23,7 @@ import DiscoverCard from '../components/DiscoverCard';
 import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 // Interface for the search API response
 interface SearchMealResponse {
@@ -72,11 +73,14 @@ const ScanScreenType: React.FC = () => {
 
   const profile = useStore(state => state?.profile) || null;
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   useEffect(() => {
     mixpanel?.track({
       name: 'add_meal_screen_opened',
       properties: {
+        $screen_name: 'ScanScreenType',
+            $current_url: 'ScanScreenType',
         entry_point: 'main_hub', // or actual value
         // is_first_time_user: isFirstTimeUser, // should be boolean
       },
