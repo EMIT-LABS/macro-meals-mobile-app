@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format, parseISO } from 'date-fns';
@@ -27,7 +28,6 @@ import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import { getMeals, mealService } from '../services/mealService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
-import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -92,7 +92,7 @@ const AddMeal: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const posthog = usePosthog()
+  const posthog = usePosthog();
   const [pagination, setPagination] = useState({
     has_next: false,
     has_previous: false,
@@ -108,7 +108,8 @@ const AddMeal: React.FC = () => {
   const mixpanel = useMixpanel();
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
-   
+
+    posthog?.track({ name: 'add_meal_screen_opened' });
   }, []);
 
   // State for consumed calories (same as DashboardScreen)
@@ -727,6 +728,14 @@ const AddMeal: React.FC = () => {
                                                       meal_id: meal.id,
                                                       selected_date:
                                                         meal.meal_time,
+                                                    },
+                                                  });
+                                                  posthog?.track({
+                                                    name: 'edit_meal_clicked',
+                                                    properties: {
+                                                      meal_id: meal.id,
+                                                      $name: 'AddMeal',
+                                                      $screen: 'AddMeal',
                                                     },
                                                   });
                                                   navigation.navigate(
