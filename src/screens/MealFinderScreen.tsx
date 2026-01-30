@@ -497,6 +497,8 @@ const MealFinderScreen: React.FC = () => {
             posthog.track({
               name:'meal_finder_back_to_add_meal',
               properties:{
+                 $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
                 gesture:'button'
               }
             })

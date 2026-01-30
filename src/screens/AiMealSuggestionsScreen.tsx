@@ -74,6 +74,8 @@ const AiMealSuggestionsScreen: React.FC = () => {
     posthog.track({
       name:'ai_recipe_suggestions_opened',
       properties:{
+         $screen_name: 'AiMeaSuggestionlScreen',
+        $current_url: 'AiMeaSuggestionlScreen',
         remaining_calories:todayProgress.calories,
         proteins_remaining_g:todayProgress.calories,
         carbs_remaining_g:todayProgress.carbs,
@@ -83,42 +85,44 @@ const AiMealSuggestionsScreen: React.FC = () => {
     })
   },[])
 
-  const trackAIRecipeViewed = async () => {
-    if (!mixpanel) return;
+  // const trackAIRecipeViewed = async () => {
+  //   if (!mixpanel) return;
 
-    const signupTime = mixpanel.getSuperProperty("signup_time");
-    const properties: Record<string, any> = {};
+  //   const signupTime = mixpanel.getSuperProperty("signup_time");
+  //   const properties: Record<string, any> = {};
 
-    const firstAIRecipeViewed = mixpanel.getSuperProperty(
-      "first_ai_recipe_viewed"
-    );
-    if (!firstAIRecipeViewed) {
-      const now = new Date();
-      const timeToFirstRecipe = signupTime
-        ? (now.getTime() - new Date(signupTime).getTime()) / 1000
-        : 0;
-      properties.time_to_first_ai_recipe_seconds = timeToFirstRecipe;
-      mixpanel.register({ first_ai_recipe_viewed: true });
-    }
+  //   const firstAIRecipeViewed = mixpanel.getSuperProperty(
+  //     "first_ai_recipe_viewed"
+  //   );
+  //   if (!firstAIRecipeViewed) {
+  //     const now = new Date();
+  //     const timeToFirstRecipe = signupTime
+  //       ? (now.getTime() - new Date(signupTime).getTime()) / 1000
+  //       : 0;
+  //     properties.time_to_first_ai_recipe_seconds = timeToFirstRecipe;
+  //     mixpanel.register({ first_ai_recipe_viewed: true });
+  //   }
 
-    mixpanel.track({
-      name: "ai_recipe_viewed",
-      properties,
-    });
-   posthog.track({
-      name: "ai_recipe_viewed",
-      properties:{
-        result_count:recipes.length
-      }
+  //   mixpanel.track({
+  //     name: "ai_recipe_viewed",
+  //     properties,
+  //   });
+  //  posthog.track({
+  //     name: "ai_recipe_viewed",
+  //     properties:{
+  //       result_count:recipes.length
+  //     }
 
-    });
-  };
+  //   });
+  // };
 
   useEffect(()=>{
     if(recipes){
       posthog.track({
       name: "ai_recipe_card_viewed",
       properties:{
+         $screen_name: 'AiMeaSuggestionlScreen',
+        $current_url: 'AiMeaSuggestionlScreen',
         result_count:recipes.length
       }
 
@@ -137,7 +141,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
 
       // Track AI recipe suggestions viewed
       if (result.suggestions && result.suggestions.length > 0) {
-        await trackAIRecipeViewed();
+        // await trackAIRecipeViewed();
       }
     } catch {
       setError("Failed to fetch recipe suggestions");
@@ -160,6 +164,8 @@ const AiMealSuggestionsScreen: React.FC = () => {
        posthog?.track({
       name: "ai_recipe_selected",
       properties: {
+           $screen_name: 'AiMeaSuggestionlScreen',
+        $current_url: 'AiMeaSuggestionlScreen',
         recipe_id: recipe.name,
         
       },

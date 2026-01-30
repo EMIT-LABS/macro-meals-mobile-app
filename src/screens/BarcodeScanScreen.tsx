@@ -41,7 +41,7 @@ const BarcodeScanScreen = () => {
   const lastScanTimeRef = useRef<number>(0);
   const [scanError, setScanError] = useState(false);
   const mixpanel = useMixpanel();
-  const posthog = usePosthog()
+  const posthog = usePosthog();
 
   useEffect(() => {
     mixpanel?.track({
@@ -50,9 +50,11 @@ const BarcodeScanScreen = () => {
         entry_point: 'add_meal',
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'barcode_scan_opened',
       properties: {
+        $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
         entry_point: 'add_meal',
       },
     });
@@ -122,9 +124,11 @@ const BarcodeScanScreen = () => {
             match_found: true,
           },
         });
-         posthog?.track({
+        posthog?.track({
           name: 'barcode_scanned',
           properties: {
+            $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
             barcode_value: barcode,
             match_found: true,
           },
@@ -152,9 +156,11 @@ const BarcodeScanScreen = () => {
         barcode_value: barcodeData,
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'barcode_unrecognized_prompt_manual',
       properties: {
+        $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
         barcode_value: barcodeData,
       },
     });
@@ -197,9 +203,11 @@ const BarcodeScanScreen = () => {
         serving_size_g: product.serving_unit,
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'prefilled_form_shown_from_barcode',
       properties: {
+        $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
         barcode_value: barcodeData,
         meal_name: product.name,
         meal_type: product.meal_type,
@@ -385,13 +393,17 @@ const BarcodeScanScreen = () => {
             mixpanel?.track({
               name: 'barcode_scan_back_to_add_meal',
               properties: {
+                $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
                 gesture_type: 'button',
               },
             });
-             posthog?.track({
+            posthog?.track({
               name: 'barcode_scan_back_to_add_meal',
               properties: {
                 gesture_type: 'button',
+                $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
               },
             });
             navigation.goBack();

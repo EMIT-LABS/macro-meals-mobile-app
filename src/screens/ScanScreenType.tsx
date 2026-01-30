@@ -85,6 +85,8 @@ const ScanScreenType: React.FC = () => {
     mixpanel?.track({
       name: 'add_meal_screen_opened',
       properties: {
+        $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
         entry_point: 'main_hub', // or actual value
         // is_first_time_user: isFirstTimeUser, // should be boolean
       },
@@ -92,6 +94,8 @@ const ScanScreenType: React.FC = () => {
     posthog?.track({
       name: 'add_meal_screen_opened',
       properties: {
+         $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
         entry_point: 'main_hub', // or actual value
         is_first_time_user: isFirstTimeUser,
       },
@@ -152,6 +156,8 @@ const ScanScreenType: React.FC = () => {
                 posthog?.track({
                   name: 'local_search_results_viewed',
                   properties: {
+                     $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
                     query: trimmedQuery,
                     results_count: results.length,
                   },
@@ -194,6 +200,8 @@ const ScanScreenType: React.FC = () => {
                 posthog?.track({
                   name: 'global_search_results_viewed',
                   properties: {
+                     $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
                     query: trimmedQuery,
                     results_count: results.length,
                   },
@@ -209,6 +217,8 @@ const ScanScreenType: React.FC = () => {
                 posthog?.track({
                   name: 'search_query_submitted',
                   properties: {
+                     $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
                     query: trimmedQuery,
                     results_count: results.length,
                   },
@@ -273,7 +283,8 @@ const ScanScreenType: React.FC = () => {
     });
     posthog?.track({
       name: 'add_meal_option_selected',
-      properties: { option_type: 'scan_meal' },
+      properties: { option_type: 'scan_meal', $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType', },
     });
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
@@ -323,11 +334,13 @@ const ScanScreenType: React.FC = () => {
   const handleMealFinder = () => {
     navigation.navigate('MealFinderScreen' as never);
     posthog.track({
-      name:'meal_finder_opened_from_add_meal',
-      properties:{
-        entry_point:'add_meal'
-      }
-    })
+      name: 'meal_finder_opened_from_add_meal',
+      properties: {
+        entry_point: 'add_meal',
+         $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
+      },
+    });
   };
 
   const handleSearchClear = () => {
@@ -379,11 +392,12 @@ const ScanScreenType: React.FC = () => {
           amount: meal.amount,
           serving_size_g: meal.serving_unit,
         },
-        
       });
-       posthog?.track({
+      posthog?.track({
         name: 'prefilled_form_shown_from_search',
         properties: {
+           $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
           result_id: meal.id,
           meal_name: meal.name,
           meal_type: meal.meal_type,
@@ -395,7 +409,6 @@ const ScanScreenType: React.FC = () => {
           amount: meal.amount,
           serving_size_g: meal.serving_unit,
         },
-        
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -421,6 +434,8 @@ const ScanScreenType: React.FC = () => {
     posthog?.track({
       name: 'add_meal_closed',
       properties: {
+         $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
         entry_point: 'main_hub',
         return_destination: 'main_hub',
       },
@@ -438,11 +453,13 @@ const ScanScreenType: React.FC = () => {
       posthog.track({
         name: 'search_no_results_prompt_shown',
         properties: {
+           $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
           query: searchText,
         },
       });
     }
-  },[searchText, localSearchLoading,globalSearchLoading]);
+  }, [searchText, localSearchLoading, globalSearchLoading]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -661,6 +678,8 @@ const ScanScreenType: React.FC = () => {
                                             ? 'local_search_result_add_clicked'
                                             : 'global_search_result_add_clicked',
                                           properties: {
+                                             $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
                                             result_id: item.id,
                                             meal_name: item.name,
                                             calories: item.calories,
