@@ -146,6 +146,7 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'dashboard_viewed',
           properties: {
+             $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
@@ -167,6 +168,8 @@ export const DashboardScreen: React.FC = () => {
           posthog.track({
           name: 'greeting_displayed',
           properties: {
+             $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen',
             user_id: profile?.id,
             platform: Platform.OS,
             username: profile?.first_name,
@@ -194,6 +197,7 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'macro_summary_displayed',
           properties: {
+             $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
@@ -228,6 +232,7 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'recently_uploaded_section_viewed',
           properties: {
+             $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
@@ -258,6 +263,8 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'macro_breakdown_displayed',
           properties: {
+             $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen',
             user_id: profile?.id,
             platform: Platform.OS,
             carbs: todayMealsSum.carbs,

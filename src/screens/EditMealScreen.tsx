@@ -188,6 +188,8 @@ export const EditMealScreen: React.FC = () => {
       posthog.track({
         name: 'edit_meal_screen_viewed',
         properties: {
+          $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
           meal_id: analyzedData.id,
           meal_name: analyzedData.name,
           meal_type: analyzedData.meal_type,
@@ -218,6 +220,8 @@ export const EditMealScreen: React.FC = () => {
     posthog?.track({
       name: 'quick_add_from_favorites_clicked',
       properties: {
+        $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
         meal_id: meal.id,
         replaced_existing:meal.name
         
@@ -350,6 +354,8 @@ export const EditMealScreen: React.FC = () => {
         posthog?.track({
           name: 'meal_edited',
           properties: {
+            $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
             meal_id: mealId,
             meal_type: tempMealType,
             amount: parseFloat(noOfServings) || 1,
@@ -379,6 +385,8 @@ export const EditMealScreen: React.FC = () => {
       posthog?.track({
       name: 'meal_field_updated',
       properties: {
+        $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
         fiel_name:field,
         new_value:value,
         meal_id: mealId,
@@ -430,6 +438,8 @@ export const EditMealScreen: React.FC = () => {
         posthog?.track({
           name: 'meal_picture_uploaded',
           properties: {
+             $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
             meal_id: mealId,
             meal_name: mealName,
             meal_type: mealType,
@@ -506,6 +516,8 @@ export const EditMealScreen: React.FC = () => {
          posthog?.track({
           name: 'meal_favorited_from_edit',
           properties: {
+            $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
             meal_id: mealId,
              favourite_state:isFavorite
           

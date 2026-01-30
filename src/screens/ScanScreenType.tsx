@@ -79,6 +79,8 @@ const ScanScreenType: React.FC = () => {
     mixpanel?.track({
       name: 'add_meal_screen_opened',
       properties: {
+        $screen_name: 'ScanScreenType',
+            $current_url: 'ScanScreenType',
         entry_point: 'main_hub', // or actual value
         // is_first_time_user: isFirstTimeUser, // should be boolean
       },
