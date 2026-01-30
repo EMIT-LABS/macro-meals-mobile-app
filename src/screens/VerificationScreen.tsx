@@ -22,6 +22,7 @@ import {
   useClearByFocusCell,
 } from "react-native-confirmation-code-field";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type VerificationScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -37,6 +38,8 @@ export const VerificationScreen: React.FC = () => {
   const { email: routeEmail, source } = route.params;
 
   const mixpanel = useMixpanel();
+    const posthog = usePosthog();
+
   const eventsFired = useRef(false);
 
   useEffect(() => {
@@ -47,7 +50,14 @@ export const VerificationScreen: React.FC = () => {
         properties: { platform: Platform.OS },
       });
     }
-  }, [mixpanel]);
+    if (posthog && !eventsFired.current) {
+      eventsFired.current = true;
+      posthog.track({
+        name: "password_verification_screen_viewed",
+        properties: { platform: Platform.OS },
+      });
+    }
+  }, [mixpanel, posthog]);
 
   const isDisabled = () => {
     return isLoading || !routeEmail || !/\S+@\S+\.\S+/.test(routeEmail);
@@ -93,6 +103,13 @@ export const VerificationScreen: React.FC = () => {
         platform: Platform.OS,
       },
     });
+    posthog?.track({
+      name: "password_verification_submitted",
+      properties: {
+        email_domain: routeEmail.split("@")[1] || "",
+        platform: Platform.OS,
+      },
+    });
 
     setIsLoading(true);
     const params = {
@@ -107,6 +124,13 @@ export const VerificationScreen: React.FC = () => {
       console.log("The session token is", session_token);
       if (session_token) {
         mixpanel?.track({
+          name: "password_verification_successful",
+          properties: {
+            email_domain: routeEmail.split("@")[1] || "",
+            platform: Platform.OS,
+          },
+        });
+         posthog?.track({
           name: "password_verification_successful",
           properties: {
             email_domain: routeEmail.split("@")[1] || "",
@@ -131,6 +155,14 @@ export const VerificationScreen: React.FC = () => {
           platform: Platform.OS,
         },
       });
+        posthog?.track({
+        name: "password_verification_failed",
+        properties: {
+          email_domain: routeEmail.split("@")[1] || "",
+          error_type: error instanceof Error ? error.message : "unknown_error",
+          platform: Platform.OS,
+        },
+      });
       setError(
         error instanceof Error
           ? `${error.message}: Code does not exist. Please try again`
@@ -145,6 +177,11 @@ export const VerificationScreen: React.FC = () => {
     if (!canResend) return;
 
     mixpanel?.track({
+      name: "password_verification_resend_requested",
+      properties: { platform: Platform.OS },
+    });
+
+    posthog?.track({
       name: "password_verification_resend_requested",
       properties: { platform: Platform.OS },
     });

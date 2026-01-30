@@ -1,23 +1,44 @@
 // src/screens/WelcomeScreen.tsx
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import CustomSafeAreaView from '../components/CustomSafeAreaView';
 import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
 import { IMAGE_CONSTANTS } from '../constants/imageConstants';
+import { usePosthog } from '@macro-meals/posthog_service/src';
+
 
 
 
 
 export const WelcomeScreen: React.FC = () => {
+    const posthog = usePosthog()
     const navigation = useNavigation<any>();
 
     const handleGetStarted = () => {
         navigation.navigate('SignupScreen');
+        posthog.track({
+            name:'get_started_clicked',
+             properties:{
+                  $screen_name: 'WelcomeScreen',
+            $current_url: 'WelcomeScreen',
+            
+                platform:Platform.OS
+            }
+        })
     };
 
     const handleLogin = () => {
         navigation.navigate('LoginScreen');
+         posthog.track({
+            name:'sign_in_clicked',
+              properties:{
+                  $screen_name: 'WelcomeScreen',
+            $current_url: 'WelcomeScreen',
+            
+                platform:Platform.OS
+            }
+        })
     };
 
     return (
