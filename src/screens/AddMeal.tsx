@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format, parseISO } from 'date-fns';
@@ -27,7 +28,6 @@ import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import { getMeals, mealService } from '../services/mealService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
-import { usePosthog } from '@macro-meals/posthog_service/src';
 import DeviceInfo from 'react-native-device-info';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

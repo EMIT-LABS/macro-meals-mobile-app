@@ -1,6 +1,7 @@
 import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Text, View } from 'react-native';
 import { MacroCircle } from 'src/components/MacroCircle';
 import { useGoalsFlowStore } from 'src/store/goalsFlowStore';
 
@@ -17,6 +18,7 @@ export const GoalsPersonalizedPlan: React.FC<{
   macroCalculationResponse?: any;
 }> = ({ isLoading, macroData, calorieTarget, macroCalculationResponse }) => {
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
 
   // Get user input values from the goals flow store
   const {
@@ -162,6 +164,131 @@ export const GoalsPersonalizedPlan: React.FC<{
     weightKg,
     targetWeight,
   ]);
+
+
+
+  useEffect(() => {
+    if (
+      macroData?.some(macro => macro.value !== undefined) ||
+      macroCalculationResponse
+    ) {
+      console.log('MACRO DATA', macroData);
+      console.log('MACRO CALCULATION RESPONSE', macroCalculationResponse);
+
+      // Track macro calculation completion in Mixpanel
+      if (posthog && macroCalculationResponse && !isLoading) {
+        // Compose height and weight from store if not in response
+        const currentWeight =
+          macroCalculationResponse.weight ??
+          (weight_unit_preference === 'imperial' ? weightLb : weightKg);
+        const height =
+          macroCalculationResponse.height ??
+          (height_unit_preference === 'imperial'
+            ? `${heightFt || 0}'${heightIn || 0}"`
+            : heightCm);
+        const age =
+          macroCalculationResponse.age ??
+          calculateAge(dateOfBirth ?? undefined);
+        const genderValue =
+          macroCalculationResponse.sex?.toLowerCase() ?? gender?.toLowerCase();
+        const heightUnitPreference =
+          macroCalculationResponse.height_unit_preference ??
+          height_unit_preference;
+        const weightUnitPreference =
+          macroCalculationResponse.weight_unit_preference ??
+          weight_unit_preference;
+        const targetWeightValue =
+          macroCalculationResponse.target_weight ?? targetWeight;
+
+        posthog.setUserProperties({
+          has_macros: true,
+          calorie_target: calorieTarget || macroCalculationResponse.calories,
+          protein_target: macroCalculationResponse.protein,
+          carbs_target: macroCalculationResponse.carbs,
+          fat_target: macroCalculationResponse.fat,
+          goal_type: macroCalculationResponse.goal_type,
+          height_unit_preference: heightUnitPreference,
+          weight_unit_preference: weightUnitPreference,
+          estimated_goal_date:
+            macroCalculationResponse.time_to_goal?.estimated_date,
+          time_to_goal_weeks: macroCalculationResponse.time_to_goal?.weeks,
+        });
+
+        // Track macro setup completion with time-to-setup metric
+        const trackMacroSetupCompleted = async () => {
+          try {
+            // const signupTime = posthog?.('signup_time');
+            // const now = new Date();
+            // const timeToMacroSetup = signupTime
+            //   ? (now.getTime() - new Date(signupTime).getTime()) / 1000
+            //   : 0;
+
+            posthog.track({
+              name: 'macro_setup_completed',
+              properties: {
+                 $current_url: 'GoalsPersonalizedPlan',
+            $scren_name: 'GoalsPersonalizedPlan',
+                age,
+                gender: genderValue,
+                activity_level:
+                  macroCalculationResponse.activity_level?.toLowerCase(),
+                goal_type: macroCalculationResponse.goal_type?.toLowerCase(),
+                // time_to_macro_setup_seconds: timeToMacroSetup,
+                calorie_target:
+                  calorieTarget || macroCalculationResponse.calories,
+                protein_target: macroCalculationResponse.protein,
+                carbs_target: macroCalculationResponse.carbs,
+                fat_target: macroCalculationResponse.fat,
+                height_unit_preference: height_unit_preference,
+                weight_unit_preference: weight_unit_preference,
+                estimated_goal_date:
+                  macroCalculationResponse.time_to_goal?.estimated_date,
+                time_to_goal_weeks:
+                  macroCalculationResponse.time_to_goal?.weeks,
+                target_weight: targetWeightValue,
+                current_weight: currentWeight,
+                height,
+                dietary_preference: macroCalculationResponse.dietary_preference,
+              },
+            });
+
+            console.log('[POSTHOG] 📊 Macro setup completed and tracked');
+          } catch (error) {
+            console.error('[POSTHOG] ❌ Error tracking macro setup:', error);
+          }
+        };
+
+        trackMacroSetupCompleted();
+      }
+    }
+  }, [
+    macroData,
+    macroCalculationResponse,
+    isLoading,
+    posthog,
+    calorieTarget,
+    dateOfBirth,
+    gender,
+    height_unit_preference,
+    heightFt,
+    heightIn,
+    heightCm,
+    weight_unit_preference,
+    weightLb,
+    weightKg,
+    targetWeight,
+  ]);
+
+  useEffect(() => {
+    posthog?.track({
+      name: 'plan_viewed',
+      properties: {
+        platform: Platform.OS,
+         $current_url: 'GoalsPersonalizedPlan',
+            $scren_name: 'GoalsPersonalizedPlan'
+      },
+    });
+  }, [posthog]);
 
   // Helper function to format the estimated date
   const formatEstimatedDate = (dateString: string) => {

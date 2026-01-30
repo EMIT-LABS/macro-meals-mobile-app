@@ -85,6 +85,8 @@ sentryService.init({
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
+
+
 // Component to handle Mixpanel identification for authenticated users
 function MixpanelIdentifier() {
   const { isAuthenticated, userId } = useStore();
@@ -92,6 +94,7 @@ function MixpanelIdentifier() {
   const posthog = usePosthog();
   const appOpenedTracked = useRef(false);
   const lastIdentifiedUserId = useRef<string | null>(null);
+
 
 
 
@@ -122,8 +125,17 @@ function MixpanelIdentifier() {
         name: 'app_opened',
         properties: appOpenedProps,
       });
+
+      if(SplashScreen){
+      posthog.track({
+        name: 'splash_screen_viewed',
+        properties: appOpenedProps,
+      })
     }
-  }, [mixpanel, posthog]); // Only track when analytics are initialized
+    }
+
+    
+  }, [mixpanel, posthog, SplashScreen]); // Only track when analytics are initialized
 
   useEffect(() => {
     // Only identify if:
