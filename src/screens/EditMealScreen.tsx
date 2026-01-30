@@ -51,6 +51,7 @@ interface RouteParams {
 import { SERVING_UNITS } from 'constants/serving_units';
 import { FavouriteIcon } from 'src/components/FavouriteIcon';
 import { FavoriteMeal } from '../services/favoritesService';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 // const SERVING_UNITS = [
 //     'g',
@@ -112,6 +113,7 @@ export const EditMealScreen: React.FC = () => {
   const [showServingUnitModal, setShowServingUnitModal] = useState(false);
   const [tempServingUnit, setTempServingUnit] = useState('g');
   const [loggingMode, setLoggingMode] = useState<string>('manual');
+  const posthog = usePosthog()
 
   // Initialize form with analyzed data if available
   React.useEffect(() => {
@@ -182,7 +184,19 @@ export const EditMealScreen: React.FC = () => {
         },
       });
     }
-  }, [analyzedData?.id, mixpanel]);
+     if (posthog && analyzedData?.id) {
+      posthog.track({
+        name: 'edit_meal_screen_viewed',
+        properties: {
+          $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
+          meal_id: analyzedData.id,
+          meal_name: analyzedData.name,
+          meal_type: analyzedData.meal_type,
+        },
+      });
+    }
+  }, [analyzedData?.id, posthog, mixpanel]);
   /**
    * Handles going back to the previous screen
    */
@@ -201,6 +215,16 @@ export const EditMealScreen: React.FC = () => {
         meal_id: meal.id,
         meal_name: meal.name,
         meal_type: meal.meal_type,
+      },
+    });
+    posthog?.track({
+      name: 'quick_add_from_favorites_clicked',
+      properties: {
+        $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
+        meal_id: meal.id,
+        replaced_existing:meal.name
+        
       },
     });
     setMealName(meal.name);
@@ -326,6 +350,20 @@ export const EditMealScreen: React.FC = () => {
           },
         });
       }
+      if (posthog) {
+        posthog?.track({
+          name: 'meal_edited',
+          properties: {
+            $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
+            meal_id: mealId,
+            meal_type: tempMealType,
+            amount: parseFloat(noOfServings) || 1,
+            serving_unit: servingUnit,
+            ...mealMacros,
+          },
+        });
+      }
 
       navigation.navigate('MainTabs', { screen: 'Meals' });
     } catch (error) {
@@ -341,6 +379,16 @@ export const EditMealScreen: React.FC = () => {
       properties: {
         field,
         value,
+        meal_id: mealId,
+      },
+    });
+      posthog?.track({
+      name: 'meal_field_updated',
+      properties: {
+        $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
+        fiel_name:field,
+        new_value:value,
         meal_id: mealId,
       },
     });
@@ -381,6 +429,17 @@ export const EditMealScreen: React.FC = () => {
         mixpanel?.track({
           name: 'meal_picture_uploaded',
           properties: {
+            meal_id: mealId,
+            meal_name: mealName,
+            meal_type: mealType,
+            image_uri: result.assets[0].uri,
+          },
+        });
+        posthog?.track({
+          name: 'meal_picture_uploaded',
+          properties: {
+             $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
             meal_id: mealId,
             meal_name: mealName,
             meal_type: mealType,
@@ -451,6 +510,17 @@ export const EditMealScreen: React.FC = () => {
             meal_id: mealId,
             meal_name: mealName,
             meal_type: mealType,
+            favourite_state:isFavorite
+          },
+        });
+         posthog?.track({
+          name: 'meal_favorited_from_edit',
+          properties: {
+            $screen_name: 'EditMealScreen',
+            $current_url: 'EditMealScreen',
+            meal_id: mealId,
+             favourite_state:isFavorite
+          
           },
         });
         Alert.alert('Added to favorites');

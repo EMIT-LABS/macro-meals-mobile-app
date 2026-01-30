@@ -1,30 +1,31 @@
-import React, { useEffect, useState } from "react";
+import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  ActivityIndicator,
   Image,
   ScrollView,
-  ActivityIndicator,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { IMAGE_CONSTANTS } from "../constants/imageConstants";
-import CustomSafeAreaView from "../components/CustomSafeAreaView";
-import useStore from "../store/useStore";
-import { CircularProgress } from "src/components/CircularProgress";
-import { mealService } from "../services/mealService";
-import { useMixpanel } from "@macro-meals/mixpanel";
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { CircularProgress } from 'src/components/CircularProgress';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import { IMAGE_CONSTANTS } from '../constants/imageConstants';
+import { mealService } from '../services/mealService';
+import useStore from '../store/useStore';
 
 type RootStackParamList = {
   AddMeal: { analyzedData?: any };
   AIRecipeDetailsScreen: { recipe: any };
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "AddMeal">;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'AddMeal'>;
 
 interface MacroData {
-  label: "Protein" | "Carbs" | "Fat";
+  label: 'Protein' | 'Carbs' | 'Fat';
   value: number;
   color: string;
 }
@@ -41,15 +42,15 @@ interface Recipe {
 }
 
 const macroTypeToPreferenceKey = {
-  Protein: "protein_target",
-  Carbs: "carbs_target",
-  Fat: "fat_target",
+  Protein: 'protein_target',
+  Carbs: 'carbs_target',
+  Fat: 'fat_target',
 } as const;
 
 const defaultMacroData: MacroData[] = [
-  { label: "Protein", value: 0, color: "#6C5CE7" },
-  { label: "Carbs", value: 0, color: "#FFC107" },
-  { label: "Fat", value: 0, color: "#FF69B4" },
+  { label: 'Protein', value: 0, color: '#6C5CE7' },
+  { label: 'Carbs', value: 0, color: '#FFC107' },
+  { label: 'Fat', value: 0, color: '#FF69B4' },
 ];
 
 const AiMealSuggestionsScreen: React.FC = () => {
@@ -57,8 +58,8 @@ const AiMealSuggestionsScreen: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const macrosPreferences = useStore((state) => state.macrosPreferences);
-  const todayProgress = useStore((state) => state.todayProgress) || {
+  const macrosPreferences = useStore(state => state.macrosPreferences);
+  const todayProgress = useStore(state => state.todayProgress) || {
     protein: 0,
     carbs: 0,
     fat: 0,
@@ -66,16 +67,30 @@ const AiMealSuggestionsScreen: React.FC = () => {
   };
   const [macroData, setMacroData] = useState<MacroData[]>(defaultMacroData);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
+
+  useEffect(() => {
+    posthog.track({
+      name: 'ai_recipe_suggestions_opened',
+      properties: {
+        $screen_name: 'AiMeaSuggestionlScreen',
+        $current_url: 'AiMeaSuggestionlScreen',
+        remaining_calories: todayProgress.calories,
+        proteins_remaining_g: todayProgress.calories,
+        carbs_remaining_g: todayProgress.carbs,
+        fats_remaining_g: todayProgress.fat,
+        dietary_preference: recipes,
+      },
+    });
+  }, []);
 
   // const trackAIRecipeViewed = async () => {
   //   if (!mixpanel) return;
-
-  //   // const signupTime = mixpanel.getSuperProperty("signup_time");
-  //   // const properties: Record<string, any> = {};
-
-  //   // const firstAIRecipeViewed = mixpanel.getSuperProperty(
-  //   //   "first_ai_recipe_viewed"
-  //   // );
+  //   const signupTime = mixpanel.getSuperProperty("signup_time");
+  //   const properties: Record<string, any> = {};
+  //   const firstAIRecipeViewed = mixpanel.getSuperProperty(
+  //     "first_ai_recipe_viewed"
+  //   );
   //   if (!firstAIRecipeViewed) {
   //     const now = new Date();
   //     const timeToFirstRecipe = signupTime
@@ -84,12 +99,24 @@ const AiMealSuggestionsScreen: React.FC = () => {
   //     properties.time_to_first_ai_recipe_seconds = timeToFirstRecipe;
   //     mixpanel.register({ first_ai_recipe_viewed: true });
   //   }
-
   //   mixpanel.track({
   //     name: "ai_recipe_viewed",
   //     properties,
   //   });
   // };
+
+  useEffect(() => {
+    if (recipes) {
+      posthog.track({
+        name: 'ai_recipe_card_viewed',
+        properties: {
+          $screen_name: 'AiMeaSuggestionlScreen',
+          $current_url: 'AiMeaSuggestionlScreen',
+          result_count: recipes.length,
+        },
+      });
+    }
+  }, [recipes]);
 
   const fetchRecipes = async () => {
     try {
@@ -104,7 +131,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
       //   await trackAIRecipeViewed();
       // }
     } catch {
-      setError("Failed to fetch recipe suggestions");
+      setError('Failed to fetch recipe suggestions');
     } finally {
       setLoading(false);
     }
@@ -116,12 +143,20 @@ const AiMealSuggestionsScreen: React.FC = () => {
 
   const handleRecipeSelect = (recipe: Recipe) => {
     mixpanel?.track({
-      name: "ai_recipe_selected",
+      name: 'ai_recipe_selected',
       properties: {
         recipe_id: recipe.name,
       },
     });
-    navigation.navigate("AIRecipeDetailsScreen", { recipe });
+    posthog?.track({
+      name: 'ai_recipe_selected',
+      properties: {
+        $screen_name: 'AiMeaSuggestionlScreen',
+        $current_url: 'AiMeaSuggestionlScreen',
+        recipe_id: recipe.name,
+      },
+    });
+    navigation.navigate('AIRecipeDetailsScreen', { recipe });
   };
 
   // Update macroData when todayProgress changes
@@ -129,12 +164,12 @@ const AiMealSuggestionsScreen: React.FC = () => {
     if (todayProgress) {
       setMacroData([
         {
-          label: "Protein",
+          label: 'Protein',
           value: todayProgress.protein || 0,
-          color: "#6C5CE7",
+          color: '#6C5CE7',
         },
-        { label: "Carbs", value: todayProgress.carbs || 0, color: "#FFC107" },
-        { label: "Fat", value: todayProgress.fat || 0, color: "#FF69B4" },
+        { label: 'Carbs', value: todayProgress.carbs || 0, color: '#FFC107' },
+        { label: 'Fat', value: todayProgress.fat || 0, color: '#FF69B4' },
       ]);
     }
   }, [todayProgress]);
@@ -150,19 +185,19 @@ const AiMealSuggestionsScreen: React.FC = () => {
         const progressData = await mealService.getDailyProgress();
         setMacroData([
           {
-            label: "Protein",
+            label: 'Protein',
             value: progressData.logged_macros.protein || 0,
-            color: "#6C5CE7",
+            color: '#6C5CE7',
           },
           {
-            label: "Carbs",
+            label: 'Carbs',
             value: progressData.logged_macros.carbs || 0,
-            color: "#FFC107",
+            color: '#FFC107',
           },
           {
-            label: "Fat",
+            label: 'Fat',
             value: progressData.logged_macros.fat || 0,
-            color: "#FF69B4",
+            color: '#FF69B4',
           },
         ]);
       } catch {
@@ -173,7 +208,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
   }, []);
 
   return (
-    <CustomSafeAreaView edges={["left", "right"]} className="flex-1">
+    <CustomSafeAreaView edges={['left', 'right']} className="flex-1">
       <View className="flex-1 bg-gray">
         {/* Header */}
         <View className="flex-row bg-white items-center justify-between px-5 pt-4 pb-5 mb-5">
