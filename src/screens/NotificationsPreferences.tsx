@@ -41,6 +41,8 @@ export default function NotificationsPreferences() {
       mixpanel?.track({
         name: "notifications_screen_viewed",
         properties: {
+           $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
           meal_reminders_enabled: toggles.mealReminders,
         },
       });
@@ -90,6 +92,8 @@ export default function NotificationsPreferences() {
         posthog?.track({
         name: "notification_toggle_changed",
         properties: {
+            $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
           toggle_name: "meal_reminders",
           new_state: value,
         },

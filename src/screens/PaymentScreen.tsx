@@ -23,6 +23,7 @@ import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import revenueCatService from '../services/revenueCatService';
 import { userService } from '../services/userService';
 import useStore from '../store/useStore';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -234,6 +235,7 @@ const PaymentScreen = () => {
   const [isCurrentlyInTrial, setIsCurrentlyInTrial] = useState(false);
   const [hasUsedTrialBefore, setHasUsedTrialBefore] = useState(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   // Get product information for current selected plan
   const currentProductInfo = getProductInfo(
@@ -248,7 +250,12 @@ const PaymentScreen = () => {
       name: 'paywall_viewed',
       properties: { platform: Platform.OS },
     });
-  }, [mixpanel]);
+    posthog?.track({
+      name: 'paywall_viewed',
+      properties: { platform: Platform.OS, $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences', },
+    });
+  }, [mixpanel, posthog]);
   // Load RevenueCat offerings when component mounts
   useEffect(() => {
     revenueCatService.syncPurchases();
@@ -301,6 +308,18 @@ const PaymentScreen = () => {
       mixpanel?.track({
         name: 'trial_started',
         properties: {
+          $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
+          plan: selectedPlan,
+          price: currentProductInfo?.price,
+          platform: Platform.OS,
+        },
+      });
+      posthog?.track({
+        name: 'trial_started',
+        properties: {
+          $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
           plan: selectedPlan,
           price: currentProductInfo?.price,
           platform: Platform.OS,
@@ -373,11 +392,22 @@ const PaymentScreen = () => {
         mixpanel?.track({
           name: 'subscription_started',
           properties: {
+            
             plan: selectedPlan,
             price: currentProductInfo?.price,
             platform: Platform.OS,
           },
         });
+        posthog?.track({
+        name: 'subscription_started',
+        properties: {
+          $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
+         plan: selectedPlan,
+            price: currentProductInfo?.price,
+            platform: Platform.OS,
+        },
+      });
 
         // Update local state
         setHasBeenPromptedForGoals(false);
@@ -438,6 +468,16 @@ const PaymentScreen = () => {
           platform: Platform.OS,
         },
       });
+       posthog?.track({
+        name: 'subscription_failed',
+        properties: {
+          $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
+          plan: selectedPlan,
+          error_type: errorMessage,
+          platform: Platform.OS,
+        },
+      });
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
@@ -467,6 +507,18 @@ const PaymentScreen = () => {
                 mixpanel?.track({
                   name: 'subscription_plan_selected',
                   properties: {
+                    $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
+                    plan: 'monthly',
+                    price: monthlyProductInfo?.price,
+                    platform: Platform.OS,
+                  },
+                });
+                 posthog?.track({
+                  name: 'subscription_plan_selected',
+                  properties: {
+                    $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
                     plan: 'monthly',
                     price: monthlyProductInfo?.price,
                     platform: Platform.OS,
@@ -508,6 +560,17 @@ const PaymentScreen = () => {
                 mixpanel?.track({
                   name: 'subscription_plan_selected',
                   properties: {
+                    
+                    plan: 'yearly',
+                    price: yearlyProductInfo?.price,
+                    platform: Platform.OS,
+                  },
+                });
+                posthog?.track({
+                  name: 'subscription_plan_selected',
+                  properties: {
+                        $screen_name: 'NotificationPreferences',
+            $current_url: 'NotificationPreferences',
                     plan: 'yearly',
                     price: yearlyProductInfo?.price,
                     platform: Platform.OS,

@@ -116,6 +116,8 @@ export const SettingsScreen: React.FC = () => {
        posthog.track({
         name: 'profile_screen_viewed',
         properties: {
+              $screen_name: 'SettingsScreen',
+            $current_url: 'SettingsScreen',
           user_id: userData.id,
           email: userData.email,
           is_pro: userData.is_pro,
@@ -153,6 +155,8 @@ export const SettingsScreen: React.FC = () => {
          posthog?.track({
         name: 'unit_preference_changed',
         properties: {
+            $screen_name: 'SettingsScreen',
+            $current_url: 'SettingsScreen',
           new_unit_preference: value,
           previous_unit_preference: userData.unit_preference,
         },
@@ -190,6 +194,8 @@ export const SettingsScreen: React.FC = () => {
      posthog?.track({
                 name: 'logout_clicked',
                 properties: {
+                    $screen_name: 'SettingsScreen',
+            $current_url: 'SettingsScreen',
                   user_id: userData.id,
                   email: userData.email,
                   entry_point:'settings_screen',
@@ -259,6 +265,8 @@ export const SettingsScreen: React.FC = () => {
      posthog?.track({
       name: 'contact_support_clicked',
       properties: {
+          $screen_name: 'SettingsScreen',
+            $current_url: 'SettingsScreen',
        entry_point:'settings_screen'
       },
     });
@@ -275,7 +283,10 @@ export const SettingsScreen: React.FC = () => {
     });
       posthog?.track({
       name: 'submit_feedback_email_opened',
-      properties: {},
+      properties: {
+          $screen_name: 'SettingsScreen',
+            $current_url: 'SettingsScreen',
+      },
     });
 
     const { email } = appConstants();
@@ -362,7 +373,9 @@ export const SettingsScreen: React.FC = () => {
               posthog.track({
                 name:'adjust_goals_entry_clicked',
                 properties:{
-                  entry_point:'setting_screen'
+                  entry_point:'setting_screen',
+                    $screen_name: 'SettingsScreen',
+            $current_url: 'SettingsScreen',
                 }
               })
             }}
@@ -461,6 +474,13 @@ export const SettingsScreen: React.FC = () => {
               mixpanel?.track({
                 name: 'submit_feedback_clicked',
                 properties: {},
+              });
+              posthog?.track({
+                name: 'submit_feedback_clicked',
+                properties: {
+                    $screen_name: 'SettingsScreen',
+            $current_url: 'SettingsScreen',
+                },
               });
               openEmail();
             }}

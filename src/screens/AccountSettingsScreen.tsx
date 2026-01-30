@@ -84,6 +84,8 @@ export default function AccountSettingsScreen() {
       posthog?.track({
         name: "account_settings_screen_viewed",
         properties: {
+           $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
           user_id: _user.id,
           email: _user.email,
           is_pro: _user.is_pro,
@@ -250,6 +252,8 @@ export default function AccountSettingsScreen() {
           posthog?.track({
             name: "account_field_updated",
             properties: {
+               $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
               user_id: userRef.current?.id,
               field: field,
               old_value:oldValue,
@@ -329,6 +333,8 @@ export default function AccountSettingsScreen() {
       posthog?.track({
       name: "height_unit_toggled",
       properties: {
+         $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
         user_id: _user?.id,
         from_unit: height_unit_preference,
         to_unit: newUnit,
@@ -375,6 +381,8 @@ export default function AccountSettingsScreen() {
      posthog?.track({
       name: "weight_unit_toggled",
       properties: {
+         $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
         user_id: _user?.id,
         from_unit: weight_unit_preference,
         to_unit: newUnit,
@@ -467,6 +475,8 @@ export default function AccountSettingsScreen() {
      posthog?.track({
       name: "delete_account_clicked",
       properties: {
+         $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
         user_id: userRef.current?.id,
         email: userRef.current?.email,
         entry_point:'account_settings'
@@ -490,6 +500,8 @@ export default function AccountSettingsScreen() {
             posthog?.track({
               name: "delete_account_cancelled",
               properties: {
+                 $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
                 user_id: userRef.current?.id,
                 email: userRef.current?.email,
                 dialog_state:'cancel',
@@ -520,6 +532,8 @@ export default function AccountSettingsScreen() {
                posthog?.track({
                 name: "delete_account_confirmed",
                 properties: {
+                  $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
                   user_id: userRef.current?.id,
                   email: userRef.current?.email,
                   account_age_days: userRef.current?.created_at
