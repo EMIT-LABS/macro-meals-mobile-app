@@ -92,7 +92,7 @@ export type RootStackParamList = {
       read_only?: boolean;
     };
   };
-  EmailVerificationScreen: { email: string; password: string };
+  EmailVerificationScreen: { email: string; password: string; referralCode?: string };
   AddSearchedLoggedMeal: {
     searchedMeal: {
       id: string;
@@ -118,4 +118,5 @@ export type RootStackParamList = {
   RequestRestaurantScreen: {
     restaurantName?: string;
   };
+  RedeemReferralCodeScreen: undefined;
 };

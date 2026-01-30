@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { authService } from '../services/authService';
-import useStore from '../store/useStore';
+import useStore, { shouldSkipPaywall } from '../store/useStore';
 // Import the mock service instead of the real one
 // import { mockSocialAuth } from "../services/authMock";
 import CustomSafeAreaView from '../components/CustomSafeAreaView';
@@ -74,7 +74,6 @@ export const LoginScreen: React.FC = () => {
       posthog.track({
         name: '$screen',
         properties: {
-          $screen_name: 'LoginScreen',
           $current_url: 'LoginScreen',
           platform: Platform.OS,
         },
@@ -179,33 +178,49 @@ export const LoginScreen: React.FC = () => {
           name: `${profile.first_name} ${profile.last_name}`,
         });
 
-        // Set user ID in RevenueCat after successful login and check subscription status
-        try {
-          console.log(`\n\n\n\n\nUSER ID  ${profile.id}`);
-          await revenueCatService.setUserID(profile.id);
-          await revenueCatService.setAttributes({
-            $email: profile.email,
-            $displayName: `${profile.first_name} ${profile.last_name}`,
-          });
-          console.log('✅ RevenueCat user ID set after login:', profile.id);
+        // Skip paywall if is_pro OR active referral (promo)
+        if (shouldSkipPaywall(profile)) {
+          console.log('✅ LoginScreen - User has pro or active referral, skipping paywall');
+          setIsPro(true);
+          
+          // Still set up RevenueCat for future subscription management
+          try {
+            await revenueCatService.setUserID(profile.id);
+            await revenueCatService.setAttributes({
+              $email: profile.email,
+              $displayName: `${profile.first_name} ${profile.last_name}`,
+            });
+            console.log('✅ LoginScreen - RevenueCat user ID set for pro user');
+          } catch (error) {
+            console.error('❌ LoginScreen - RevenueCat setup failed for pro user:', error);
+          }
+        } else {
+          // If backend says not pro, check RevenueCat for active subscription
+          try {
+            await revenueCatService.setUserID(profile.id);
+            await revenueCatService.setAttributes({
+              $email: profile.email,
+              $displayName: `${profile.first_name} ${profile.last_name}`,
+            });
+            console.log('✅ LoginScreen - RevenueCat user ID set after login:', profile.id);
 
-          // Check subscription status from RevenueCat (source of truth)
-          const { syncSubscriptionStatus } = await import(
-            '../services/subscriptionChecker'
-          );
-          const subscriptionStatus = await syncSubscriptionStatus(setIsPro);
+            // Check subscription status from RevenueCat
+            const { syncSubscriptionStatus } = await import(
+              '../services/subscriptionChecker'
+            );
+            const subscriptionStatus = await syncSubscriptionStatus(setIsPro);
 
-          console.log(
-            '🔍 LoginScreen - RevenueCat subscription status:',
-            subscriptionStatus
-          );
-        } catch (error) {
-          console.error(
-            '❌ Failed to set RevenueCat user ID or check subscription after login:',
-            error
-          );
-          // Fallback to backend isPro value if RevenueCat fails
-          setIsPro(!!profile.is_pro);
+            console.log(
+              '🔍 LoginScreen - RevenueCat subscription status:',
+              subscriptionStatus
+            );
+          } catch (error) {
+            console.error(
+              '❌ LoginScreen - Failed to check RevenueCat subscription:',
+              error
+            );
+            setIsPro(false);
+          }
         }
 
         console.log('🔍 LoginScreen - Immediately after setting states:', {

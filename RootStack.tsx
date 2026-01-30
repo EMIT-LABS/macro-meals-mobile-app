@@ -54,6 +54,7 @@ import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import RequestRestaurantScreen from './src/screens/RequestRestaurantScreen';
 import ScannedMealBreakdownScreen from './src/screens/ScannedMealBreakdown';
 import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
+import RedeemReferralCodeScreen from './src/screens/RedeemReferralCodeScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -274,6 +275,10 @@ const DashboardNavigator = () => {
       <Stack.Screen
         name="RequestRestaurantScreen"
         component={RequestRestaurantScreen}
+      />
+      <Stack.Screen
+        name="RedeemReferralCodeScreen"
+        component={RedeemReferralCodeScreen}
       />
     </Stack.Navigator>
   );

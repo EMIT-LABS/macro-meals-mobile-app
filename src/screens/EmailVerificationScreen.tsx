@@ -2,7 +2,7 @@ import { useMixpanel } from '@macro-meals/mixpanel/src';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -25,8 +25,10 @@ import { HasMacrosContext } from 'src/contexts/HasMacrosContext';
 import { IsProContext } from 'src/contexts/IsProContext';
 import { OnboardingContext } from 'src/contexts/OnboardingContext';
 import { authService } from 'src/services/authService';
+import { referralService } from 'src/services/referralService';
 import { userService } from 'src/services/userService';
 import { useGoalsFlowStore } from 'src/store/goalsFlowStore';
+import { shouldSkipPaywall } from 'src/store/useStore';
 import { RootStackParamList } from 'src/types/navigation';
 import revenueCatService from '../services/revenueCatService';
 import useStore from '../store/useStore';
@@ -48,7 +50,7 @@ export const EmailVerificationScreen = () => {
   const { setHasMacros, setReadyForDashboard } = useContext(HasMacrosContext);
   const resetSteps = useGoalsFlowStore(state => state.resetSteps);
   const { setIsPro } = React.useContext(IsProContext);
-  const { email: routeEmail, password: routePassword } = route.params;
+  const { email: routeEmail, password: routePassword, referralCode } = route.params;
   const CELL_COUNT = 6;
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
@@ -57,6 +59,9 @@ export const EmailVerificationScreen = () => {
     value,
     setValue,
   });
+  
+  // Ref to track if referral code has been redeemed to prevent multiple calls
+  const hasRedeemedReferralCode = useRef(false);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -176,47 +181,72 @@ export const EmailVerificationScreen = () => {
           console.log('Could not update FCM token on backend:', error);
         }
 
+        // Redeem referral code if provided during signup (only once)
+        let profileForState = profile;
+        if (referralCode && !hasRedeemedReferralCode.current) {
+          hasRedeemedReferralCode.current = true;
+          try {
+            console.log('🎁 Attempting to redeem referral code:', referralCode);
+            await referralService.redeemReferralCode(referralCode);
+            console.log('✅ Referral code redeemed successfully');
+            mixpanel?.track({
+              name: 'referral_code_redeemed',
+              properties: { referral_code: referralCode, platform: Platform.OS },
+            });
+            // Refetch profile so store has latest is_pro and referral
+            profileForState = await userService.getProfile();
+            const { setProfile } = useStore.getState();
+            setProfile(profileForState);
+            console.log('✅ EmailVerification - Profile refetched after redeem:', profileForState?.is_pro, profileForState?.referral?.is_active);
+          } catch (error) {
+            console.error('❌ Failed to redeem referral code:', error);
+            mixpanel?.track({
+              name: 'referral_code_redemption_failed',
+              properties: {
+                referral_code: referralCode,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                platform: Platform.OS,
+              },
+            });
+          }
+        }
+
         resetSteps();
         setIsOnboardingCompleted(true);
-        setHasMacros(profile.has_macros);
-        setReadyForDashboard(profile.has_macros);
+        setHasMacros(profileForState.has_macros);
+        setReadyForDashboard(profileForState.has_macros);
 
         setAuthenticated(true, token, loginUserId);
-        await revenueCatService.setUserID(profile.id);
-        await revenueCatService.setAttributes({
-          $email: profile.email,
-          $displayName: `${profile.first_name} ${profile.last_name}`,
-        });
 
-        console.log(
-          `\n\n\n\n\n\n\n\n\n\n✅ RevenueCat user ID set after email verification: ${profile.id} and email: ${profile.email} and display name: ${profile.first_name} ${profile.last_name}\n\n\n\n\n\n\n\n\n\n`
-        );
-
-        // Set user ID in RevenueCat and check subscription status
-        try {
-          await revenueCatService.setUserID(profile.id);
-          console.log(
-            '✅ RevenueCat user ID set after email verification:',
-            profile.id
-          );
-
-          // Check subscription status from RevenueCat (source of truth)
-          const { syncSubscriptionStatus } = await import(
-            '../services/subscriptionChecker'
-          );
-          const subscriptionStatus = await syncSubscriptionStatus(setIsPro);
-
-          console.log(
-            '🔍 EmailVerification - RevenueCat subscription status:',
-            subscriptionStatus
-          );
-        } catch (error) {
-          console.error(
-            '❌ Failed to set RevenueCat user ID or check subscription after verification:',
-            error
-          );
-          // Fallback to backend isPro value if RevenueCat fails
-          setIsPro(!!profile.is_pro);
+        // Skip paywall if is_pro OR active referral (promo)
+        if (shouldSkipPaywall(profileForState)) {
+          console.log('✅ EmailVerification - User has pro or active referral, skipping paywall');
+          setIsPro(true);
+          try {
+            await revenueCatService.setUserID(profileForState.id);
+            await revenueCatService.setAttributes({
+              $email: profileForState.email,
+              $displayName: `${profileForState.first_name} ${profileForState.last_name}`,
+            });
+          } catch (error) {
+            console.error('❌ EmailVerification - RevenueCat setup failed for pro user:', error);
+          }
+        } else {
+          try {
+            await revenueCatService.setUserID(profileForState.id);
+            await revenueCatService.setAttributes({
+              $email: profileForState.email,
+              $displayName: `${profileForState.first_name} ${profileForState.last_name}`,
+            });
+            const { syncSubscriptionStatus } = await import(
+              '../services/subscriptionChecker'
+            );
+            const subscriptionStatus = await syncSubscriptionStatus(setIsPro);
+            console.log('🔍 EmailVerification - RevenueCat subscription status:', subscriptionStatus);
+          } catch (error) {
+            console.error('❌ EmailVerification - Failed to check RevenueCat subscription:', error);
+            setIsPro(false);
+          }
         }
       } else {
         mixpanel?.track({

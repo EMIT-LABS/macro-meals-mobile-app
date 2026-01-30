@@ -373,6 +373,22 @@ export const SettingsScreen: React.FC = () => {
               navigation.navigate('ManageSubscriptionsScreen');
             }}
           />
+          <SectionItem
+            title="Redeem referral code"
+            image={IMAGE_CONSTANTS.chatIcon}
+            rightComponent={
+              <Text className="text-xl text-gray-400 ml-1">›</Text>
+            }
+            onPress={() => {
+              mixpanel?.track({
+                name: 'redeem_referral_code_clicked',
+                properties: {
+                  source: 'settings_screen',
+                },
+              });
+              navigation.navigate('RedeemReferralCodeScreen');
+            }}
+          />
         </ProfileSection>
 
         {/* Notifications Section */}

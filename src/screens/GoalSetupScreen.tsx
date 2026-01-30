@@ -13,7 +13,7 @@ import { RootStackParamList } from 'src/types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { IMAGE_CONSTANTS } from 'src/constants/imageConstants';
 import { useGoalsFlowStore } from 'src/store/goalsFlowStore';
-import useStore from 'src/store/useStore';
+import useStore, { shouldSkipPaywall } from 'src/store/useStore';
 import { useRemoteConfigContext } from '@macro-meals/remote-config-service';
 import { HasMacrosContext } from '../contexts/HasMacrosContext';
 import { IsProContext } from '../contexts/IsProContext';
@@ -162,144 +162,70 @@ React.useEffect(() => {
                     console.log('🔍 GoalSetup - allCompleted result:', allCompleted);
                     
                     if (allCompleted) {
-                        // Check subscription status from RevenueCat before routing
+                        console.log('🔍 GoalSetup - All steps completed, checking pro status...');
+                        
+                        // Always fetch fresh profile so we never use stale store data (e.g. after referral redemption)
+                        let currentProfile: typeof profile = null;
+                        try {
+                            const { userService } = await import('../services/userService');
+                            const freshProfile = await userService.getProfile();
+                            currentProfile = freshProfile;
+                            console.log('🔍 GoalSetup - Fetched fresh profile from API:', currentProfile);
+                            const { setProfile } = useStore.getState();
+                            setProfile(freshProfile);
+                        } catch (error) {
+                            console.error('❌ GoalSetup - Failed to fetch profile from API:', error);
+                            // Fallback to store profile
+                            currentProfile = profile || useStore.getState().profile;
+                        }
+                        
+                        console.log('🔍 GoalSetup - is_pro:', currentProfile?.is_pro, 'referral.is_active:', currentProfile?.referral?.is_active);
+                        
+                        // Skip paywall if is_pro OR active referral (promo)
+                        if (shouldSkipPaywall(currentProfile)) {
+                            console.log('✅ GoalSetup - User has pro or active referral, skipping paywall');
+                            setIsPro(true);
+                            setReadyForDashboard(true);
+                            setHasBeenPromptedForGoals(false);
+                            return;
+                        }
+                        
+                        // If backend says not pro, check RevenueCat for active subscriptions
                         try {
                             const { revenueCatService } = await import('../services/revenueCatService');
                             
-                            console.log('🔍 GoalSetup - Starting subscription check process...');
+                            console.log('🔍 GoalSetup - Backend is_pro is false, checking RevenueCat...');
                             
-                            // First, sync purchases to ensure we have the latest data
-                            console.log('🔄 GoalSetup - Syncing purchases to check for existing subscriptions...');
+                            // Sync purchases to ensure latest data
                             try {
                                 await revenueCatService.syncPurchases();
-                                console.log('✅ GoalSetup - Purchases synced successfully');
+                                console.log('✅ GoalSetup - Purchases synced');
                             } catch (syncError) {
                                 console.error('❌ GoalSetup - Failed to sync purchases:', syncError);
                             }
                             
-                            // Get customer info for detailed logging
-                            console.log('🔍 GoalSetup - Getting customer info for detailed analysis...');
-                            const customerInfo = await revenueCatService.getCustomerInfo();
-                            console.log('🔍 GoalSetup - Full RevenueCat customer info:', {
-                                originalAppUserId: customerInfo.originalAppUserId,
-                                activeEntitlements: Object.keys(customerInfo.entitlements.active),
-                                allEntitlements: Object.keys(customerInfo.entitlements.all),
-                                activeSubscriptions: customerInfo.activeSubscriptions,
-                                allPurchaseDates: customerInfo.allPurchaseDates,
-                                allExpirationDates: customerInfo.allExpirationDates,
-                                subscriptionsByProductIdentifier: Object.keys(customerInfo.subscriptionsByProductIdentifier)
-                            });
-                            
                             // Check subscription status
                             const subscriptionStatus = await revenueCatService.checkSubscriptionStatus();
+                            console.log('🔍 GoalSetup - RevenueCat subscription status:', subscriptionStatus);
                             
-                            console.log('🔍 GoalSetup - RevenueCat subscription status check:', subscriptionStatus);
-                            
-                            // If no subscription found with current method, try email-based lookup and linking
-                            if (!subscriptionStatus.isPro) {
-                                console.log('🔍 GoalSetup - No subscription found with standard check, trying email-based lookup...');
-                                
-                                // Get user email and ID from profile hook
-                                console.log('🔍 GoalSetup - Profile object:', profile);
-                                console.log('🔍 GoalSetup - Profile type:', typeof profile);
-                                console.log('🔍 GoalSetup - Profile keys:', profile ? Object.keys(profile) : 'null/undefined');
-                                
-                                // Try to get profile from store state as fallback
-                                const storeState = useStore.getState();
-                                console.log('🔍 GoalSetup - Store state profile:', storeState.profile);
-                                
-                                // If profile is not available, try to fetch it from the API
-                                let userEmail = profile?.email || storeState.profile?.email;
-                                let userId = profile?.id || storeState.profile?.id;
-                                
-                                if (!userEmail || !userId) {
-                                    console.log('🔍 GoalSetup - Profile not available, fetching from API...');
-                                    try {
-                                        const { userService } = await import('../services/userService');
-                                        const fetchedProfile = await userService.getProfile();
-                                        console.log('🔍 GoalSetup - Fetched profile from API:', fetchedProfile);
-                                        
-                                        // Store the profile in the store for future use
-                                        const { setProfile } = useStore.getState();
-                                        setProfile(fetchedProfile);
-                                        
-                                        userEmail = fetchedProfile.email;
-                                        userId = fetchedProfile.id;
-                                        
-                                        console.log('🔍 GoalSetup - Updated email and ID from API:', { userEmail, userId });
-                                    } catch (error) {
-                                        console.error('❌ GoalSetup - Failed to fetch profile from API:', error);
-                                    }
-                                }
-                                
-                                console.log('🔍 GoalSetup - Extracted email:', userEmail);
-                                console.log('🔍 GoalSetup - Extracted ID:', userId);
-                                
-                                if (userEmail && userId) {
-                                    console.log('🔍 GoalSetup - User email:', userEmail);
-                                    console.log('🔍 GoalSetup - User ID:', userId);
-                                    
-                                    // Step 1: Set email as RevenueCat attribute to help find existing customer
-                                    console.log('🔍 GoalSetup - Setting email as RevenueCat attribute...');
-                                    await revenueCatService.setAttributes({ $email: userEmail });
-                                    
-                                    // Step 2: Check for existing subscription by email
-                                    console.log('🔍 GoalSetup - Checking for existing subscription by email...');
-                                    const emailCheckResult = await revenueCatService.checkForExistingSubscription(userEmail);
-                                    
-                                    if (emailCheckResult.hasSubscription) {
-                                        console.log('✅ GoalSetup - Found existing subscription by email!');
-                                        console.log('🔍 GoalSetup - Email check result:', emailCheckResult);
-                                        
-                                        // Step 3: Link the new user ID to the existing subscription
-                                        console.log('🔍 GoalSetup - Linking new user ID to existing subscription...');
-                                        const linkResult = await revenueCatService.linkExistingSubscription(userId, userEmail);
-                                        
-                                        if (linkResult.success) {
-                                            console.log('✅ GoalSetup - Successfully linked existing subscription to new user ID!');
-                                            setIsPro(true);
-                                            setReadyForDashboard(true);
-                                            setHasBeenPromptedForGoals(false);
-                                            return;
-                                        } else {
-                                            console.log('⚠️ GoalSetup - Found subscription but failed to link to new user ID');
-                                            console.log('🔍 GoalSetup - Link result:', linkResult);
-                                            setIsPro(false);
-                                        }
-                                    } else {
-                                        console.log('❌ GoalSetup - No existing subscription found by email');
-                                        setIsPro(false);
-                                    }
-                                } else {
-                                    console.log('⚠️ GoalSetup - Missing user email or ID for subscription check');
-                                    console.log('🔍 GoalSetup - Email:', userEmail, 'ID:', userId);
-                                    setIsPro(false);
-                                }
-                            } else {
-                                console.log('✅ GoalSetup - User already has active subscription');
-                                setIsPro(subscriptionStatus.isPro);
-                            }
-                            
-                            // Get the final isPro state (it was set in the email check above)
-                            const currentIsPro = subscriptionStatus.isPro; // This will be updated by the email check if needed
-                            
-                            if (currentIsPro || devMode) {
-                                // User has active RevenueCat entitlements or dev mode - go to dashboard
-                                console.log('🔍 GoalSetup - User has active subscription or dev mode, going to dashboard');
-                                setHasBeenPromptedForGoals(false);
+                            if (subscriptionStatus.isPro || devMode) {
+                                console.log('✅ GoalSetup - User has active subscription or dev mode');
+                                setIsPro(true);
                                 setReadyForDashboard(true);
+                                setHasBeenPromptedForGoals(false);
                                 return;
                             } else {
-                                // User needs subscription - go to payment screen
-                                console.log('🔍 GoalSetup - User needs subscription, going to payment screen');
-                                navigation.navigate('PaymentScreen'); // BLOCKED FOR TESTING
+                                console.log('🔍 GoalSetup - No active subscription, showing paywall');
+                                setIsPro(false);
+                                navigation.navigate('PaymentScreen');
                                 setHasBeenPromptedForGoals(false);
                                 return;
                             }
                         } catch (error) {
-                            console.error('❌ GoalSetup - Failed to check RevenueCat subscription status:', error);
-                            // Fallback to payment screen if check fails
-                            navigation.navigate('PaymentScreen'); // BLOCKED FOR TESTING
+                            console.error('❌ GoalSetup - Failed to check RevenueCat subscription:', error);
+                            // Default to paywall if check fails
+                            setIsPro(false);
+                            navigation.navigate('PaymentScreen');
                             setHasBeenPromptedForGoals(false);
                             return;
                         }
