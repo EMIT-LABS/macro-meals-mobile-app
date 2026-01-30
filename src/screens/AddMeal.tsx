@@ -93,7 +93,7 @@ const AddMeal: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const posthog = usePosthog()
+  const posthog = usePosthog();
   const [pagination, setPagination] = useState({
     has_next: false,
     has_previous: false,
@@ -109,22 +109,19 @@ const AddMeal: React.FC = () => {
   const mixpanel = useMixpanel();
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
-        posthog?.track({
-          name: 'meals_page_viewed',
-            properties: {
-                      platform: Platform.OS,
-                      app_version: DeviceInfo.getVersion(),
-                      selected_date: selectedRange,
-                      date_range_start:customRange.endDate,
-                       date_range_end:customRange.endDate,
-                       total_meals_count:meals.length,
-
-                    }
-           
-          
-          });
-
-   
+    posthog?.track({
+      name: 'meals_page_viewed',
+      properties: {
+        $screen_name: 'AddMeal',
+        $current_url: 'AddMeal',
+        platform: Platform.OS,
+        app_version: DeviceInfo.getVersion(),
+        selected_date: selectedRange,
+        date_range_start: customRange.endDate,
+        date_range_end: customRange.endDate,
+        total_meals_count: meals.length,
+      },
+    });
   }, []);
 
   // State for consumed calories (same as DashboardScreen)
@@ -189,16 +186,18 @@ const AddMeal: React.FC = () => {
           days_displayed: Object.keys(mealsByMonth).length,
         },
       });
-       posthog?.track({
+      posthog?.track({
         name: 'meals_day_summary_displayed',
         properties: {
+          $screen_name: 'AddMeal',
+          $current_url: 'AddMeal',
           days_displayed: Object.keys(mealsByMonth).length,
-          remaining_calories:macros.calories - periodMealsSum,
-          consumed_calories:periodMealsSum,
-          goal_calories:macros.calories,
+          remaining_calories: macros.calories - periodMealsSum,
+          consumed_calories: periodMealsSum,
+          goal_calories: macros.calories,
           protein_g: macros.protein,
-          carbs_g:macros.carbs,
-          fat_g:macros.fat
+          carbs_g: macros.carbs,
+          fat_g: macros.fat,
         },
       });
     }
@@ -344,11 +343,17 @@ const AddMeal: React.FC = () => {
               await mealService.deleteMeal(mealId);
               mixpanel?.track({
                 name: 'meal_deleted',
-                properties: { meal_id: mealId, selected_date:selectedRange },
+                properties: { meal_id: mealId, selected_date: selectedRange },
               });
-               posthog?.track({
+              posthog?.track({
                 name: 'meal_deleted',
-                properties: { meal_id: mealId, selected_date:selectedRange  },
+
+                properties: {
+                  meal_id: mealId,
+                  selected_date: selectedRange,
+                  $screen_name: 'AddMeal',
+                  $current_url: 'AddMeal',
+                },
               });
               // Remove meal from store immediately
               deleteLoggedMeal(mealId);
@@ -396,7 +401,6 @@ const AddMeal: React.FC = () => {
 
   const showFilterSheet = () => {
     mixpanel?.track({ name: 'meals_filter_icon_clicked' });
-        
 
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -426,14 +430,17 @@ const AddMeal: React.FC = () => {
           // Cancel does nothing
         }
       );
-      posthog?.track({ name: 'meals_filter_icon_clicked',
-          properties:{
-            current_view_period:selectedRange,
-            current_selected_date:selectedRange,
-            total_meals_count:meals.length,
-            entry_point :'meal_screen' 
-          }
-         });
+      posthog?.track({
+        name: 'meals_filter_icon_clicked',
+        properties: {
+          $screen_name: 'AddMeal',
+          $current_url: 'AddMeal',
+          current_view_period: selectedRange,
+          current_selected_date: selectedRange,
+          total_meals_count: meals.length,
+          entry_point: 'meal_screen',
+        },
+      });
     } else {
       setModalVisible(true); // fallback to your custom modal for Android
     }
@@ -452,7 +459,6 @@ const AddMeal: React.FC = () => {
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={() => {
-                  
                   const currentIndex = FILTER_OPTIONS.findIndex(
                     opt => opt.value === selectedRange
                   );
@@ -472,9 +478,11 @@ const AddMeal: React.FC = () => {
                         entry_point: 'meals_page',
                       },
                     });
-                      posthog?.track({
+                    posthog?.track({
                       name: 'custom_date_picker_opened',
                       properties: {
+                        $screen_name: 'AddMeal',
+                        $current_url: 'AddMeal',
                         current_view_period: selectedRange,
                         prefilled_start_date: customRange.startDate,
                         prefilled_end_date: customRange.endDate,
@@ -482,15 +490,17 @@ const AddMeal: React.FC = () => {
                       },
                     });
                     posthog.track({
-                    name:'meals_period_navigated',
-                    properties:{
-                      from_period:prevIndex,
-                      to_period:currentIndex,
-                      direction:'backward',
-                      from_date:selectedRange,
-                      to_date:newRange
-                    }
-                  })
+                      name: 'meals_period_navigated',
+                      properties: {
+                        $screen_name: 'AddMeal',
+                        $current_url: 'AddMeal',
+                        from_period: prevIndex,
+                        to_period: currentIndex,
+                        direction: 'backward',
+                        from_date: selectedRange,
+                        to_date: newRange,
+                      },
+                    });
                     setCustomPickerOpen(true);
                   }
                 }}
@@ -517,18 +527,19 @@ const AddMeal: React.FC = () => {
                   if (newRange === 'custom') {
                     setCustomPickerOpen(true);
                   }
-                     posthog.track({
-                    name:'meals_period_navigated',
-                    properties:{
-                      from_period:currentIndex,
-                      to_period:nextIndex,
-                      direction:'forward',
-                      from_date:selectedRange,
-                      to_date:newRange
-                    }
-                  })
+                  posthog.track({
+                    name: 'meals_period_navigated',
+                    properties: {
+                      $screen_name: 'AddMeal',
+                      $current_url: 'AddMeal',
+                      from_period: currentIndex,
+                      to_period: nextIndex,
+                      direction: 'forward',
+                      from_date: selectedRange,
+                      to_date: newRange,
+                    },
+                  });
                 }}
-                
               >
                 <Text className="text-white text-2xl font-bold">›</Text>
               </TouchableOpacity>
@@ -805,6 +816,8 @@ const AddMeal: React.FC = () => {
                                                   posthog?.track({
                                                     name: 'edit_meal_from_meals_clicked',
                                                     properties: {
+                                                      $screen_name: 'AddMeal',
+                                                      $current_url: 'AddMeal',
                                                       meal_id: meal.id,
                                                       selected_date:
                                                         meal.meal_time,
@@ -1315,9 +1328,11 @@ const AddMeal: React.FC = () => {
                   : null,
             },
           });
-           posthog?.track({
+          posthog?.track({
             name: 'custom_date_range_selected',
             properties: {
+              $screen_name: 'AddMeal',
+              $current_url: 'AddMeal',
               date_range_start: startDate?.toISOString() ?? null,
               date_range_end: endDate?.toISOString() ?? null,
               total_days:
