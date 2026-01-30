@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { useMixpanel } from '@macro-meals/mixpanel/src';
 import { usePosthog } from '@macro-meals/posthog_service/src';
@@ -107,6 +107,7 @@ const AddMeal: React.FC = () => {
   const deleteLoggedMeal = useStore(state => state.deleteLoggedMeal);
   const fetchTodayProgress = useStore(state => state.fetchTodayProgress);
   const mixpanel = useMixpanel();
+  const hasTrackedDaySummary = useRef(false);
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
     posthog?.track({
@@ -179,7 +180,8 @@ const AddMeal: React.FC = () => {
     }, [meals]);
 
   useEffect(() => {
-    if (meals.length > 0) {
+    if (meals.length > 0 && !hasTrackedDaySummary.current) {
+      hasTrackedDaySummary.current = true;
       mixpanel?.track({
         name: 'meals_day_summary_displayed',
         properties: {
@@ -201,12 +203,7 @@ const AddMeal: React.FC = () => {
         },
       });
     }
-  }, [meals]);
-
-  // Keep all accordions closed initially
-  useEffect(() => {
-    // No need to open any accordions by default
-  }, [mealsByMonth]);
+  }, [meals, mealsByMonth, macros, periodMealsSum, mixpanel, posthog]);
 
   // Toggle month accordion
 

@@ -2,7 +2,7 @@ import { useMixpanel } from '@macro-meals/mixpanel';
 import { usePosthog } from '@macro-meals/posthog_service/src';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -84,8 +84,10 @@ const AiMealSuggestionsScreen: React.FC = () => {
     });
   }, []);
 
+  const hasTrackedCardView = useRef(false);
   useEffect(() => {
-    if (recipes) {
+    if (recipes.length > 0 && !hasTrackedCardView.current) {
+      hasTrackedCardView.current = true;
       posthog.track({
         name: 'ai_recipe_card_viewed',
         properties: {
@@ -95,7 +97,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
         },
       });
     }
-  }, [recipes]);
+  }, [recipes, posthog]);
 
   const fetchRecipes = async () => {
     try {
@@ -138,20 +140,17 @@ const AiMealSuggestionsScreen: React.FC = () => {
     navigation.navigate('AIRecipeDetailsScreen', { recipe });
   };
 
-  // Update macroData when todayProgress changes
+  // Update macroData when todayProgress values change (primitives to avoid ref churn)
+  const protein = todayProgress?.protein ?? 0;
+  const carbs = todayProgress?.carbs ?? 0;
+  const fat = todayProgress?.fat ?? 0;
   useEffect(() => {
-    if (todayProgress) {
-      setMacroData([
-        {
-          label: 'Protein',
-          value: todayProgress.protein || 0,
-          color: '#6C5CE7',
-        },
-        { label: 'Carbs', value: todayProgress.carbs || 0, color: '#FFC107' },
-        { label: 'Fat', value: todayProgress.fat || 0, color: '#FF69B4' },
-      ]);
-    }
-  }, [todayProgress]);
+    setMacroData([
+      { label: 'Protein', value: protein, color: '#6C5CE7' },
+      { label: 'Carbs', value: carbs, color: '#FFC107' },
+      { label: 'Fat', value: fat, color: '#FF69B4' },
+    ]);
+  }, [protein, carbs, fat]);
 
   useEffect(() => {
     fetchRecipes();
