@@ -86,10 +86,8 @@ const AiMealSuggestionsScreen: React.FC = () => {
 
   // const trackAIRecipeViewed = async () => {
   //   if (!mixpanel) return;
-
   //   const signupTime = mixpanel.getSuperProperty("signup_time");
   //   const properties: Record<string, any> = {};
-
   //   const firstAIRecipeViewed = mixpanel.getSuperProperty(
   //     "first_ai_recipe_viewed"
   //   );
@@ -101,17 +99,9 @@ const AiMealSuggestionsScreen: React.FC = () => {
   //     properties.time_to_first_ai_recipe_seconds = timeToFirstRecipe;
   //     mixpanel.register({ first_ai_recipe_viewed: true });
   //   }
-
   //   mixpanel.track({
   //     name: "ai_recipe_viewed",
   //     properties,
-  //   });
-  //  posthog.track({
-  //     name: "ai_recipe_viewed",
-  //     properties:{
-  //       result_count:recipes.length
-  //     }
-
   //   });
   // };
 

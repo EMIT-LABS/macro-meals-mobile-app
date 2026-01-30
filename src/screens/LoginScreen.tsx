@@ -69,7 +69,7 @@ export const LoginScreen: React.FC = () => {
   useEffect(() => {
     if (mixpanel && !eventsFired.current) {
       eventsFired.current = true;
-      
+
       // Track screen view for PostHog
       posthog.track({
         name: '$screen',
@@ -79,11 +79,23 @@ export const LoginScreen: React.FC = () => {
           platform: Platform.OS,
         },
       });
-      
+
       // Track event for Mixpanel
       mixpanel.track({
         name: 'sign_in_screen_viewed',
-        properties: { platform: Platform.OS },
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'SignUpScreen',
+          $current_url: 'SignUpScreen',
+        },
+      });
+      posthog.track({
+        name: 'sign_in_screen_viewed',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'LoginScreen',
+          $current_url: 'LoginScreen',
+        },
       });
     }
   }, [mixpanel, posthog]);
@@ -115,6 +127,16 @@ export const LoginScreen: React.FC = () => {
     mixpanel?.track({
       name: 'sign_in_attempted',
       properties: {
+        email_domain: email.split('@')[1] || '',
+        platform: Platform.OS,
+      },
+    });
+
+    posthog?.track({
+      name: 'sign_in_attempted',
+      properties: {
+        $screen_name: 'LoginScreen',
+        $current_url: 'LoginScreen',
         email_domain: email.split('@')[1] || '',
         platform: Platform.OS,
       },
@@ -259,6 +281,17 @@ export const LoginScreen: React.FC = () => {
           },
         });
 
+        posthog?.track({
+          name: 'sign_in_successful',
+          properties: {
+            login_method: 'email',
+            has_macros: profile.has_macros,
+            is_pro: profile.is_pro || false,
+            $screen_name: 'LoginScreen',
+            $current_url: 'LoginScreen',
+          },
+        });
+
         // Set authenticated last to trigger navigation
         console.log('🔍 LoginScreen - Setting authenticated state');
 
@@ -321,6 +354,17 @@ export const LoginScreen: React.FC = () => {
         },
       });
 
+      posthog?.track({
+        name: 'sign_in_failed',
+        properties: {
+          email_domain: email.split('@')[1] || '',
+          error_type: errorMessage,
+          platform: Platform.OS,
+          $screen_name: 'LoginScreen',
+          $current_url: 'LoginScreen',
+        },
+      });
+
       Alert.alert('Login Failed', errorMessage, [{ text: 'OK' }]);
     } finally {
       setIsLoading(false);
@@ -330,6 +374,14 @@ export const LoginScreen: React.FC = () => {
     mixpanel?.track({
       name: 'forgot_password_clicked',
       properties: { platform: Platform.OS },
+    });
+    posthog?.track({
+      name: 'forgot_password_clicked',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'LoginScreen',
+        $current_url: 'LoginScreen',
+      },
     });
     (navigation as any).navigate('ForgotPasswordScreen');
   };

@@ -99,7 +99,6 @@ export const DashboardScreen: React.FC = () => {
   const posthog = usePosthog();
   const eventsFired = useRef(false);
   const userIdentified = useRef(false); // Track if user has been identified in PostHog
-  const [loggedMealsPresent , setLoggedMealsPresent] = useState(false)
 
   // Calculate today's total macros from loggedMeals
   const todayMealsSum = loggedMeals.reduce(
@@ -146,7 +145,7 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'dashboard_viewed',
           properties: {
-             $screen_name: 'DashboardScreen',
+            $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
@@ -168,7 +167,7 @@ export const DashboardScreen: React.FC = () => {
           posthog.track({
           name: 'greeting_displayed',
           properties: {
-             $screen_name: 'DashboardScreen',
+            $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen',
             user_id: profile?.id,
             platform: Platform.OS,
@@ -197,7 +196,7 @@ export const DashboardScreen: React.FC = () => {
         posthog.track({
           name: 'macro_summary_displayed',
           properties: {
-             $screen_name: 'DashboardScreen',
+            $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
@@ -213,6 +212,7 @@ export const DashboardScreen: React.FC = () => {
 
       // Recently uploaded section viewed tracking
       if (loggedMeals !== undefined) {
+        const hasLoggedMeals = (loggedMeals?.length ?? 0) > 0;
         mixpanel.track({
           name: 'recently_uploaded_section_viewed',
           properties: {
@@ -222,22 +222,15 @@ export const DashboardScreen: React.FC = () => {
           },
         });
 
-      if(loggedMeals){
-        setLoggedMealsPresent(true)
-      }else{
-        setLoggedMealsPresent(false)
-      }
-
-
         posthog.track({
           name: 'recently_uploaded_section_viewed',
           properties: {
-             $screen_name: 'DashboardScreen',
+            $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
             meal_count: loggedMeals.length,
-            empty_state:loggedMealsPresent,
+            empty_state: !hasLoggedMeals,
           },
         });
       }
@@ -280,13 +273,9 @@ export const DashboardScreen: React.FC = () => {
   }, [
     isLoading,
     error,
-    profile,
-    macros,
-    todayProgress,
-    loggedMeals,
-    todayMealsSum,
+    profile?.id,
     mixpanel,
-    posthog
+    posthog,
   ]);
 
   // useEffect(() => {
@@ -465,13 +454,7 @@ export const DashboardScreen: React.FC = () => {
       },
     });
 
-     if(loggedMeals){
-        setLoggedMealsPresent(true)
-      }else{
-        setLoggedMealsPresent(false)
-      }
-
-   posthog?.track({
+    posthog?.track({
       name: 'log_first_meal_clicked',
       properties: {
         $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
@@ -479,8 +462,8 @@ export const DashboardScreen: React.FC = () => {
         meals_logged_count: loggedMeals.length,
         user_id: profile?.id,
         platform: Platform.OS,
-        entry_point:'dashboard_screen',
-        is_first_time_user:loggedMealsPresent
+        entry_point: 'dashboard_screen',
+        is_first_time_user: (loggedMeals?.length ?? 0) === 0,
       },
     });
     navigation.navigate('ScanScreenType');
