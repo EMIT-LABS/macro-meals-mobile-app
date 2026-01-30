@@ -186,6 +186,8 @@ const MealFinderScreen: React.FC = () => {
             posthog.track({
               name: 'dashboard_viewed',
               properties: {
+                $screen_name: 'MealFinderScreen',
+            $current_url: 'MealFinderScreen',
                 entry_point:'meal_finder',
                 macros:macrosPreferences,
                 view_type:activeTab
@@ -418,6 +420,8 @@ const MealFinderScreen: React.FC = () => {
     posthog.track({
       name:'search_bar_engaged',
       properties:{
+           $screen_name: 'MealFinderScreen',
+            $current_url: 'MealFinderScreen',
         entry_point:'meal_finder_screen'
       }
     })
@@ -653,6 +657,8 @@ const MealFinderScreen: React.FC = () => {
                    posthog.track({
               name: 'viewed_type_toggled',
               properties: {
+                $screen_name: 'MealFinderScreen',
+            $current_url: 'MealFinderScreen',
                 from_view:activeTab,
                 to_view:'map'
 
@@ -688,6 +694,8 @@ const MealFinderScreen: React.FC = () => {
                    posthog.track({
               name: 'viewed_type_toggled',
               properties: {
+                   $screen_name: 'MealFinderScreen',
+            $current_url: 'MealFinderScreen',
                 from_view:activeTab,
                 to_view:'list'
 

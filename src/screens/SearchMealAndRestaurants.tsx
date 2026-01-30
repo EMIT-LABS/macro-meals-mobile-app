@@ -146,6 +146,8 @@ const SearchMealAndRestaurants: React.FC = () => {
       posthog.track({
         name:'search_query_submitted',
         properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
           query:searchQuery,
           search_scope:searchResults.length
         }
@@ -155,6 +157,8 @@ const SearchMealAndRestaurants: React.FC = () => {
       posthog.track({
         name:'search_result_viewed',
         properties:{
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
           query:searchQuery,
           search_scope:searchResults.length,
           total_restaurants:searchResults.length,
@@ -168,6 +172,8 @@ const SearchMealAndRestaurants: React.FC = () => {
       posthog.track({
         name:'search_no_results_displayed',
         properties:{
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
           query:searchQuery,
           
         }
@@ -433,6 +439,8 @@ const SearchMealAndRestaurants: React.FC = () => {
       posthog.track({
         name:'filter_icon_clicked',
         properties:{
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
           entry_point:'search_meals_and_restaurants',
           
         }
@@ -452,7 +460,8 @@ const SearchMealAndRestaurants: React.FC = () => {
         name:'filter_category_selected',
         properties:{
                     category_name:tempSelectedCuisines,
-                    is_selected:""
+                   $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
 
         }
       })
@@ -466,7 +475,9 @@ const SearchMealAndRestaurants: React.FC = () => {
         name:'filter_applied',
         properties:{
                     selected_categories:tempSelectedCuisines,
-                    total_selected:selectedCuisines.length
+                    total_selected:selectedCuisines.length,
+                    $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
 
         }
       })
@@ -481,7 +492,9 @@ const SearchMealAndRestaurants: React.FC = () => {
         name:'filter_reset_clicked',
         properties:{
                   
-          total_selected_before_reset:selectedCuisines.length
+          total_selected_before_reset:selectedCuisines.length,
+          $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
 
         }
       })
@@ -497,7 +510,9 @@ const SearchMealAndRestaurants: React.FC = () => {
         name:'filter_modal_viewed',
         properties:{
                     with_categories:tempSelectedCuisines,
-                    preselected_count:tempSelectedCuisines.length
+                    preselected_count:tempSelectedCuisines.length,
+                    $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
 
         }
       })
@@ -635,6 +650,8 @@ const SearchMealAndRestaurants: React.FC = () => {
       posthog.track({
             name:'meal_detail_viewed',
             properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
               meal_id:meal.id,
               meal_name:meal.name,
               restaurant_name:meal.restaurant.name,
@@ -661,6 +678,8 @@ const SearchMealAndRestaurants: React.FC = () => {
        posthog.track({
             name:'meal_card_clicked',
             properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
               meal_id:meal.id,
               meal_name:meal.name,
               restaurant_name:meal.restaurant.name,
@@ -796,6 +815,8 @@ const SearchMealAndRestaurants: React.FC = () => {
           posthog.track({
             name:"search_tab_switched",
             properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
               from_tab:'meals',
               to_tab:'restaurants'
             }
@@ -823,6 +844,8 @@ const SearchMealAndRestaurants: React.FC = () => {
           posthog.track({
             name:"search_tab_switched",
             properties:{
+              $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
               from_tab:'restaurants',
               to_tab:'meals'
             }
@@ -1018,6 +1041,8 @@ const SearchMealAndRestaurants: React.FC = () => {
                   posthog.track({
                     name:'filter_cancel_clicked',
                     properties:{
+                      $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
                       total_selected_before_cancel:selectedCuisines.length
                     }
                   })
