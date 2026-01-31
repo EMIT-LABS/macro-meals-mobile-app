@@ -27,7 +27,6 @@ import { mealService } from '../services/mealService';
 import { Meal } from '../types';
 import { usePosthog } from '@macro-meals/posthog_service/src';
 
-
 interface MacroData {
   label: 'Protein' | 'Carbs' | 'Fat';
   value: number;
@@ -177,27 +176,20 @@ const MealFinderScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const isDataLoaded = !locationLoading && meals.length > 0;
-  const posthog = usePosthog()
+  const posthog = usePosthog();
 
-
-
-  useEffect(()=>{
-    // Track regular events
-            posthog.track({
-              name: 'dashboard_viewed',
-              properties: {
-                entry_point:'meal_finder',
-                macros:macrosPreferences,
-                view_type:activeTab
-
-              },
-            });
-  })
-
-
-
-
-
+  useEffect(() => {
+    posthog?.track({
+      name: 'meal_finder_screen_viewed',
+      properties: {
+        $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
+        entry_point: 'meal_finder',
+        macros: macrosPreferences,
+        view_type: activeTab,
+      },
+    });
+  }, []);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -418,6 +410,8 @@ const MealFinderScreen: React.FC = () => {
     posthog.track({
       name:'search_bar_engaged',
       properties:{
+           $screen_name: 'MealFinderScreen',
+            $current_url: 'MealFinderScreen',
         entry_point:'meal_finder_screen'
       }
     })
@@ -520,7 +514,16 @@ const MealFinderScreen: React.FC = () => {
         style={{ paddingTop: Platform.OS === 'android' ? 8 : 50 }}
       >
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => {navigation.goBack(),
+            posthog.track({
+              name:'meal_finder_back_to_add_meal',
+              properties:{
+                 $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
+                gesture:'button'
+              }
+            })
+          }}
           className={`flex-row w-8 h-8 rounded-full bg-white justify-center items-center`}
         >
           <Ionicons
@@ -653,6 +656,8 @@ const MealFinderScreen: React.FC = () => {
                    posthog.track({
               name: 'viewed_type_toggled',
               properties: {
+                $screen_name: 'MealFinderScreen',
+            $current_url: 'MealFinderScreen',
                 from_view:activeTab,
                 to_view:'map'
 
@@ -688,6 +693,8 @@ const MealFinderScreen: React.FC = () => {
                    posthog.track({
               name: 'viewed_type_toggled',
               properties: {
+                   $screen_name: 'MealFinderScreen',
+            $current_url: 'MealFinderScreen',
                 from_view:activeTab,
                 to_view:'list'
 

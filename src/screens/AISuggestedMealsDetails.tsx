@@ -12,6 +12,7 @@ import FavoritesService from '../services/favoritesService';
 import { mealService } from '../services/mealService';
 import useStore from '../store/useStore';
 import { userService } from '../services/userService';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -57,11 +58,13 @@ const AISuggestedMealsDetailsScreen: React.FC = () => {
   // const [userPreferences, setUserPreferences] = useState<any>(null);
   const [macroBreakdown, setMacroBreakdown] = useState<MacroData[]>([]);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const posthog = usePosthog()
 
   // Check if meal is in favorites on component mount
   useEffect(() => {
     checkIfFavorite();
     fetchUserPreferences();
+    
   }, []);
 
   const checkIfFavorite = async (): Promise<void> => {

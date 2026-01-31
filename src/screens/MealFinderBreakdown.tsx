@@ -210,6 +210,8 @@ const MealFinderBreakdownScreen: React.FC = () => {
         posthog.track({
           name:'meal_favourited',
           properties:{
+               $screen_name: 'MealFinderBreakdownScreen',
+            $current_url: 'MealFinderBreakdownScreen',
             meal_id:meal.name
           }
         })
@@ -258,6 +260,8 @@ const MealFinderBreakdownScreen: React.FC = () => {
       posthog.track({
         name:'add_to_log_from_detail_clicked',
           properties:{
+             $screen_name: 'MealFinderBreakdownScreen',
+            $current_url: 'MealFinderBreakdownScreen',
               meal_name:mealData.name,
               restaurant_name:meal.restaurant.name,
               meal_type:mealData.meal_type,

@@ -240,6 +240,8 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
                posthog.track({
                 name:'map_pin_tapped',
                 properties:{
+                    $screen_name: 'MealFinderMapView',
+                  $current_url: 'MealFinderMapView',
                   restaurant_id:selectedMarker.data.id,
                   restaurant_name:selectedMarker.data.restaurant,
                   match_percentage:selectedMarker.data.matchScore,
@@ -291,6 +293,8 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
                posthog.track({
                 name:'map_pin_card_clicked',
                 properties:{
+                   $screen_name: 'MealFinderMapView',
+                  $current_url: 'MealFinderMapView',
                   restaurant_id:selectedMarker.data.id,
                   meal_name:selectedMarker.data.name
                   
