@@ -407,15 +407,15 @@ const MealFinderScreen: React.FC = () => {
         defaultResults: meals,
       });
     }, 100);
-    posthog.track({
-      name:'search_bar_engaged',
-      properties:{
-           $screen_name: 'MealFinderScreen',
-            $current_url: 'MealFinderScreen',
-        entry_point:'meal_finder_screen'
-      }
-    })
-  }, [navigation, meals]);
+    posthog?.track({
+      name: 'search_bar_engaged',
+      properties: {
+        $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
+        entry_point: 'meal_finder_screen',
+      },
+    });
+  }, [navigation, meals, posthog]);
 
   const handleSelectCurrentLocation = async () => {
     closeLocationSheet();
@@ -514,15 +514,16 @@ const MealFinderScreen: React.FC = () => {
         style={{ paddingTop: Platform.OS === 'android' ? 8 : 50 }}
       >
         <TouchableOpacity
-          onPress={() => {navigation.goBack(),
-            posthog.track({
-              name:'meal_finder_back_to_add_meal',
-              properties:{
-                 $screen_name: 'MealFinderScreen',
-        $current_url: 'MealFinderScreen',
-                gesture:'button'
-              }
-            })
+          onPress={() => {
+            posthog?.track({
+              name: 'meal_finder_back_to_add_meal',
+              properties: {
+                $screen_name: 'MealFinderScreen',
+                $current_url: 'MealFinderScreen',
+                gesture: 'button',
+              },
+            });
+            navigation.goBack();
           }}
           className={`flex-row w-8 h-8 rounded-full bg-white justify-center items-center`}
         >
@@ -652,19 +653,20 @@ const MealFinderScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity
-            onPress={() =>  { if(activeTab){
-                   posthog.track({
-              name: 'viewed_type_toggled',
-              properties: {
-                $screen_name: 'MealFinderScreen',
-            $current_url: 'MealFinderScreen',
-                from_view:activeTab,
-                to_view:'map'
-
-              },
-            });
-            setActiveTab('map')
-              }}}
+            onPress={() => {
+              if (activeTab !== 'map') {
+                posthog?.track({
+                  name: 'viewed_type_toggled',
+                  properties: {
+                    $screen_name: 'MealFinderScreen',
+                    $current_url: 'MealFinderScreen',
+                    from_view: activeTab,
+                    to_view: 'map',
+                  },
+                });
+              }
+              setActiveTab('map');
+            }}
             className={`flex-1 py-3 rounded-[1000px] ${
               activeTab === 'map'
                 ? 'bg-[#01675B1A] rounded-[96px] text-primary'
@@ -688,22 +690,20 @@ const MealFinderScreen: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => 
-              { if(activeTab){
-                   posthog.track({
-              name: 'viewed_type_toggled',
-              properties: {
-                   $screen_name: 'MealFinderScreen',
-            $current_url: 'MealFinderScreen',
-                from_view:activeTab,
-                to_view:'list'
-
-              },
-            });
-            setActiveTab('list')
-              }}
-             
-            }
+            onPress={() => {
+              if (activeTab !== 'list') {
+                posthog?.track({
+                  name: 'viewed_type_toggled',
+                  properties: {
+                    $screen_name: 'MealFinderScreen',
+                    $current_url: 'MealFinderScreen',
+                    from_view: activeTab,
+                    to_view: 'list',
+                  },
+                });
+              }
+              setActiveTab('list');
+            }}
             className={`flex-1 py-3 rounded-[96px] ${
               activeTab === 'list'
                 ? 'bg-[#01675B1A] rounded-[96px]'
