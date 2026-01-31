@@ -42,16 +42,13 @@ export const ForgotPasswordScreen: React.FC = () => {
   const eventsFired = useRef(false);
 
   useEffect(() => {
-    if (mixpanel && !eventsFired.current) {
+    if (!eventsFired.current) {
       eventsFired.current = true;
-      mixpanel.track({
+      mixpanel?.track({
         name: 'forgot_password_screen_viewed',
         properties: { platform: Platform.OS },
       });
-    }
-    if (posthog && !eventsFired.current) {
-      eventsFired.current = true;
-      posthog.track({
+      posthog?.track({
         name: 'forgot_password_screen_viewed',
         properties: {
           platform: Platform.OS,

@@ -76,9 +76,14 @@ const AdjustTargetsScreen: React.FC = () => {
         name: "adjust_targets_screen_viewed",
         properties: {},
       });
-        posthog?.track({
+      posthog?.track({
         name: "adjust_targets_screen_viewed",
-        properties: {},
+        properties: {
+          current_calories: macros.calories,
+          current_protein: macros.protein,
+          current_carbs: macros.carbs,
+          current_fats: macros.fat,
+        },
       });
     }
   }, [macros]);
@@ -132,6 +137,13 @@ const AdjustTargetsScreen: React.FC = () => {
       };
       await updateMacros(updatedMacros);
       mixpanel?.track({
+        name: "targets_saved",
+        properties: {
+          updated_field: selectedMacro.key,
+          new_value: num,
+        },
+      });
+       posthog?.track({
         name: "targets_saved",
         properties: {
           updated_field: selectedMacro.key,

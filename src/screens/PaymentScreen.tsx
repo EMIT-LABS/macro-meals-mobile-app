@@ -1,4 +1,4 @@
-// src/screens/WelcomeScreen.tsx
+// src/screens/PaymentScreen.tsx
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useContext, useEffect, useState } from 'react';
@@ -237,7 +237,6 @@ const PaymentScreen = () => {
   const mixpanel = useMixpanel();
   const posthog = usePosthog();
 
-
   // Get product information for current selected plan
   const currentProductInfo = getProductInfo(
     offerings,
@@ -251,10 +250,13 @@ const PaymentScreen = () => {
       name: 'paywall_viewed',
       properties: { platform: Platform.OS },
     });
-      posthog?.track({
+    posthog?.track({
       name: 'paywall_viewed',
-      properties: { platform: Platform.OS,$screen_name: 'PaymentScreen',
-          $current_url: 'PaymentScreen', },
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'PaymentScreen',
+        $current_url: 'PaymentScreen',
+      },
     });
   }, [mixpanel, posthog]);
   // Load RevenueCat offerings when component mounts
@@ -307,6 +309,14 @@ const PaymentScreen = () => {
   const handleTrialSubscription = async () => {
     if (!profile?.has_used_trial) {
       mixpanel?.track({
+        name: 'trial_started',
+        properties: {
+          plan: selectedPlan,
+          price: currentProductInfo?.price,
+          platform: Platform.OS,
+        },
+      });
+      posthog?.track({
         name: 'trial_started',
         properties: {
           plan: selectedPlan,
@@ -388,14 +398,14 @@ const PaymentScreen = () => {
             platform: Platform.OS,
           },
         });
-           posthog?.track({
+        posthog?.track({
           name: 'subscription_started',
           properties: {
             plan: selectedPlan,
             price: currentProductInfo?.price,
             platform: Platform.OS,
             $screen_name: 'PaymentScreen',
-          $current_url: 'PaymentScreen',
+            $current_url: 'PaymentScreen',
           },
         });
 
@@ -458,7 +468,7 @@ const PaymentScreen = () => {
           platform: Platform.OS,
         },
       });
-       posthog?.track({
+      posthog?.track({
         name: 'subscription_failed',
         properties: {
           plan: selectedPlan,
@@ -502,14 +512,14 @@ const PaymentScreen = () => {
                     platform: Platform.OS,
                   },
                 });
-                 posthog?.track({
+                posthog?.track({
                   name: 'subscription_plan_selected',
                   properties: {
                     plan: 'monthly',
                     price: monthlyProductInfo?.price,
                     platform: Platform.OS,
                     $screen_name: 'PaymentScreen',
-          $current_url: 'PaymentScreen',
+                    $current_url: 'PaymentScreen',
                   },
                 });
               }}
@@ -548,19 +558,20 @@ const PaymentScreen = () => {
                 mixpanel?.track({
                   name: 'subscription_plan_selected',
                   properties: {
+                    
                     plan: 'yearly',
                     price: yearlyProductInfo?.price,
                     platform: Platform.OS,
                   },
                 });
-                 posthog?.track({
+                posthog?.track({
                   name: 'subscription_plan_selected',
                   properties: {
                     plan: 'yearly',
                     price: yearlyProductInfo?.price,
                     platform: Platform.OS,
                     $screen_name: 'PaymentScreen',
-          $current_url: 'PaymentScreen',
+                    $current_url: 'PaymentScreen',
                   },
                 });
               }}

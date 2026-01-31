@@ -15,6 +15,7 @@ import CustomSafeAreaView from "../components/CustomSafeAreaView";
 // import { useMixpanel } from '@macro-meals/mixpanel';
 import { useMixpanel } from "@macro-meals/mixpanel/src";
 import revenueCatService from "../services/revenueCatService";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 interface SubscriptionDetails {
   amount: number;
@@ -43,6 +44,7 @@ const ManageSubscriptionsScreen: React.FC = () => {
   // const [reactivating, setReactivating] = useState(false);
   // const [showCancelModal, setShowCancelModal] = useState(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   useEffect(() => {
     fetchSubscriptionDetails();
@@ -58,7 +60,18 @@ const ManageSubscriptionsScreen: React.FC = () => {
           status: subscription.status,
         },
       });
+       posthog?.track({
+        name: "manage_subscription_screen_viewed",
+        properties: {
+           $screen_name: 'ManageSubscriptionsScreen',
+            $current_url: 'ManageSubscriptionsScreen', 
+          user_id: subscription.subscription_id,
+          plan: subscription.plan,
+          status: subscription.status,
+        },
+      });
     }
+    
   }, [subscription]);
 
   const fetchSubscriptionDetails = async () => {
@@ -223,6 +236,16 @@ const ManageSubscriptionsScreen: React.FC = () => {
         status: subscription?.status,
       },
     });
+      posthog?.track({
+      name: "cancel_subscription_clicked",
+      properties: {
+         $screen_name: 'ManageSubscriptionsScreen',
+            $current_url: 'ManageSubscriptionsScreen', 
+        user_id: subscription?.subscription_id,
+        plan: subscription?.plan,
+        status: subscription?.status,
+      },
+    });
     Alert.alert(
       "Cancel Subscription",
       "To cancel your subscription, please use your device settings:\n\niOS: Settings → Apple ID → Subscriptions\nAndroid: Google Play Store → Subscriptions",
@@ -238,6 +261,16 @@ const ManageSubscriptionsScreen: React.FC = () => {
                 status: subscription?.status,
               },
             });
+             posthog?.track({
+              name: "cancel_subscription_confirmed",
+              properties: {
+                 $screen_name: 'ManageSubscriptionsScreen',
+            $current_url: 'ManageSubscriptionsScreen', 
+                user_id: subscription?.subscription_id,
+                plan: subscription?.plan,
+                status: subscription?.status,
+              },
+            });
             openSubscriptionSettings();
           },
         },
@@ -248,6 +281,18 @@ const ManageSubscriptionsScreen: React.FC = () => {
             mixpanel?.track({
               name: "cancel_subscription_failed",
               properties: {
+                 $screen_name: 'ManageSubscriptionsScreen',
+            $current_url: 'ManageSubscriptionsScreen', 
+                user_id: subscription?.subscription_id,
+                plan: subscription?.plan,
+                status: subscription?.status,
+              },
+            });
+            posthog?.track({
+              name: "cancel_subscription_failed",
+              properties: {
+                 $screen_name: 'ManageSubscriptionsScreen',
+            $current_url: 'ManageSubscriptionsScreen', 
                 user_id: subscription?.subscription_id,
                 plan: subscription?.plan,
                 status: subscription?.status,
@@ -288,11 +333,23 @@ const ManageSubscriptionsScreen: React.FC = () => {
             mixpanel?.track({
               name: "subscription_reactivated",
               properties: {
+                
                 user_id: subscription?.subscription_id,
                 plan: subscription?.plan,
                 status: subscription?.status,
               },
             });
+            posthog?.track({
+              name: "subscription_reactivated",
+              properties: {
+                  $screen_name: 'ManageSubscriptionsScreen',
+            $current_url: 'ManageSubscriptionsScreen',
+                user_id: subscription?.subscription_id,
+                plan: subscription?.plan,
+                status: subscription?.status,
+              },
+            });
+
             navigation.navigate("PaymentScreen" as never);
           },
         },
