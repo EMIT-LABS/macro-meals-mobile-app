@@ -104,7 +104,7 @@ const SearchMealAndRestaurants: React.FC = () => {
     longitude: number;
   } | null>(null);
   const searchRequestIdRef = useRef<number>(0);
-  const posthog = usePosthog()
+  const posthog = usePosthog();
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -141,39 +141,6 @@ const SearchMealAndRestaurants: React.FC = () => {
     fetchProgress();
   }, []);
 
-  useEffect(()=>{
-    if(searchQuery){
-      posthog.track({
-        name:'search_query_submitted',
-        properties:{
-          query:searchQuery,
-          search_scope:searchResults.length
-        }
-      })
-    }
-    if(searchQuery && searchResults){
-      posthog.track({
-        name:'search_result_viewed',
-        properties:{
-          query:searchQuery,
-          search_scope:searchResults.length,
-          total_restaurants:searchResults.length,
-          result_count:searchResults.length,
-          total_meals:searchResults.length,
-
-        }
-      })
-    }
-    if(!searchResults){
-      posthog.track({
-        name:'search_no_results_displayed',
-        properties:{
-          query:searchQuery,
-          
-        }
-      })
-    }
-  },[searchQuery, searchResults])
 
 
 
@@ -285,6 +252,18 @@ const SearchMealAndRestaurants: React.FC = () => {
     setSearchLoading(true);
     setSearchError(null);
 
+    if (hasQuery) {
+      posthog?.track({
+        name: 'search_query_submitted',
+        properties: {
+          $screen_name: 'SearchMealsAndRestaurants',
+          $current_url: 'SearchMealsAndRestaurants',
+          query: searchQuery.trim(),
+          search_scope: activeTab,
+        },
+      });
+    }
+
     const matchingMode: 'restaurant' | 'meal' =
       activeTab === 'restaurants' ? 'restaurant' : 'meal';
 
@@ -310,6 +289,28 @@ const SearchMealAndRestaurants: React.FC = () => {
       // Transform based on current active tab
       const transformedResults = transformPinsData(pins, activeTab);
       setSearchResults(transformedResults);
+
+      if (transformedResults.length > 0) {
+        posthog?.track({
+          name: 'search_result_viewed',
+          properties: {
+            $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+            query: searchQuery.trim() || undefined,
+            search_scope: activeTab,
+            result_count: transformedResults.length,
+          },
+        });
+      } else if (hasQuery || hasFilters) {
+        posthog?.track({
+          name: 'search_no_results_displayed',
+          properties: {
+            $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+            query: searchQuery.trim() || undefined,
+          },
+        });
+      }
 
       // Log meals when on meal tab after search
       if (activeTab === 'meals' && transformedResults.length > 0) {
@@ -340,6 +341,16 @@ const SearchMealAndRestaurants: React.FC = () => {
       setSearchError(friendlyErrorMessage);
       setSearchResults([]);
       setRawPinsData([]);
+      if (hasQuery || hasFilters) {
+        posthog?.track({
+          name: 'search_no_results_displayed',
+          properties: {
+            $screen_name: 'SearchMealsAndRestaurants',
+            $current_url: 'SearchMealsAndRestaurants',
+            query: searchQuery.trim() || undefined,
+          },
+        });
+      }
     } finally {
       // Only update loading state if this is still the latest request
       if (currentRequestId === searchRequestIdRef.current) {
@@ -430,79 +441,74 @@ const SearchMealAndRestaurants: React.FC = () => {
   const showFilterSheet = () => {
     setTempSelectedCuisines(selectedCuisines);
     setModalVisible(true);
-      posthog.track({
-        name:'filter_icon_clicked',
-        properties:{
-          entry_point:'search_meals_and_restaurants',
-          
-        }
-      })
-    
-
+    posthog?.track({
+      name: 'filter_icon_clicked',
+      properties: {
+        $screen_name: 'SearchMealsAndRestaurants',
+        $current_url: 'SearchMealsAndRestaurants',
+        entry_point: 'search_meals_and_restaurants',
+      },
+    });
+    posthog?.track({
+      name: 'filter_modal_viewed',
+      properties: {
+        $screen_name: 'SearchMealsAndRestaurants',
+        $current_url: 'SearchMealsAndRestaurants',
+        preselected_count: selectedCuisines.length,
+      },
+    });
   };
 
   const handleCuisineToggle = (value: string) => {
+    const isSelecting = !tempSelectedCuisines.includes(value);
     setTempSelectedCuisines(prev =>
       prev.includes(value)
         ? prev.filter(item => item !== value)
         : [...prev, value]
     );
-    if(tempSelectedCuisines){
-      posthog.track({
-        name:'filter_category_selected',
-        properties:{
-                    category_name:tempSelectedCuisines,
-                    is_selected:""
-
-        }
-      })
-    }
+    posthog?.track({
+      name: 'filter_category_selected',
+      properties: {
+        $screen_name: 'SearchMealsAndRestaurants',
+        $current_url: 'SearchMealsAndRestaurants',
+        category: value,
+        action: isSelecting ? 'selected' : 'deselected',
+      },
+    });
   };
 
   const applyCuisineFilters = () => {
+    posthog?.track({
+      name: 'filter_applied',
+      properties: {
+        $screen_name: 'SearchMealsAndRestaurants',
+        $current_url: 'SearchMealsAndRestaurants',
+        selected_categories: tempSelectedCuisines,
+        total_selected: tempSelectedCuisines.length,
+      },
+    });
     setSelectedCuisines(tempSelectedCuisines);
     setModalVisible(false);
-      posthog.track({
-        name:'filter_applied',
-        properties:{
-                    selected_categories:tempSelectedCuisines,
-                    total_selected:selectedCuisines.length
-
-        }
-      })
-    
   };
 
   const resetCuisineFilters = () => {
+    posthog?.track({
+      name: 'filter_reset_clicked',
+      properties: {
+        $screen_name: 'SearchMealsAndRestaurants',
+        $current_url: 'SearchMealsAndRestaurants',
+        total_selected_before_reset: selectedCuisines.length,
+      },
+    });
     setTempSelectedCuisines([]);
     setSelectedCuisines([]);
     setModalVisible(false);
-    posthog.track({
-        name:'filter_reset_clicked',
-        properties:{
-                  
-          total_selected_before_reset:selectedCuisines.length
-
-        }
-      })
   };
 
   const handleRetry = () => {
     search();
   };
 
-  useEffect(()=>{
-    if(selectedCuisines){
-      posthog.track({
-        name:'filter_modal_viewed',
-        properties:{
-                    with_categories:tempSelectedCuisines,
-                    preselected_count:tempSelectedCuisines.length
-
-        }
-      })
-    }
-  },[selectedCuisines])
 
   const renderRestaurantItem = (meal: Meal) => (
     <TouchableOpacity
@@ -631,44 +637,26 @@ const SearchMealAndRestaurants: React.FC = () => {
       longitude: meal.longitude,
     };
 
-    if(transformedMeal){
-      posthog.track({
-            name:'meal_detail_viewed',
-            properties:{
-              meal_id:meal.id,
-              meal_name:meal.name,
-              restaurant_name:meal.restaurant.name,
-              match_percentage:meal.matchScore,
-              calories:meal.macros.calories,
-              proteins_g:meal.macros.protein,
-              carbs_g:meal.macros.carbs,
-              fat_g:meal.macros.fat
-
-
-            }
-          })
-    }
-
     return (
       <TouchableOpacity
         key={meal.id}
-        onPress={() =>{
+        onPress={() => {
+          posthog?.track({
+            name: 'meal_card_clicked',
+            properties: {
+              $screen_name: 'SearchMealsAndRestaurants',
+              $current_url: 'SearchMealsAndRestaurants',
+              meal_id: meal.id,
+              meal_name: meal.name,
+              restaurant_name: meal.restaurant.name,
+              match_percentage: meal.matchScore,
+              query_context: 'meal',
+            },
+          });
           navigation.navigate('MealFinderBreakdownScreen', {
             meal: transformedMeal,
-          }
-         
-        )
-       posthog.track({
-            name:'meal_card_clicked',
-            properties:{
-              meal_id:meal.id,
-              meal_name:meal.name,
-              restaurant_name:meal.restaurant.name,
-              match_percentage:meal.matchScore,
-              query_context:'meal'
-            }
-          })}
-        }
+          });
+        }}
         className="flex-row bg-white rounded-xl mb-4 px-4 py-4 shadow-sm"
       >
         <View className="flex-row items-center justify-center bg-cornflowerBlue h-[48px] w-[48px] rounded-full mr-3 flex-shrink-0">
@@ -790,17 +778,19 @@ const SearchMealAndRestaurants: React.FC = () => {
         <View className="flex-row px-5 pb-0">
           <TouchableOpacity
             onPress={() => {
+              if (activeTab !== 'restaurants') {
+                posthog?.track({
+                  name: 'search_tab_switched',
+                  properties: {
+                    $screen_name: 'SearchMealsAndRestaurants',
+                    $current_url: 'SearchMealsAndRestaurants',
+                    from_tab: activeTab,
+                    to_tab: 'restaurants',
+                  },
+                });
+              }
               setActiveTab('restaurants');
               setSearchQuery('');
-               if(activeTab){
-          posthog.track({
-            name:"search_tab_switched",
-            properties:{
-              from_tab:'meals',
-              to_tab:'restaurants'
-            }
-          })
-        }
             }}
             className="flex-1 items-center pb-3 relative"
           >
@@ -817,17 +807,19 @@ const SearchMealAndRestaurants: React.FC = () => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
+              if (activeTab !== 'meals') {
+                posthog?.track({
+                  name: 'search_tab_switched',
+                  properties: {
+                    $screen_name: 'SearchMealsAndRestaurants',
+                    $current_url: 'SearchMealsAndRestaurants',
+                    from_tab: activeTab,
+                    to_tab: 'meals',
+                  },
+                });
+              }
               setActiveTab('meals');
               setSearchQuery('');
-              if(activeTab){
-          posthog.track({
-            name:"search_tab_switched",
-            properties:{
-              from_tab:'restaurants',
-              to_tab:'meals'
-            }
-          })
-        }
             }}
             className="flex-1 items-center pb-3 relative"
           >
@@ -1014,13 +1006,16 @@ const SearchMealAndRestaurants: React.FC = () => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => {setModalVisible(false);
-                  posthog.track({
-                    name:'filter_cancel_clicked',
-                    properties:{
-                      total_selected_before_cancel:selectedCuisines.length
-                    }
-                  })
+                onPress={() => {
+                  posthog?.track({
+                    name: 'filter_cancel_clicked',
+                    properties: {
+                      $screen_name: 'SearchMealsAndRestaurants',
+                      $current_url: 'SearchMealsAndRestaurants',
+                      total_selected_before_cancel: tempSelectedCuisines.length,
+                    },
+                  });
+                  setModalVisible(false);
                 }}
                 className="w-full py-3 mt-3 rounded-full border border-transparent"
               >

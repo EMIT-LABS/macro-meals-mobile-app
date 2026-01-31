@@ -27,7 +27,6 @@ import { mealService } from '../services/mealService';
 import { Meal } from '../types';
 import { usePosthog } from '@macro-meals/posthog_service/src';
 
-
 interface MacroData {
   label: 'Protein' | 'Carbs' | 'Fat';
   value: number;
@@ -177,27 +176,20 @@ const MealFinderScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const isDataLoaded = !locationLoading && meals.length > 0;
-  const posthog = usePosthog()
+  const posthog = usePosthog();
 
-
-
-  useEffect(()=>{
-    // Track regular events
-            posthog.track({
-              name: 'dashboard_viewed',
-              properties: {
-                entry_point:'meal_finder',
-                macros:macrosPreferences,
-                view_type:activeTab
-
-              },
-            });
-  })
-
-
-
-
-
+  useEffect(() => {
+    posthog?.track({
+      name: 'meal_finder_screen_viewed',
+      properties: {
+        $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
+        entry_point: 'meal_finder',
+        macros: macrosPreferences,
+        view_type: activeTab,
+      },
+    });
+  }, []);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -415,13 +407,15 @@ const MealFinderScreen: React.FC = () => {
         defaultResults: meals,
       });
     }, 100);
-    posthog.track({
-      name:'search_bar_engaged',
-      properties:{
-        entry_point:'meal_finder_screen'
-      }
-    })
-  }, [navigation, meals]);
+    posthog?.track({
+      name: 'search_bar_engaged',
+      properties: {
+        $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
+        entry_point: 'meal_finder_screen',
+      },
+    });
+  }, [navigation, meals, posthog]);
 
   const handleSelectCurrentLocation = async () => {
     closeLocationSheet();
@@ -520,7 +514,17 @@ const MealFinderScreen: React.FC = () => {
         style={{ paddingTop: Platform.OS === 'android' ? 8 : 50 }}
       >
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            posthog?.track({
+              name: 'meal_finder_back_to_add_meal',
+              properties: {
+                $screen_name: 'MealFinderScreen',
+                $current_url: 'MealFinderScreen',
+                gesture: 'button',
+              },
+            });
+            navigation.goBack();
+          }}
           className={`flex-row w-8 h-8 rounded-full bg-white justify-center items-center`}
         >
           <Ionicons
@@ -649,17 +653,20 @@ const MealFinderScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity
-            onPress={() =>  { if(activeTab){
-                   posthog.track({
-              name: 'viewed_type_toggled',
-              properties: {
-                from_view:activeTab,
-                to_view:'map'
-
-              },
-            });
-            setActiveTab('map')
-              }}}
+            onPress={() => {
+              if (activeTab !== 'map') {
+                posthog?.track({
+                  name: 'viewed_type_toggled',
+                  properties: {
+                    $screen_name: 'MealFinderScreen',
+                    $current_url: 'MealFinderScreen',
+                    from_view: activeTab,
+                    to_view: 'map',
+                  },
+                });
+              }
+              setActiveTab('map');
+            }}
             className={`flex-1 py-3 rounded-[1000px] ${
               activeTab === 'map'
                 ? 'bg-[#01675B1A] rounded-[96px] text-primary'
@@ -683,20 +690,20 @@ const MealFinderScreen: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => 
-              { if(activeTab){
-                   posthog.track({
-              name: 'viewed_type_toggled',
-              properties: {
-                from_view:activeTab,
-                to_view:'list'
-
-              },
-            });
-            setActiveTab('list')
-              }}
-             
-            }
+            onPress={() => {
+              if (activeTab !== 'list') {
+                posthog?.track({
+                  name: 'viewed_type_toggled',
+                  properties: {
+                    $screen_name: 'MealFinderScreen',
+                    $current_url: 'MealFinderScreen',
+                    from_view: activeTab,
+                    to_view: 'list',
+                  },
+                });
+              }
+              setActiveTab('list');
+            }}
             className={`flex-1 py-3 rounded-[96px] ${
               activeTab === 'list'
                 ? 'bg-[#01675B1A] rounded-[96px]'

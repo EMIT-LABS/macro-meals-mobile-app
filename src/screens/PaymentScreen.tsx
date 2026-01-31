@@ -1,4 +1,4 @@
-// src/screens/WelcomeScreen.tsx
+// src/screens/PaymentScreen.tsx
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useContext, useEffect, useState } from 'react';
@@ -235,7 +235,7 @@ const PaymentScreen = () => {
   const [isCurrentlyInTrial, setIsCurrentlyInTrial] = useState(false);
   const [hasUsedTrialBefore, setHasUsedTrialBefore] = useState(false);
   const mixpanel = useMixpanel();
-  const posthog = usePosthog()
+  const posthog = usePosthog();
 
   // Get product information for current selected plan
   const currentProductInfo = getProductInfo(
@@ -252,8 +252,11 @@ const PaymentScreen = () => {
     });
     posthog?.track({
       name: 'paywall_viewed',
-      properties: { platform: Platform.OS, $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences', },
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'PaymentScreen',
+        $current_url: 'PaymentScreen',
+      },
     });
   }, [mixpanel, posthog]);
   // Load RevenueCat offerings when component mounts
@@ -308,8 +311,6 @@ const PaymentScreen = () => {
       mixpanel?.track({
         name: 'trial_started',
         properties: {
-          $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences',
           plan: selectedPlan,
           price: currentProductInfo?.price,
           platform: Platform.OS,
@@ -318,11 +319,11 @@ const PaymentScreen = () => {
       posthog?.track({
         name: 'trial_started',
         properties: {
-          $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences',
           plan: selectedPlan,
           price: currentProductInfo?.price,
           platform: Platform.OS,
+          $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
         },
       });
     }
@@ -392,22 +393,21 @@ const PaymentScreen = () => {
         mixpanel?.track({
           name: 'subscription_started',
           properties: {
-            
             plan: selectedPlan,
             price: currentProductInfo?.price,
             platform: Platform.OS,
           },
         });
         posthog?.track({
-        name: 'subscription_started',
-        properties: {
-          $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences',
-         plan: selectedPlan,
+          name: 'subscription_started',
+          properties: {
+            plan: selectedPlan,
             price: currentProductInfo?.price,
             platform: Platform.OS,
-        },
-      });
+            $screen_name: 'PaymentScreen',
+            $current_url: 'PaymentScreen',
+          },
+        });
 
         // Update local state
         setHasBeenPromptedForGoals(false);
@@ -468,14 +468,14 @@ const PaymentScreen = () => {
           platform: Platform.OS,
         },
       });
-       posthog?.track({
+      posthog?.track({
         name: 'subscription_failed',
         properties: {
-          $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences',
           plan: selectedPlan,
           error_type: errorMessage,
           platform: Platform.OS,
+          $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
         },
       });
       Alert.alert('Error', errorMessage);
@@ -507,21 +507,19 @@ const PaymentScreen = () => {
                 mixpanel?.track({
                   name: 'subscription_plan_selected',
                   properties: {
-                    $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences',
                     plan: 'monthly',
                     price: monthlyProductInfo?.price,
                     platform: Platform.OS,
                   },
                 });
-                 posthog?.track({
+                posthog?.track({
                   name: 'subscription_plan_selected',
                   properties: {
-                    $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences',
                     plan: 'monthly',
                     price: monthlyProductInfo?.price,
                     platform: Platform.OS,
+                    $screen_name: 'PaymentScreen',
+                    $current_url: 'PaymentScreen',
                   },
                 });
               }}
@@ -569,11 +567,11 @@ const PaymentScreen = () => {
                 posthog?.track({
                   name: 'subscription_plan_selected',
                   properties: {
-                        $screen_name: 'NotificationPreferences',
-            $current_url: 'NotificationPreferences',
                     plan: 'yearly',
                     price: yearlyProductInfo?.price,
                     platform: Platform.OS,
+                    $screen_name: 'PaymentScreen',
+                    $current_url: 'PaymentScreen',
                   },
                 });
               }}

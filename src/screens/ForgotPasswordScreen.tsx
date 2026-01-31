@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,57 +7,66 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from "react-native";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { authService } from "../services/authService";
-import CustomSafeAreaView from "../components/CustomSafeAreaView";
-import CustomTouchableOpacityButton from "../components/CustomTouchableOpacityButton";
-import BackButton from "../components/BackButton";
-import { RootStackParamList } from "src/types/navigation";
-import { useMixpanel } from "@macro-meals/mixpanel/src";
-import { usePosthog } from "@macro-meals/posthog_service/src";
+} from 'react-native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { authService } from '../services/authService';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
+import BackButton from '../components/BackButton';
+import { RootStackParamList } from 'src/types/navigation';
+import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type ForgotPasswordScreenRouteProp = RouteProp<
   RootStackParamList,
-  "ForgotPasswordScreen"
+  'ForgotPasswordScreen'
 >;
 type ForgotPasswordScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "ForgotPasswordScreen"
+  'ForgotPasswordScreen'
 >;
 
 export const ForgotPasswordScreen: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<ForgotPasswordScreenNavigationProp>();
   const route = useRoute<ForgotPasswordScreenRouteProp>();
 
-  const source = route.params?.source ?? "Forgot";
-  const [errors, setErrors] = useState({ email: "" });
+  const source = route.params?.source ?? 'Forgot';
+  const [errors, setErrors] = useState({ email: '' });
   const [touched, setTouched] = useState(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
+
   const eventsFired = useRef(false);
-  const posthog = usePosthog()
 
   useEffect(() => {
-    if (mixpanel && !eventsFired.current) {
+    if (!eventsFired.current) {
       eventsFired.current = true;
-      mixpanel.track({
-        name: "forgot_password_screen_viewed",
+      mixpanel?.track({
+        name: 'forgot_password_screen_viewed',
         properties: { platform: Platform.OS },
       });
+      posthog?.track({
+        name: 'forgot_password_screen_viewed',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'ForgotPasswordScreen',
+          $current_url: 'ForgotPasswordScreen',
+        },
+      });
     }
-  }, [mixpanel]);
+  }, [mixpanel, posthog]);
 
   // Validation function for email
   const validateEmail = (text: string) => {
     if (!text) {
-      return "Email is required";
+      return 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(text)) {
-      return "Email is invalid";
+      return 'Email is invalid';
     }
-    return "";
+    return '';
   };
 
   const isDisabled = () => {
@@ -74,10 +83,19 @@ export const ForgotPasswordScreen: React.FC = () => {
       return;
     }
     mixpanel?.track({
-      name: "send_reset_code_attempted",
+      name: 'send_reset_code_attempted',
       properties: {
-        email_domain: email.split("@")[1] || "",
+        email_domain: email.split('@')[1] || '',
         platform: Platform.OS,
+      },
+    });
+    posthog?.track({
+      name: 'send_reset_code_attempted',
+      properties: {
+        email_domain: email.split('@')[1] || '',
+        platform: Platform.OS,
+        $screen_name: 'ForgotPasswordScreen',
+        $current_url: 'ForgotPasswordScreen',
       },
     });
     setIsLoading(true);
@@ -85,17 +103,26 @@ export const ForgotPasswordScreen: React.FC = () => {
     try {
       await authService.forgotPassword(email);
       mixpanel?.track({
-        name: "send_reset_code_successful",
+        name: 'send_reset_code_successful',
         properties: {
-          email_domain: email.split("@")[1] || "",
+          email_domain: email.split('@')[1] || '',
           platform: Platform.OS,
         },
       });
-      navigation.navigate("VerificationScreen", { email: email, source });
+      posthog?.track({
+        name: 'send_reset_code_successful',
+        properties: {
+          email_domain: email.split('@')[1] || '',
+          platform: Platform.OS,
+          $screen_name: 'ForgotPasswordScreen',
+          $current_url: 'ForgotPasswordScreen',
+        },
+      });
+      navigation.navigate('VerificationScreen', { email: email, source });
     } catch (error) {
-      let errorMessage = "Invalid email. Please try again.";
+      let errorMessage = 'Invalid email. Please try again.';
 
-      if (error && typeof error === "object" && "response" in error) {
+      if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as any;
         if (axiosError.response?.data?.detail) {
           errorMessage = axiosError.response.data.detail;
@@ -108,39 +135,57 @@ export const ForgotPasswordScreen: React.FC = () => {
         errorMessage = error.message;
       }
       mixpanel?.track({
-        name: "send_reset_code_failed",
+        name: 'send_reset_code_failed',
         properties: {
-          email_domain: email.split("@")[1] || "",
+          email_domain: email.split('@')[1] || '',
           error_type: errorMessage,
           platform: Platform.OS,
         },
       });
+      posthog?.track({
+        name: 'send_reset_code_failed',
+        properties: {
+          email_domain: email.split('@')[1] || '',
+          error_type: errorMessage,
+          platform: Platform.OS,
+          $screen_name: 'ForgotPasswordScreen',
+          $current_url: 'ForgotPasswordScreen',
+        },
+      });
 
-      Alert.alert("Forgot Password Failed", errorMessage, [{ text: "OK" }]);
+      Alert.alert('Forgot Password Failed', errorMessage, [{ text: 'OK' }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const headerText =
-    source === "settings" ? "Reset your password" : "Forgot your password?";
+    source === 'settings' ? 'Reset your password' : 'Forgot your password?';
 
-const handleBackToSignIn = () => {
-  mixpanel?.track({
-    name: "back_to_sign_in_clicked",
-    properties: { platform: Platform.OS },
-  });
-  navigation.goBack();
-};
+  const handleBackToSignIn = () => {
+    mixpanel?.track({
+      name: 'back_to_sign_in_clicked',
+      properties: { platform: Platform.OS },
+    });
+    posthog?.track({
+      name: 'back_to_sign_in_clicked',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'ForgotPasswordScreen',
+        $current_url: 'ForgotPasswordScreen',
+      },
+    });
+    navigation.goBack();
+  };
 
   return (
     <CustomSafeAreaView
       className="flex-1 items-start justify-start"
-      edges={["left", "right"]}
+      edges={['left', 'right']}
     >
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView className="flex-1 relative p-6">
           <View className="flex-row items-center justify-start mb-3">
@@ -157,15 +202,15 @@ const handleBackToSignIn = () => {
             <View
               className={`mb-6 ${
                 touched && errors.email
-                  ? "border border-[#ff6b6b] rounded-md"
-                  : ""
+                  ? 'border border-[#ff6b6b] rounded-md'
+                  : ''
               }`}
             >
               <TextInput
-                className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                className={`border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]`}
                 placeholder="Enter your email"
                 value={email}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setEmail(text);
                   if (touched) {
                     setErrors({ email: validateEmail(text) });
@@ -194,7 +239,7 @@ const handleBackToSignIn = () => {
           <View className="w-full items-center">
             <CustomTouchableOpacityButton
               className={`h-[56px] w-full items-center justify-center bg-primary rounded-[100px] ${
-                isDisabled() ? "opacity-30" : "opacity-100"
+                isDisabled() ? 'opacity-30' : 'opacity-100'
               }`}
               title="Send code"
               textClassName="text-white text-[17px] font-semibold"

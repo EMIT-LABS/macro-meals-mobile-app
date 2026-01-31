@@ -1,10 +1,11 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -31,6 +32,7 @@ import { GoalsPersonalizedPlan } from 'src/components/goal_flow_components/your_
 import { setupMacros } from 'src/services/macroService';
 import { userService } from 'src/services/userService';
 import { HasMacrosContext } from '../contexts/HasMacrosContext';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -42,6 +44,7 @@ type GoalsSetupFlowRouteParams = {
 };
 
 export const GoalsSetupFlow = () => {
+  const posthog = usePosthog();
   const navigation = useNavigation<NavigationProp>();
   const {
     majorStep,
@@ -379,6 +382,82 @@ export const GoalsSetupFlow = () => {
     yourGoalSubsteps,
     yourPlanSubsteps,
   ];
+
+  useEffect(() => {
+    if (gender) {
+      posthog?.track({
+        name: 'gender_selected',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'GoalSetupFlow',
+          $current_url: 'GoalSetupFlow',
+        },
+      });
+    }
+
+    if (dateOfBirth) {
+      posthog?.track({
+        name: 'age_selected',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'GoalSetupFlow',
+          $current_url: 'GoalSetupFlow',
+        },
+      });
+    }
+
+    if (heightCm || heightFt || heightIn) {
+      posthog?.track({
+        name: 'height_selected',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'GoalSetupFlow',
+          $current_url: 'GoalSetupFlow',
+        },
+      });
+    }
+    if (weightKg || weightLb) {
+      posthog?.track({
+        name: 'weight_selected',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'GoalSetupFlow',
+          $current_url: 'GoalSetupFlow',
+        },
+      });
+    }
+
+    if (dailyActivityLevel) {
+      posthog?.track({
+        name: 'activity_level_selceted',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'GoalSetupFlow',
+          $current_url: 'GoalSetupFlow',
+        },
+      });
+    }
+    if (dietaryPreference) {
+      posthog?.track({
+        name: 'dietary_preference_selceted',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'GoalSetupFlow',
+          $current_url: 'GoalSetupFlow',
+        },
+      });
+    }
+  }, [
+    gender,
+    dateOfBirth,
+    heightCm,
+    heightFt,
+    heightIn,
+    weightKg,
+    weightLb,
+    dailyActivityLevel,
+    dietaryPreference,
+  ]);
 
   // Validation for current substep
   const isCurrentSubStepValid = () => {

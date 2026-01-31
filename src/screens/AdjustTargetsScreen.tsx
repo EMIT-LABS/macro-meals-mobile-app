@@ -79,11 +79,10 @@ const AdjustTargetsScreen: React.FC = () => {
       posthog?.track({
         name: "adjust_targets_screen_viewed",
         properties: {
-          current_calories:macros.calories,
-          current_protein:macros.calories,
-          current_carbs:macros.carbs,
-          current_fats:macros.fat,
-
+          current_calories: macros.calories,
+          current_protein: macros.protein,
+          current_carbs: macros.carbs,
+          current_fats: macros.fat,
         },
       });
     }
@@ -101,13 +100,11 @@ const AdjustTargetsScreen: React.FC = () => {
         label: macro.label,
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: "targets_field_updated",
       properties: {
-        field_name: macro.key,
+        field: macro.key,
         label: macro.label,
-        old_value:selectedMacro,
-        new_value:''
       },
     });
     setSelectedMacro(macro);
