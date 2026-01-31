@@ -109,7 +109,8 @@ apply from: new File(["node", "--print", "require.resolve('@sentry/react-native/
 android {
     ndkVersion rootProject.ext.ndkVersion
 
-    compileSdk rootProject.ext.compileSdkVersion
+    // compileSdk rootProject.ext.compileSdkVersion
+    compileSdk 35
 
     namespace 'com.macromeals.app'
     flavorDimensions "environment"

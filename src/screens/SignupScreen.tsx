@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { authService } from '../services/authService';
-import CustomSafeAreaView from '../components/CustomSafeAreaView';
-import BackButton from '../components/BackButton';
-import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
 import { MaterialIcons } from '@expo/vector-icons';
-import { RootStackParamList } from '../types/navigation';
-import { useMixpanel } from '@macro-meals/mixpanel';
 import DeviceInfo from 'react-native-device-info';
+import { useMixpanel } from '@macro-meals/mixpanel';
 import { usePosthog } from '@macro-meals/posthog_service/src';
+import BackButton from '../components/BackButton';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
+import { authService } from '../services/authService';
+import { RootStackParamList } from '../types/navigation';
 
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -84,8 +84,8 @@ export const SignupScreen: React.FC = () => {
     if (!email) {
       newErrors.email = 'Email is required';
       isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(email)) {
-      newErrors.email = "Email is invalid";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email is invalid';
       isValid = false;
     }
 
@@ -136,7 +136,6 @@ export const SignupScreen: React.FC = () => {
         },
       });
     }
-
     if (posthog) {
       posthog.track({
         name: 'signup_attempted',
@@ -154,16 +153,11 @@ export const SignupScreen: React.FC = () => {
 
     try {
       const signUpTime = new Date().toISOString();
-      // user does NOT log in yet
-      const signupData: any = {
+      const signupData = {
         email,
         password,
+        ...(referralCode.trim() ? { referral_code: referralCode.trim() } : {}),
       };
-
-      // Add referral code if provided
-      if (referralCode.trim()) {
-        signupData.referral_code = referralCode.trim();
-      }
 
       const userId = await authService.signup(signupData);
 
@@ -182,7 +176,6 @@ export const SignupScreen: React.FC = () => {
         });
         mixpanel?.register({ signup_time: signUpTime });
       }
-
       if (posthog) {
         posthog.identify(userId);
         posthog.track({
@@ -202,6 +195,7 @@ export const SignupScreen: React.FC = () => {
       navigation.navigate('EmailVerificationScreen', {
         email,
         password,
+        referralCode: referralCode.trim() || undefined,
       });
     } catch (error) {
       let errorMessage = 'Failed to create account';
@@ -245,7 +239,6 @@ export const SignupScreen: React.FC = () => {
           },
         });
       }
-
       if (posthog) {
         posthog.track({
           name: 'signup_failed',
@@ -313,7 +306,7 @@ export const SignupScreen: React.FC = () => {
                         ...prev,
                         email: 'Email is required',
                       }));
-                    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(text)) {
+                    } else if (!/\S+@\S+\.\S+/.test(text)) {
                       setErrors(prev => ({
                         ...prev,
                         email: 'Email is invalid',

@@ -15,7 +15,7 @@ import Constants from 'expo-constants';
 import { HasMacrosContext } from 'src/contexts/HasMacrosContext';
 import { RootStack } from './RootStack';
 import { OnboardingContext } from './src/contexts/OnboardingContext';
-import useStore from './src/store/useStore';
+import useStore, { shouldSkipPaywall } from './src/store/useStore';
 
 // import { userService } from './src/services/userService';
 // import { authService } from './src/services/authService';
@@ -434,27 +434,39 @@ export function App() {
             }
           );
 
-          // Set states in correct order
-          setHasMacros(profile.has_macros);
-          setReadyForDashboard(profile.has_macros);
-          setAuthenticated(true, profile.id, profile.id);
+        // Set states in correct order
+        setHasMacros(profile.has_macros);
+        setReadyForDashboard(profile.has_macros);
+        setAuthenticated(true, profile.id, profile.id);
 
-          // Set user ID in RevenueCat after successful authentication
+        // Skip paywall if is_pro OR active referral (promo)
+        if (shouldSkipPaywall(profile)) {
+          console.log('✅ App.tsx - User has pro or active referral, skipping paywall');
+          setIsPro(true);
+          
+          // Still set up RevenueCat for future subscription management
           try {
             await revenueCatService.setUserID(profile.id);
-
-            // Check subscription status from RevenueCat (source of truth)
+            console.log('✅ App.tsx - RevenueCat user ID set for pro user');
+          } catch (error) {
+            console.error('❌ App.tsx - RevenueCat setup failed for pro user:', error);
+          }
+        } else {
+          // If backend says not pro, check RevenueCat for active subscription
+          try {
+            await revenueCatService.setUserID(profile.id);
             const subscriptionStatus =
               await revenueCatService.checkSubscriptionStatus();
             setIsPro(subscriptionStatus.isPro);
+            console.log('🔍 App.tsx - RevenueCat subscription status:', subscriptionStatus.isPro);
           } catch (error) {
             console.error(
-              '❌ Failed to set RevenueCat user ID or check subscription:',
+              '❌ App.tsx - Failed to check RevenueCat subscription:',
               error
             );
-            // Fallback to backend isPro value if RevenueCat fails
-            setIsPro(!!profile.is_pro);
+            setIsPro(false);
           }
+        }
 
           console.log('🔍 App.tsx - Session restored successfully:', {
             hasMacros: profile.has_macros,
@@ -620,7 +632,7 @@ export function App() {
                   debug={__DEV__}
                   autocapture={false}
                   disableGeoip={false}
-                  enableSessionReplay={true}
+                  enableSessionReplay={Config.ENVIRONMENT === 'production'}
                   sessionReplayConfig={{
                     maskAllTextInputs: false,
                     maskAllImages: false,
