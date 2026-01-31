@@ -61,17 +61,6 @@ export const SignupScreen: React.FC = () => {
       properties: {
         $screen_name: 'SignUpscreen',
         $current_url: 'SignUpscreen',
-
-        platform: Platform.OS,
-        app_version: DeviceInfo.getVersion(),
-      },
-    });
-
-    console.log('Event tracked:', {
-      name: 'signup_screen_viewed',
-      properties: {
-        $screen_name: 'SignUpscreen',
-        $current_url: 'SignUpscreen',
         platform: Platform.OS,
         app_version: DeviceInfo.getVersion(),
       },
@@ -92,13 +81,11 @@ export const SignupScreen: React.FC = () => {
       terms: '',
     };
 
-    const emailRegex = /^[A-Za-z\._\-0-9]*[@][A-Za-z]*[\.][a-z]{2,4}$/;
-
     if (!email) {
       newErrors.email = 'Email is required';
       isValid = false;
-    } else if (!emailRegex) {
-      newErrors.email = 'Email is invalid. It must end with .com or .cam';
+    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(email)) {
+      newErrors.email = "Email is invalid";
       isValid = false;
     }
 
@@ -206,7 +193,7 @@ export const SignupScreen: React.FC = () => {
             signup_method: 'email',
             platform: Platform.OS,
             signup_time: signUpTime,
-           
+            has_referral_code: !!referralCode.trim(),
           },
         });
         posthog?.register({ signup_time: signUpTime });
@@ -265,6 +252,7 @@ export const SignupScreen: React.FC = () => {
           properties: {
             $screen_name: 'SignUpscreen',
             $current_url: 'SignUpscreen',
+            email_domain: email.split('@')[1] || '',
             error_type: errorMessage,
             platform: Platform.OS,
           },
@@ -325,9 +313,7 @@ export const SignupScreen: React.FC = () => {
                         ...prev,
                         email: 'Email is required',
                       }));
-                    } else if (
-                      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com)$/i.test(text)
-                    ) {
+                    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(text)) {
                       setErrors(prev => ({
                         ...prev,
                         email: 'Email is invalid',
