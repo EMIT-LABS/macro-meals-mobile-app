@@ -6,6 +6,7 @@ import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Button,
   Image,
   SafeAreaView,
   StatusBar,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { scanService } from '../services/scanService';
 import { RootStackParamList } from '../types/navigation';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 /**
  * SnapMealScreen component allows users to take photos of their meals
@@ -35,11 +37,20 @@ const SnapMealScreen = () => {
   const [_isAlertVisible, setIsAlertVisible] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
 
   useEffect(() => {
     mixpanel?.track({
       name: 'meal_scan_opened',
       properties: {
+        entry_point: 'add_meal',
+      },
+    });
+    posthog?.track({
+      name: 'meal_scan_opened',
+      properties: {
+        $screen_name: 'SnapMealScreen',
+        $current_url: 'SnapMealScreen',
         entry_point: 'add_meal',
       },
     });
@@ -49,6 +60,18 @@ const SnapMealScreen = () => {
 
     return () => clearTimeout(overlayTimer);
   }, []);
+
+  useEffect(() => {
+    if (permission && permission.status !== undefined) {
+      mixpanel?.track({
+        name: 'meal_scan_permission_response',
+        properties: {
+          granted: permission.granted,
+          permission_denied: permission.granted ? 'true' : 'false',
+        },
+      });
+    }
+  }, [permission]);
 
   /**
    * Handle meal photo capture
@@ -77,6 +100,21 @@ const SnapMealScreen = () => {
         mixpanel?.track({
           name: 'meal_scanned',
           properties: {
+            match_found: true,
+            meal_name: data.items[0].name,
+            calories: data.items[0].calories,
+            protein_g: data.items[0].protein,
+            carbs_g: data.items[0].carbs,
+            fats_g: data.items[0].fat,
+          },
+        });
+        posthog?.track({
+          name: 'meal_scanned',
+          properties: {
+            $screen_name: 'SnapMealScreen',
+        $current_url: 'SnapMealScreen',
+            detected_meal_name: data.items[0].name,
+            ingredients_count: data.detected_ingredients.length,
             match_found: true,
             meal_name: data.items[0].name,
             calories: data.items[0].calories,
@@ -129,6 +167,14 @@ const SnapMealScreen = () => {
         gesture_type: 'button',
       },
     });
+    posthog?.track({
+      name: 'meal_scan_back_to_add_meal',
+      properties: {
+        $screen_name: 'SnapMealScreen',
+        $current_url: 'SnapMealScreen',
+        gesture_type: 'button',
+      },
+    });
     navigation.goBack();
   };
 
@@ -159,30 +205,28 @@ const SnapMealScreen = () => {
     );
   }
 
-  // if (!permission.granted) {
-  //   mixpanel?.track({
-  //     name: "meal_scan_permission_prompt_shown",
-  //     properties: {},
-  //   });
-  //   return (
-  //     <View className="flex-1 bg-black justify-center items-center">
-  //       <Text className="text-white text-center mb-5">
-  //         We need camera access to analyze your meals
-  //       </Text>
-  //       <Button title="Continue" onPress={requestPermission} />
-  //     </View>
-  //   );
-  // }
-  // useEffect(() => {
-  //   if (permission && permission.status !== undefined) {
-  //     mixpanel?.track({
-  //       name: "meal_scan_permission_response",
-  //       properties: {
-  //         granted: permission.granted,
-  //       },
-  //     });
-  //   }
-  // }, [permission]);
+  if (!permission.granted) {
+    mixpanel?.track({
+      name: 'meal_scan_permission_prompt_shown',
+      properties: {},
+    });
+    posthog?.track({
+      name: 'meal_scan_permission_prompt_shown',
+      properties: {
+        $screen_name: 'SnapMealScreen',
+        $current_url: 'SnapMealScreen',
+        system_permission_status_before: 'not_granted',
+      },
+    });
+    return (
+      <View className="flex-1 bg-black justify-center items-center">
+        <Text className="text-white text-center mb-5">
+          We need camera access to analyze your meals
+        </Text>
+        <Button title="Continue" onPress={requestPermission} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-black">

@@ -1,4 +1,4 @@
-// src/screens/WelcomeScreen.tsx
+// src/screens/PaymentScreen.tsx
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useContext, useEffect, useState } from 'react';
@@ -23,6 +23,7 @@ import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import revenueCatService from '../services/revenueCatService';
 import { userService } from '../services/userService';
 import useStore from '../store/useStore';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -234,6 +235,7 @@ const PaymentScreen = () => {
   const [isCurrentlyInTrial, setIsCurrentlyInTrial] = useState(false);
   const [hasUsedTrialBefore, setHasUsedTrialBefore] = useState(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
 
   // Get product information for current selected plan
   const currentProductInfo = getProductInfo(
@@ -248,7 +250,15 @@ const PaymentScreen = () => {
       name: 'paywall_viewed',
       properties: { platform: Platform.OS },
     });
-  }, [mixpanel]);
+    posthog?.track({
+      name: 'paywall_viewed',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'PaymentScreen',
+        $current_url: 'PaymentScreen',
+      },
+    });
+  }, [mixpanel, posthog]);
   // Load RevenueCat offerings when component mounts
   useEffect(() => {
     revenueCatService.syncPurchases();
@@ -304,6 +314,16 @@ const PaymentScreen = () => {
           plan: selectedPlan,
           price: currentProductInfo?.price,
           platform: Platform.OS,
+        },
+      });
+      posthog?.track({
+        name: 'trial_started',
+        properties: {
+          plan: selectedPlan,
+          price: currentProductInfo?.price,
+          platform: Platform.OS,
+          $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
         },
       });
     }
@@ -378,6 +398,16 @@ const PaymentScreen = () => {
             platform: Platform.OS,
           },
         });
+        posthog?.track({
+          name: 'subscription_started',
+          properties: {
+            plan: selectedPlan,
+            price: currentProductInfo?.price,
+            platform: Platform.OS,
+            $screen_name: 'PaymentScreen',
+            $current_url: 'PaymentScreen',
+          },
+        });
 
         // Update local state
         setHasBeenPromptedForGoals(false);
@@ -438,6 +468,16 @@ const PaymentScreen = () => {
           platform: Platform.OS,
         },
       });
+      posthog?.track({
+        name: 'subscription_failed',
+        properties: {
+          plan: selectedPlan,
+          error_type: errorMessage,
+          platform: Platform.OS,
+          $screen_name: 'PaymentScreen',
+          $current_url: 'PaymentScreen',
+        },
+      });
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
@@ -470,6 +510,16 @@ const PaymentScreen = () => {
                     plan: 'monthly',
                     price: monthlyProductInfo?.price,
                     platform: Platform.OS,
+                  },
+                });
+                posthog?.track({
+                  name: 'subscription_plan_selected',
+                  properties: {
+                    plan: 'monthly',
+                    price: monthlyProductInfo?.price,
+                    platform: Platform.OS,
+                    $screen_name: 'PaymentScreen',
+                    $current_url: 'PaymentScreen',
                   },
                 });
               }}
@@ -508,9 +558,20 @@ const PaymentScreen = () => {
                 mixpanel?.track({
                   name: 'subscription_plan_selected',
                   properties: {
+                    
                     plan: 'yearly',
                     price: yearlyProductInfo?.price,
                     platform: Platform.OS,
+                  },
+                });
+                posthog?.track({
+                  name: 'subscription_plan_selected',
+                  properties: {
+                    plan: 'yearly',
+                    price: yearlyProductInfo?.price,
+                    platform: Platform.OS,
+                    $screen_name: 'PaymentScreen',
+                    $current_url: 'PaymentScreen',
                   },
                 });
               }}
