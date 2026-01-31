@@ -22,6 +22,7 @@ import { locationService } from '../services/locationService';
 import { mealService } from '../services/mealService';
 import { userService } from '../services/userService';
 import useStore from '../store/useStore';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -73,6 +74,7 @@ const MealFinderBreakdownScreen: React.FC = () => {
   // const [userPreferences, setUserPreferences] = useState<any>(null);
   const [macroBreakdown, setMacroBreakdown] = useState<MacroData[]>([]);
   const [distanceInMiles, setDistanceInMiles] = useState<number | null>(null);
+  const posthog = usePosthog();
 
   // Check if meal is in favorites on component mount
   useEffect(() => {
@@ -205,6 +207,14 @@ const MealFinderBreakdownScreen: React.FC = () => {
       setIsFavorite(newFavoriteStatus);
 
       if (newFavoriteStatus) {
+        posthog?.track({
+          name: 'meal_favourited',
+          properties: {
+            $screen_name: 'MealFinderBreakdownScreen',
+            $current_url: 'MealFinderBreakdownScreen',
+            meal_id: meal.name,
+          },
+        });
         Alert.alert('Added to favorites');
       } else {
         Alert.alert('Removed from favorites');
@@ -247,6 +257,20 @@ const MealFinderBreakdownScreen: React.FC = () => {
       }
 
       console.log('Meal logged successfully:', loggedMeal);
+      posthog?.track({
+        name: 'add_to_log_from_detail_clicked',
+        properties: {
+          $screen_name: 'MealFinderBreakdownScreen',
+          $current_url: 'MealFinderBreakdownScreen',
+          meal_name: mealData.name,
+          restaurant_name: meal.restaurant.name,
+          meal_type: mealData.meal_type,
+          calories: mealData.calories,
+          protein_g: mealData.protein,
+          fat_g: mealData.fat,
+          carbs_g: mealData.carbs,
+        },
+      });
 
       Alert.alert('Success', "Meal added to today's log!", [
         {

@@ -32,6 +32,7 @@ import { shouldSkipPaywall } from 'src/store/useStore';
 import { RootStackParamList } from 'src/types/navigation';
 import revenueCatService from '../services/revenueCatService';
 import useStore from '../store/useStore';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type VerificationScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -55,6 +56,7 @@ export const EmailVerificationScreen = () => {
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [error, setError] = useState('');
+  const posthog = usePosthog();
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
     setValue,
@@ -88,7 +90,16 @@ export const EmailVerificationScreen = () => {
         platform: Platform.OS,
       },
     });
-  }, [mixpanel]);
+
+    posthog?.track({
+      name: 'email_verification_screen_viewed',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'EmailVerificationScreen',
+        $current_url: 'EmailVerificationScreen',
+      },
+    });
+  }, [mixpanel, posthog]);
 
   const isDisabled = () => {
     return (
@@ -108,8 +119,17 @@ export const EmailVerificationScreen = () => {
           platform: Platform.OS,
         },
       });
+      posthog?.track({
+        name: 'verification_code_entered',
+        properties: {
+          code_length: value.length,
+          platform: Platform.OS,
+          $screen_name: 'EmailVerificationScreen',
+          $current_url: 'EmailVerificationScreen',
+        },
+      });
     }
-  }, [value, mixpanel]);
+  }, [value, mixpanel, posthog]);
 
   const handleVerifyEmail = async () => {
     if (!routeEmail) {
@@ -133,6 +153,14 @@ export const EmailVerificationScreen = () => {
         mixpanel?.track({
           name: 'verification_successful',
           properties: { platform: Platform.OS },
+        });
+        posthog?.track({
+          name: 'verification_successful',
+          properties: {
+            platform: Platform.OS,
+            $screen_name: 'EmailVerificationScreen',
+            $current_url: 'EmailVerificationScreen',
+          },
         });
 
         const loginData = await authService.login({
@@ -253,6 +281,15 @@ export const EmailVerificationScreen = () => {
           name: 'verification_failed',
           properties: { error_type: 'invalid_code', platform: Platform.OS },
         });
+        posthog?.track({
+          name: 'verification_failed',
+          properties: {
+            error_type: 'invalid_code',
+            platform: Platform.OS,
+            $screen_name: 'EmailVerificationScreen',
+            $current_url: 'EmailVerificationScreen',
+          },
+        });
         setError('Invalid verification code. Please try again.');
         Alert.alert('Error', 'Invalid verification code');
       }
@@ -260,6 +297,15 @@ export const EmailVerificationScreen = () => {
       mixpanel?.track({
         name: 'verification_failed',
         properties: { error_type: 'invalid_code', platform: Platform.OS },
+      });
+      posthog?.track({
+        name: 'verification_failed',
+        properties: {
+          error_type: 'invalid_code',
+          platform: Platform.OS,
+          $screen_name: 'EmailVerificationScreen',
+          $current_url: 'EmailVerificationScreen',
+        },
       });
       setError(
         err instanceof Error
@@ -278,6 +324,14 @@ export const EmailVerificationScreen = () => {
       name: 'resend_code_clicked',
       properties: {
         platform: Platform.OS,
+      },
+    });
+    posthog?.track({
+      name: 'resend_code_clicked',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'EmailVerificationScreen',
+        $current_url: 'EmailVerificationScreen',
       },
     });
 
@@ -316,8 +370,8 @@ export const EmailVerificationScreen = () => {
           <Text className="text-3xl font-medium text-black mb-2">
             Enter email verification code
           </Text>
-          <Text className="text-[18px] font-normal text-textMediumGrey mb-8 leading-7">
-            We've sent a 6-digit code to {routeEmail}
+          <Text className="text-[15px] font-normal text-textMediumGrey mb-8 leading-7">
+            We've sent a 6-digit code to {routeEmail}. If you don’t see it in your inbox, please check your spam or junk folder.
           </Text>
 
           <View className="w-full mb-5">

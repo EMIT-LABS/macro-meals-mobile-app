@@ -1,11 +1,13 @@
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
   BackHandler,
   Image,
+  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -33,6 +35,7 @@ type NavigationProp = NativeStackNavigationProp<
 >;
 
 export const AdjustGoalsFlow = () => {
+  const posthog = usePosthog()
   const navigation = useNavigation<NavigationProp>();
   const {
     majorStep,
@@ -114,6 +117,18 @@ export const AdjustGoalsFlow = () => {
     'Maintain weight': 'maintain',
     'Gain weight': 'gain',
   };
+
+
+  useEffect(()=>{
+   posthog?.track({
+        name: "adjust_targets_screen_viewed",
+        properties: {
+          platform:Platform.OS,
+         goal_type:fitnessGoal
+
+        },
+      });
+  })
 
   React.useEffect(() => {
     // Fetch profile data when DOB, gender, or height metrics are missing
@@ -383,6 +398,18 @@ export const AdjustGoalsFlow = () => {
     yourPlanSubsteps,
   ];
 
+  useEffect(()=>{
+    if(weightKg && weightLb){
+      posthog.track({
+        name:'adjust_goals_weight_selected  ',
+        properties:{
+          weight:weightLb || weightKg,
+          target_weight:targetWeight
+        }
+      })
+    }
+  },[weightKg, weightLb])
+
   // Validation for current substep
   const isCurrentSubStepValid = () => {
     // Basic Info Steps
@@ -497,6 +524,13 @@ export const AdjustGoalsFlow = () => {
   };
 
   const handleBack = () => {
+    posthog.track({
+      name:'adjust_goals_back_clicked',
+      properties:{
+        current_step:majorStep,
+        previou_step:majorStep-1
+      }
+    })
     console.log('handleBack called with:', {
       majorStep,
       subSteps,

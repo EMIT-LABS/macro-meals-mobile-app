@@ -1,14 +1,7 @@
-import React from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    ScrollView,
-    Image,
-
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import CustomSafeAreaView  from '../components/CustomSafeAreaView';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
 import { RootStackParamList } from 'src/types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { IMAGE_CONSTANTS } from 'src/constants/imageConstants';
@@ -20,72 +13,98 @@ import { IsProContext } from '../contexts/IsProContext';
 import { useContext } from 'react';
 import Config from 'react-native-config';
 import { useMixpanel } from '@macro-meals/mixpanel/src';
-import { Platform } from "react-native";
-
-
-
+import { Platform } from 'react-native';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const GoalSetupScreen: React.FC = () => {
-    const navigation = useNavigation<NavigationProp>();
-    const { completed, majorStep, setMajorStep, setSubStep, navigateToMajorStep } = useGoalsFlowStore();
-    const setHasBeenPromptedForGoals = useStore((state) => state.setHasBeenPromptedForGoals);
-    const profile = useStore((state) => state.profile);
-    
-    // Debug profile state
-    console.log('🔍 GoalSetup - Component render - Profile:', profile);
-    console.log('🔍 GoalSetup - Component render - Profile type:', typeof profile);
-    
-    const { getValue, debugLogAllValues } = useRemoteConfigContext();
-    const { setReadyForDashboard } = useContext(HasMacrosContext);
-    const { setIsPro } = useContext(IsProContext);
-    const mixpanel = useMixpanel();
+  const navigation = useNavigation<NavigationProp>();
+  const {
+    completed,
+    majorStep,
+    setMajorStep,
+    setSubStep,
+    navigateToMajorStep,
+  } = useGoalsFlowStore();
+  const setHasBeenPromptedForGoals = useStore(
+    state => state.setHasBeenPromptedForGoals
+  );
+  const profile = useStore(state => state.profile);
+  const posthog = usePosthog();
 
-React.useEffect(() => {
-  mixpanel?.track({
-    name: "onboarding_welcome_viewed",
-    properties: { platform: Platform.OS },
-  });
-}, [mixpanel]);
-    // Only allow dev_mode to bypass payment in non-production environments
-    let devMode = false;
-    try {
-              const currentEnv = Config.ENVIRONMENT;
-      if (currentEnv !== 'production') {
-        devMode = getValue('dev_mode').asBoolean();
-      } else {
-        console.log('[GOAL SETUP] Production environment detected, ignoring dev_mode remote config');
-        devMode = false;
-      }
-    } catch (error) {
-      console.log('[GOAL SETUP] Could not get dev_mode from remote config, defaulting to false:', error);
+  // Debug profile state
+  console.log('🔍 GoalSetup - Component render - Profile:', profile);
+  console.log(
+    '🔍 GoalSetup - Component render - Profile type:',
+    typeof profile
+  );
+
+  const { getValue, debugLogAllValues } = useRemoteConfigContext();
+  const { setReadyForDashboard } = useContext(HasMacrosContext);
+  const { setIsPro } = useContext(IsProContext);
+  const mixpanel = useMixpanel();
+
+  React.useEffect(() => {
+    mixpanel?.track({
+      name: 'onboarding_welcome_viewed',
+      properties: { platform: Platform.OS },
+    });
+    posthog?.track({
+      name: 'onboarding_welcome_viewed',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'GoalSetupScreen',
+        $current_url: 'GoalSetupScreen',
+      },
+    });
+  }, [mixpanel, posthog]);
+  // Only allow dev_mode to bypass payment in non-production environments
+  let devMode = false;
+  try {
+    const currentEnv = Config.ENVIRONMENT;
+    if (currentEnv !== 'production') {
+      devMode = getValue('dev_mode').asBoolean();
+    } else {
+      console.log(
+        '[GOAL SETUP] Production environment detected, ignoring dev_mode remote config'
+      );
       devMode = false;
     }
-    
-    // Debug: Test force_update variable
-    React.useEffect(() => {
-        try {
-            const forceUpdateValue = getValue('force_update');
-            console.log('[GOAL SETUP] 🔧 force_update value:', {
-                stringValue: forceUpdateValue.asString(),
-                booleanValue: forceUpdateValue.asBoolean(),
-                numberValue: forceUpdateValue.asNumber(),
-                source: forceUpdateValue.getSource()
-            });
-        } catch (error) {
-            console.error('[GOAL SETUP] ❌ Error getting force_update:', error);
-        }
-        
-        // Also log all available values
-        debugLogAllValues();
-    }, [getValue, debugLogAllValues]);
-    
-    return (
-        <CustomSafeAreaView className="flex-1 bg-white" edges={['left', 'right']}>
-            <ScrollView className="relative flex-1 mx-4" contentContainerStyle={{ flexGrow: 1 }}>
-                <View className="flex-1">
-                {/* <View className="flex-row items-center justify-between">
+  } catch (error) {
+    console.log(
+      '[GOAL SETUP] Could not get dev_mode from remote config, defaulting to false:',
+      error
+    );
+    devMode = false;
+  }
+
+  // Debug: Test force_update variable
+  React.useEffect(() => {
+    try {
+      const forceUpdateValue = getValue('force_update');
+      console.log('[GOAL SETUP] 🔧 force_update value:', {
+        stringValue: forceUpdateValue.asString(),
+        booleanValue: forceUpdateValue.asBoolean(),
+        numberValue: forceUpdateValue.asNumber(),
+        source: forceUpdateValue.getSource(),
+      });
+    } catch (error) {
+      console.error('[GOAL SETUP] ❌ Error getting force_update:', error);
+    }
+
+    // Also log all available values
+    debugLogAllValues();
+  }, [getValue, debugLogAllValues]);
+
+  return (
+    <CustomSafeAreaView className="flex-1 bg-white" edges={['left', 'right']}>
+      <ScrollView
+        className="relative flex-1 mx-4"
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <View className="flex-1">
+          {/* <View className="flex-row items-center justify-between">
                     <BackButton onPress={() => {
                         setHasBeenPromptedForGoals(false);
                         navigation.navigate('MainTabs' as never);
@@ -257,4 +276,3 @@ React.useEffect(() => {
         </CustomSafeAreaView>
     );
 };
-

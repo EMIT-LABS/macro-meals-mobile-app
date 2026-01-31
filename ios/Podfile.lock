@@ -241,32 +241,6 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - PostHog (3.37.2)
-  - posthog-react-native-session-replay (1.2.3):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - PostHog (~> 3.21)
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - PromisesObjC (2.4.0)
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
@@ -2136,7 +2110,7 @@ PODS:
   - RevenueCat (5.33.1)
   - RNAppleAuthentication (2.4.1):
     - React-Core
-  - RNCAsyncStorage (2.2.0):
+  - RNCAsyncStorage (2.1.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2208,7 +2182,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNDeviceInfo (15.0.1):
+  - RNDeviceInfo (14.0.4):
     - React-Core
   - RNFBApp (22.4.0):
     - Firebase/CoreOnly (= 11.15.0)
@@ -2280,30 +2254,6 @@ PODS:
     - DoubleConversion
     - glog
     - GoogleSignIn (~> 7.1)
-    - hermes-engine
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - RNLocalize (3.6.1):
-    - DoubleConversion
-    - glog
     - hermes-engine
     - RCT-Folly (= 2024.11.18.00)
     - RCTRequired
@@ -2681,7 +2631,6 @@ DEPENDENCIES:
   - GoogleMaps
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - MixpanelReactNative (from `../node_modules/mixpanel-react-native`)
-  - posthog-react-native-session-replay (from `../node_modules/posthog-react-native-session-replay`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2767,7 +2716,6 @@ DEPENDENCIES:
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
-  - RNLocalize (from `../node_modules/react-native-localize`)
   - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNPurchases (from `../node_modules/react-native-purchases`)
@@ -2805,7 +2753,6 @@ SPEC REPOS:
     - libwebp
     - Mixpanel-swift
     - nanopb
-    - PostHog
     - PromisesObjC
     - PromisesSwift
     - PurchasesHybridCommon
@@ -2876,8 +2823,6 @@ EXTERNAL SOURCES:
     :tag: hermes-2025-06-04-RNv0.79.3-7f9a871eefeb2c3852365ee80f0b6733ec12ac3b
   MixpanelReactNative:
     :path: "../node_modules/mixpanel-react-native"
-  posthog-react-native-session-replay:
-    :path: "../node_modules/posthog-react-native-session-replay"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -3044,8 +2989,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNGoogleSignin:
     :path: "../node_modules/@react-native-google-signin/google-signin"
-  RNLocalize:
-    :path: "../node_modules/react-native-localize"
   RNNotifee:
     :path: "../node_modules/@notifee/react-native"
   RNPermissions:
@@ -3118,8 +3061,6 @@ SPEC CHECKSUMS:
   Mixpanel-swift: 7b26468fc0e2e521104e51d65c4bbf7cab8162f8
   MixpanelReactNative: cdcfe933b8ce89aadd183f17aad3c8529daccb94
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  PostHog: 6e90f34cb71fc0881d8f98b8654e8e1799d72dbe
-  posthog-react-native-session-replay: 9b103d979d8b12ac6ea9fd2b540f7cf219619291
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   PurchasesHybridCommon: ae7a0a6e105ecdde3e8816a004e57f0a2a7b9261
@@ -3197,10 +3138,10 @@ SPEC CHECKSUMS:
   ReactCommon: 1aa48867a0fc71a2b4f9e8a1529f5673648354f3
   RevenueCat: b0ed01125b05a45b8264a2951ad68acb61942038
   RNAppleAuthentication: c3dddf5918126c9aae85dc2e2ce9fb87835e9e04
-  RNCAsyncStorage: c1dca434eda758348a549efb46822b4091d76804
+  RNCAsyncStorage: 646c1bf2ebfc78d6632a3b0399f471fba8101e73
   RNCPicker: c424533f7747c9463b35d294328e7b2b4d2baf31
   RNDateTimePicker: cbba58b7fde72d73362a8896b9815498c8e014b2
-  RNDeviceInfo: 36d7f232bfe7c9b5c494cb7793230424ed32c388
+  RNDeviceInfo: d863506092aef7e7af3a1c350c913d867d795047
   RNFBApp: 12884d3bf9b3a0223efe4a0adce516edf72c4102
   RNFBCrashlytics: ea81b9ceb43e2e9268342d456546cf014c096b10
   RNFBMessaging: e954bfb053a5c6bb10b26bae4bbc58a4edd41131
@@ -3208,7 +3149,6 @@ SPEC CHECKSUMS:
   RNFlashList: 1897a8ba91227cd2c1dfcf2e893ebbd25f61786e
   RNGestureHandler: 8ff2b1434b0ff8bab28c8242a656fb842990bbc8
   RNGoogleSignin: 34668f9c7a67213c8949b356404bcc7facb1b946
-  RNLocalize: 96be44cef67cf436fc6cb5972560f655187da533
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNPermissions: 913e830a18973804e2ca7cd38786e8d0c8f821eb
   RNPurchases: 791e8c81fa5bbd192b77894740c63bd9f813a5ac

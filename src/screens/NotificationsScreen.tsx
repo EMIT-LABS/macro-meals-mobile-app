@@ -12,11 +12,13 @@ import {
   Alert,
   FlatList,
   ViewToken,
+  Platform,
 } from "react-native";
 import NotificationItem from "../components/NotificationItem";
 import CustomSafeAreaView from "../components/CustomSafeAreaView";
 import Header from "../components/Header";
 import { notificationService } from "../services/notificationsService";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 type APINotification = {
   id: string;
@@ -104,6 +106,7 @@ const NotificationsScreen: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const posthog = usePosthog()
 
   // To prevent marking as read multiple times
   const markedAsReadRef = useRef<Set<string>>(new Set());
@@ -164,6 +167,16 @@ const NotificationsScreen: React.FC = () => {
     });
     return arr;
   }, [notificationsByDay]);
+
+
+  useEffect(()=>{
+    posthog.track({
+      name:'notifications_screen_viewed',
+      properties:{
+        platform:Platform.OS
+      }
+    })
+  })
 
   // Mark notifications as read when they become visible
   const onViewableItemsChanged = useCallback(

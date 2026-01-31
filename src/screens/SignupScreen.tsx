@@ -1,7 +1,3 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useMixpanel } from '@macro-meals/mixpanel';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,7 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MaterialIcons } from '@expo/vector-icons';
 import DeviceInfo from 'react-native-device-info';
+import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import BackButton from '../components/BackButton';
 import CustomSafeAreaView from '../components/CustomSafeAreaView';
 import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
@@ -34,6 +35,7 @@ export const SignupScreen: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
 
   const [errors, setErrors] = useState({
     email: '',
@@ -54,6 +56,15 @@ export const SignupScreen: React.FC = () => {
         },
       });
     }
+    posthog.track({
+      name: 'signup_screen_viewed',
+      properties: {
+        $screen_name: 'SignUpscreen',
+        $current_url: 'SignUpscreen',
+        platform: Platform.OS,
+        app_version: DeviceInfo.getVersion(),
+      },
+    });
   }, []);
 
   const navigation = useNavigation<NavigationProp>();
@@ -117,6 +128,20 @@ export const SignupScreen: React.FC = () => {
       mixpanel.track({
         name: 'signup_attempted',
         properties: {
+          $screen_name: 'SignUpscreen',
+          $current_url: 'SignUpscreen',
+          email_domain: email.split('@')[1] || '',
+          has_referral_code: !!referralCode.trim(),
+          platform: Platform.OS,
+        },
+      });
+    }
+    if (posthog) {
+      posthog.track({
+        name: 'signup_attempted',
+        properties: {
+          $screen_name: 'SignUpscreen',
+          $current_url: 'SignUpscreen',
           email_domain: email.split('@')[1] || '',
           has_referral_code: !!referralCode.trim(),
           platform: Platform.OS,
@@ -128,10 +153,10 @@ export const SignupScreen: React.FC = () => {
 
     try {
       const signUpTime = new Date().toISOString();
-      // user does NOT log in yet
       const signupData = {
         email,
         password,
+        ...(referralCode.trim() ? { referral_code: referralCode.trim() } : {}),
       };
 
       const userId = await authService.signup(signupData);
@@ -141,6 +166,8 @@ export const SignupScreen: React.FC = () => {
         mixpanel.track({
           name: 'signup_successful',
           properties: {
+            $screen_name: 'SignUpscreen',
+            $current_url: 'SignUpscreen',
             signup_method: 'email',
             platform: Platform.OS,
             signup_time: signUpTime,
@@ -148,6 +175,21 @@ export const SignupScreen: React.FC = () => {
           },
         });
         mixpanel?.register({ signup_time: signUpTime });
+      }
+      if (posthog) {
+        posthog.identify(userId);
+        posthog.track({
+          name: 'signup_successful',
+          properties: {
+            $screen_name: 'SignUpscreen',
+            $current_url: 'SignUpscreen',
+            signup_method: 'email',
+            platform: Platform.OS,
+            signup_time: signUpTime,
+            has_referral_code: !!referralCode.trim(),
+          },
+        });
+        posthog?.register({ signup_time: signUpTime });
       }
 
       navigation.navigate('EmailVerificationScreen', {
@@ -189,6 +231,20 @@ export const SignupScreen: React.FC = () => {
         mixpanel.track({
           name: 'signup_failed',
           properties: {
+            $screen_name: 'SignUpscreen',
+            $current_url: 'SignUpscreen',
+            email_domain: email.split('@')[1] || '',
+            error_type: errorMessage,
+            platform: Platform.OS,
+          },
+        });
+      }
+      if (posthog) {
+        posthog.track({
+          name: 'signup_failed',
+          properties: {
+            $screen_name: 'SignUpscreen',
+            $current_url: 'SignUpscreen',
             email_domain: email.split('@')[1] || '',
             error_type: errorMessage,
             platform: Platform.OS,
