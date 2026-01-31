@@ -233,10 +233,9 @@ const MealFinderScreen: React.FC = () => {
     fetchProgress();
   }, [token]);
 
-  const fetchLocationAndSuggestions = async () => {
-    // setInitializing(true);
-    try {
-      // 1. Get location
+
+
+const handleLocationPermission = async (): Promise<boolean> => {
       const hasPermission = await locationService.requestPermissions();
       if (!hasPermission) {
         Alert.alert(
@@ -255,8 +254,18 @@ const MealFinderScreen: React.FC = () => {
           ]
         );
         // setInitializing(false);
-        return;
-      }
+         return false; 
+  }
+  
+  return true; 
+};
+
+
+  const fetchLocationAndSuggestions = async () => {
+    // setInitializing(true);
+    try {
+      // 1. Get location
+    
       const location = await locationService.getCurrentLocation();
       if (location) {
         const address = await locationService.reverseGeocode(
@@ -288,7 +297,10 @@ const MealFinderScreen: React.FC = () => {
         try {
           const mapPinsResponse = await mealService.getMapPins(
             location.coords.latitude,
-            location.coords.longitude
+            location.coords.longitude,
+            undefined,
+            undefined,
+           
           );
           // Keep only restaurants within ~50km of the user (based on API distance_km)
           const pins = (mapPinsResponse.pins || []).filter(
@@ -420,7 +432,10 @@ const MealFinderScreen: React.FC = () => {
   const handleSelectCurrentLocation = async () => {
     closeLocationSheet();
     setLocationLoading(true);
-    // await handleLocationPermission();
+    const permissionGranted:boolean = await handleLocationPermission();
+    if (permissionGranted) {
+      await fetchLocationAndSuggestions();
+    }
     setLocationLoading(false);
   };
 
@@ -448,7 +463,9 @@ const MealFinderScreen: React.FC = () => {
     try {
       const mapPinsResponse = await mealService.getMapPins(
         location.latitude,
-        location.longitude
+        location.longitude,
+        undefined,
+        undefined,
       );
       // Keep only restaurants within ~50km of the selected location
       const pins = (mapPinsResponse.pins || []).filter(
