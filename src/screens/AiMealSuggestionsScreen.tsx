@@ -106,11 +106,6 @@ const AiMealSuggestionsScreen: React.FC = () => {
 
       const result = await mealService.getAiMealSuggestionsRecipes();
       setRecipes(result.suggestions);
-
-      // Track AI recipe suggestions viewed
-      // if (result.suggestions && result.suggestions.length > 0) {
-      //   await trackAIRecipeViewed();
-      // }
     } catch {
       setError('Failed to fetch recipe suggestions');
     } finally {
