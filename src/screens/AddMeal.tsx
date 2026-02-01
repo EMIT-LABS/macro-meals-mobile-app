@@ -104,8 +104,8 @@ const AddMeal: React.FC = () => {
   const deleteLoggedMeal = useStore(state => state.deleteLoggedMeal);
   const fetchTodayProgress = useStore(state => state.fetchTodayProgress);
   const mixpanel = useMixpanel();
-  const [day, setDay] =useState<string>('')
-  
+  const [day, setDay] = useState<string>('');
+
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
   }, []);
@@ -550,10 +550,14 @@ const AddMeal: React.FC = () => {
                     const defaultDate = new Date();
                     if ((selectedRange as string) === 'yesterday') {
                       defaultDate.setDate(defaultDate.getDate() - 1);
-                       navigation.navigate('ScanScreenType', {
-    defaultDate: defaultDate.toISOString() || undefined,});
+                      navigation.navigate('ScanScreenType', {
+                        defaultDate: defaultDate.toISOString(),
+                      });
+                    } else {
+                      navigation.navigate('ScanScreenType', {
+                        defaultDate: defaultDate.toISOString(),
+                      });
                     }
-                   
                   }}
                 >
                   <Text className="text-primary font-semibold">+ ADD FOOD</Text>
@@ -901,7 +905,10 @@ const AddMeal: React.FC = () => {
                             <TouchableOpacity
                               className="py-4 px-4 border-t border-gray"
                               onPress={() => {
-                                navigation.navigate('ScanScreenType');
+                                const defaultDate = new Date().toISOString();
+                                navigation.navigate('ScanScreenType', {
+                                  defaultDate: defaultDate,
+                                });
                               }}
                             >
                               <Text className="text-primary font-semibold">
@@ -934,9 +941,13 @@ const AddMeal: React.FC = () => {
                         const defaultDate = new Date();
                         if (selectedRange === 'yesterday') {
                           defaultDate.setDate(defaultDate.getDate() - 1);
-                          navigation.navigate('ScanScreenType', {defaultDate:defaultDate.toISOString()} );
-                        
-
+                          navigation.navigate('ScanScreenType', {
+                            defaultDate: defaultDate.toISOString(),
+                          });
+                        } else {
+                          navigation.navigate('ScanScreenType', {
+                            defaultDate: defaultDate.toISOString(),
+                          });
                         }
                       }}
                     >
@@ -1132,9 +1143,14 @@ const AddMeal: React.FC = () => {
                           const defaultDate = new Date();
                           if (selectedRange === 'yesterday') {
                             defaultDate.setDate(defaultDate.getDate() - 1);
-                             navigation.navigate('ScanScreenType', {defaultDate:defaultDate.toISOString()});
+                            navigation.navigate('ScanScreenType', {
+                              defaultDate: defaultDate.toISOString(),
+                            });
+                          } else {
+                            navigation.navigate('ScanScreenType', {
+                              defaultDate: defaultDate.toISOString(),
+                            });
                           }
-                         
                         }}
                       >
                         <Text className="text-primary font-semibold">
