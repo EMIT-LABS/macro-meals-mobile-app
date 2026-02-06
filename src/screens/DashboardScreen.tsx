@@ -32,6 +32,7 @@ import { RootStackParamList } from '../types/navigation';
 
 // Use the Profile type from the store instead of defining a local one
 import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import axiosInstance from 'src/services/axios';
 import { Profile } from '../store/useStore';
 
@@ -95,7 +96,9 @@ export const DashboardScreen: React.FC = () => {
   const refreshMeals = useStore(state => state.refreshMeals);
   const hasLoggedFirstMeal = useStore(state => state.hasLoggedFirstMeal);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
   const eventsFired = useRef(false);
+  const userIdentified = useRef(false); // Track if user has been identified in PostHog
 
   // Calculate today's total macros from loggedMeals
   const todayMealsSum = loggedMeals.reduce(
@@ -120,11 +123,33 @@ export const DashboardScreen: React.FC = () => {
 
       // Dashboard viewed tracking
       if (profile) {
+        // Track screen view for PostHog (populates the screen/URL field)
+        posthog.track({
+          name: '$screen',
+          properties: {
+            $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            user_id: profile?.id,
+            platform: Platform.OS,
+          },
+        });
+        
+        // Track regular events
         mixpanel.track({
           name: 'dashboard_viewed',
           properties: {
             user_id: profile?.id,
             platform: Platform.OS,
+          },
+        });
+        posthog.track({
+          name: 'dashboard_viewed',
+          properties: {
+            $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            user_id: profile?.id,
+            platform: Platform.OS,
+            entry_point:'dashboard_screen'
           },
         });
       }
@@ -139,6 +164,19 @@ export const DashboardScreen: React.FC = () => {
             first_name: profile?.first_name,
           },
         });
+          posthog.track({
+          name: 'greeting_displayed',
+          properties: {
+            $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen',
+            user_id: profile?.id,
+            platform: Platform.OS,
+            username: profile?.first_name,
+            greeting_type:getGreeting(profile?.first_name)
+          },
+        });
+
+    
       }
 
       // Macro summary displayed tracking
@@ -154,10 +192,27 @@ export const DashboardScreen: React.FC = () => {
             fat_target: macros.fat,
           },
         });
+
+        posthog.track({
+          name: 'macro_summary_displayed',
+          properties: {
+            $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            user_id: profile?.id,
+            platform: Platform.OS,
+            goal_calories:macros.calories,
+            remaining_calories:remaining.calories,
+            consumed_calories:todayProgress.calories,
+            goal_type:'',
+
+
+          },
+        });
       }
 
       // Recently uploaded section viewed tracking
       if (loggedMeals !== undefined) {
+        const hasLoggedMeals = (loggedMeals?.length ?? 0) > 0;
         mixpanel.track({
           name: 'recently_uploaded_section_viewed',
           properties: {
@@ -166,8 +221,21 @@ export const DashboardScreen: React.FC = () => {
             meal_count: loggedMeals.length,
           },
         });
+
+        posthog.track({
+          name: 'recently_uploaded_section_viewed',
+          properties: {
+            $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+            user_id: profile?.id,
+            platform: Platform.OS,
+            meal_count: loggedMeals.length,
+            empty_state: !hasLoggedMeals,
+          },
+        });
       }
 
+     
       // Macro breakdown displayed tracking
       if (macros && todayMealsSum) {
         mixpanel.track({
@@ -184,16 +252,30 @@ export const DashboardScreen: React.FC = () => {
           },
         });
       }
+        if (macros && todayMealsSum) {
+        posthog.track({
+          name: 'macro_breakdown_displayed',
+          properties: {
+             $screen_name: 'DashboardScreen',
+            $current_url: 'DashboardScreen',
+            user_id: profile?.id,
+            platform: Platform.OS,
+            carbs: todayMealsSum.carbs,
+            carbs_goal: macros.carbs,
+            fat: todayMealsSum.fat,
+            fat_goal: macros.fat,
+            protein: todayMealsSum.protein,
+            protein_goal: macros.protein,
+          },
+        });
+      }
     }
   }, [
     isLoading,
     error,
-    profile,
-    macros,
-    todayProgress,
-    loggedMeals,
-    todayMealsSum,
+    profile?.id,
     mixpanel,
+    posthog,
   ]);
 
   // useEffect(() => {
@@ -230,6 +312,20 @@ export const DashboardScreen: React.FC = () => {
 
       // 1. Fetch user profile info
       const profileResponse = await userService.getProfile();
+      
+      // Identify user in PostHog only once per session
+      if (!userIdentified.current && profileResponse.id) {
+        userIdentified.current = true;
+        posthog.identify(profileResponse.id, {
+          email: profileResponse.email,
+          name: profileResponse.display_name || profileResponse.first_name,
+          signup_date: profileResponse.created_at || new Date().toISOString(),
+          has_macros: profileResponse.has_macros,
+          is_pro: profileResponse.is_pro || false,
+          meal_reminder_preferences_set: profileResponse.meal_reminder_preferences_set || false,
+        });
+      }
+      
       setStoreProfile(profileResponse);
       setProfile(profileResponse);
       // macroMealsCrashlytics.setUserAttributes({
@@ -318,11 +414,32 @@ export const DashboardScreen: React.FC = () => {
         platform: Platform.OS,
       },
     });
+     posthog?.track({
+      name: 'see_nearby_meals_clicked',
+      properties: {
+      $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+      $screen_name: 'DashboardScreen',
+        user_id: profile?.id,
+        platform: Platform.OS,
+        entry_point:'dashboard_screen'
+      },
+    });
     mixpanel?.track({
       name: 'meal_finder_opened_from_dashboard',
       properties: {
         user_id: profile?.id,
         platform: Platform.OS,
+      },
+    });
+      posthog?.track({
+      name: 'meal_finder_opened_from_dashboard',
+      properties: {
+       $current_url: 'DashboardScreen', 
+        $screen_name: 'DashboardScreen',
+        user_id: profile?.id,
+        platform: Platform.OS,
+        entry_point:'dashboard',
+        has_location_permission:''
       },
     });
     navigation.navigate('MealFinderScreen');
@@ -334,6 +451,19 @@ export const DashboardScreen: React.FC = () => {
       properties: {
         user_id: profile?.id,
         platform: Platform.OS,
+      },
+    });
+
+    posthog?.track({
+      name: 'log_first_meal_clicked',
+      properties: {
+        $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+        $screen_name: 'dashboard',
+        meals_logged_count: loggedMeals.length,
+        user_id: profile?.id,
+        platform: Platform.OS,
+        entry_point: 'dashboard_screen',
+        is_first_time_user: (loggedMeals?.length ?? 0) === 0,
       },
     });
     navigation.navigate('ScanScreenType');
@@ -405,6 +535,7 @@ export const DashboardScreen: React.FC = () => {
     if (hour < 12) return `Good morning, ${first_name} 👋`;
     if (hour < 18) return `Good afternoon, ${first_name} 👋`;
     return `Good evening, ${first_name} 👋`;
+    
   }
 
   function getTimeOfDayEmoji() {
@@ -443,6 +574,14 @@ export const DashboardScreen: React.FC = () => {
               <TouchableOpacity
                 onPress={() => {
                   mixpanel?.track({
+                    name: 'notifications_icon_clicked',
+                    properties: {
+                      user_id: profile?.id,
+                      platform: Platform.OS,
+                      unread_count: unreadCount,
+                    },
+                  });
+                   posthog?.track({
                     name: 'notifications_icon_clicked',
                     properties: {
                       user_id: profile?.id,
@@ -690,6 +829,13 @@ export const DashboardScreen: React.FC = () => {
                         </Text>
                         <TouchableOpacity
                           onPress={() => {
+                            posthog.track({
+                              name:'edit_meal_clicked',
+                              properties:{
+                                meal_id:meal.id,
+                                entry_point:'dashboard'
+                              }
+                            })
                             navigation.navigate('EditMealScreen', {
                               analyzedData: {
                                 id: meal.id,

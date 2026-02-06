@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import { scanService } from '../services/scanService';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 type RootStackParamList = {
   Dashboard: undefined;
@@ -46,11 +47,20 @@ const BarcodeScanScreen: React.FC = () => {
   const lastScanTimeRef = useRef<number>(0);
   const [scanError, setScanError] = useState(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog();
 
   useEffect(() => {
     mixpanel?.track({
       name: 'barcode_scan_opened',
       properties: {
+        entry_point: 'add_meal',
+      },
+    });
+    posthog?.track({
+      name: 'barcode_scan_opened',
+      properties: {
+        $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
         entry_point: 'add_meal',
       },
     });
@@ -120,6 +130,15 @@ const BarcodeScanScreen: React.FC = () => {
             match_found: true,
           },
         });
+        posthog?.track({
+          name: 'barcode_scanned',
+          properties: {
+            $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
+            barcode_value: barcode,
+            match_found: true,
+          },
+        });
         setScanError(false);
         console.log('product', product);
         handleSuccessfulScan(barcode, product);
@@ -140,6 +159,14 @@ const BarcodeScanScreen: React.FC = () => {
     mixpanel?.track({
       name: 'barcode_unrecognized_prompt_manual',
       properties: {
+        barcode_value: barcodeData,
+      },
+    });
+    posthog?.track({
+      name: 'barcode_unrecognized_prompt_manual',
+      properties: {
+        $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
         barcode_value: barcodeData,
       },
     });
@@ -171,6 +198,22 @@ const BarcodeScanScreen: React.FC = () => {
     mixpanel?.track({
       name: 'prefilled_form_shown_from_barcode',
       properties: {
+        barcode_value: barcodeData,
+        meal_name: product.name,
+        meal_type: product.meal_type,
+        calories: product.calories,
+        protein_g: product.protein,
+        carbs_g: product.carbs,
+        fats_g: product.fat,
+        amount: product.amount,
+        serving_size_g: product.serving_unit,
+      },
+    });
+    posthog?.track({
+      name: 'prefilled_form_shown_from_barcode',
+      properties: {
+        $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
         barcode_value: barcodeData,
         meal_name: product.name,
         meal_type: product.meal_type,
@@ -357,7 +400,17 @@ const BarcodeScanScreen: React.FC = () => {
             mixpanel?.track({
               name: 'barcode_scan_back_to_add_meal',
               properties: {
+                $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
                 gesture_type: 'button',
+              },
+            });
+            posthog?.track({
+              name: 'barcode_scan_back_to_add_meal',
+              properties: {
+                gesture_type: 'button',
+                $screen_name: 'BarcodeScreen',
+                $current_url: 'BarcodeScreen',
               },
             });
             navigation.goBack();

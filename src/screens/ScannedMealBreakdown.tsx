@@ -19,6 +19,7 @@ import { MealFeedback, mealService } from "../services/mealService";
 import useStore from "../store/useStore";
 import { RateMacroMeals } from "src/components/RateMacroMeals";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 // type MacroColorKey = keyof typeof macroColors;
@@ -55,6 +56,8 @@ const ScannedMealBreakdownScreen: React.FC = () => {
   const scannedImage = meal.scannedImage || "";
   console.log("Extracted scannedImage:", scannedImage);
   const mixpanel = useMixpanel();
+    const posthog = usePosthog();
+
   const token = useStore((state) => state.token);
 
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
@@ -73,6 +76,18 @@ const ScannedMealBreakdownScreen: React.FC = () => {
         protein_g: macros.protein,
         carbs_g: macros.carbs,
         fats_g: macros.fat,
+        ingredients_list:detectedIngredients
+      },
+    });
+    posthog?.track({
+      name: "meal_scan_results_viewed",
+      properties: {
+        meal_name: mealName,
+        calories: macros.calories,
+        protein_g: macros.protein,
+        carbs_g: macros.carbs,
+        fats_g: macros.fat,
+        ingredients_list:detectedIngredients
       },
     });
   }, []);
@@ -97,6 +112,7 @@ const ScannedMealBreakdownScreen: React.FC = () => {
     mixpanel?.track({
       name: "add_to_log_from_meal_scan_submitted",
       properties: {
+        meal_id:meal.id,
         meal_name: mealName,
         calories: macros.calories,
         protein_g: macros.protein,

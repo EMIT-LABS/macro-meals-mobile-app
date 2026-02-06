@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { authService } from '../services/authService';
-import useStore from '../store/useStore';
+import useStore, { shouldSkipPaywall } from '../store/useStore';
 // Import the mock service instead of the real one
 // import { mockSocialAuth } from "../services/authMock";
 import CustomSafeAreaView from '../components/CustomSafeAreaView';
@@ -25,6 +25,7 @@ import { OnboardingContext } from '../contexts/OnboardingContext';
 import { RootStackParamList } from '../types/navigation';
 // import { MaterialIcons } from "@expo/vector-icons";
 import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import { sentryService } from '@macro-meals/sentry_service/src';
 import Constants from 'expo-constants';
 import { Linking } from 'react-native';
@@ -63,16 +64,40 @@ export const LoginScreen: React.FC = () => {
   const resetSteps = useGoalsFlowStore(state => state.resetSteps);
   const mixpanel = useMixpanel();
   const eventsFired = useRef(false);
+  const posthog = usePosthog();
 
   useEffect(() => {
     if (mixpanel && !eventsFired.current) {
       eventsFired.current = true;
+
+      // Track screen view for PostHog
+      posthog.track({
+        name: '$screen',
+        properties: {
+          $current_url: 'LoginScreen',
+          platform: Platform.OS,
+        },
+      });
+
+      // Track event for Mixpanel
       mixpanel.track({
         name: 'sign_in_screen_viewed',
-        properties: { platform: Platform.OS },
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'SignUpScreen',
+          $current_url: 'SignUpScreen',
+        },
+      });
+      posthog.track({
+        name: 'sign_in_screen_viewed',
+        properties: {
+          platform: Platform.OS,
+          $screen_name: 'LoginScreen',
+          $current_url: 'LoginScreen',
+        },
       });
     }
-  }, [mixpanel]);
+  }, [mixpanel, posthog]);
 
   const [errors, setErrors] = useState({
     email: '',
@@ -101,6 +126,16 @@ export const LoginScreen: React.FC = () => {
     mixpanel?.track({
       name: 'sign_in_attempted',
       properties: {
+        email_domain: email.split('@')[1] || '',
+        platform: Platform.OS,
+      },
+    });
+
+    posthog?.track({
+      name: 'sign_in_attempted',
+      properties: {
+        $screen_name: 'LoginScreen',
+        $current_url: 'LoginScreen',
         email_domain: email.split('@')[1] || '',
         platform: Platform.OS,
       },
@@ -165,33 +200,49 @@ export const LoginScreen: React.FC = () => {
           name: `${profile.first_name} ${profile.last_name}`,
         });
 
-        // Set user ID in RevenueCat after successful login and check subscription status
-        try {
-          console.log(`\n\n\n\n\nUSER ID  ${profile.id}`);
-          await revenueCatService.setUserID(profile.id);
-          await revenueCatService.setAttributes({
-            $email: profile.email,
-            $displayName: `${profile.first_name} ${profile.last_name}`,
-          });
-          console.log('✅ RevenueCat user ID set after login:', profile.id);
+        // Skip paywall if is_pro OR active referral (promo)
+        if (shouldSkipPaywall(profile)) {
+          console.log('✅ LoginScreen - User has pro or active referral, skipping paywall');
+          setIsPro(true);
+          
+          // Still set up RevenueCat for future subscription management
+          try {
+            await revenueCatService.setUserID(profile.id);
+            await revenueCatService.setAttributes({
+              $email: profile.email,
+              $displayName: `${profile.first_name} ${profile.last_name}`,
+            });
+            console.log('✅ LoginScreen - RevenueCat user ID set for pro user');
+          } catch (error) {
+            console.error('❌ LoginScreen - RevenueCat setup failed for pro user:', error);
+          }
+        } else {
+          // If backend says not pro, check RevenueCat for active subscription
+          try {
+            await revenueCatService.setUserID(profile.id);
+            await revenueCatService.setAttributes({
+              $email: profile.email,
+              $displayName: `${profile.first_name} ${profile.last_name}`,
+            });
+            console.log('✅ LoginScreen - RevenueCat user ID set after login:', profile.id);
 
-          // Check subscription status from RevenueCat (source of truth)
-          const { syncSubscriptionStatus } = await import(
-            '../services/subscriptionChecker'
-          );
-          const subscriptionStatus = await syncSubscriptionStatus(setIsPro);
+            // Check subscription status from RevenueCat
+            const { syncSubscriptionStatus } = await import(
+              '../services/subscriptionChecker'
+            );
+            const subscriptionStatus = await syncSubscriptionStatus(setIsPro);
 
-          console.log(
-            '🔍 LoginScreen - RevenueCat subscription status:',
-            subscriptionStatus
-          );
-        } catch (error) {
-          console.error(
-            '❌ Failed to set RevenueCat user ID or check subscription after login:',
-            error
-          );
-          // Fallback to backend isPro value if RevenueCat fails
-          setIsPro(!!profile.is_pro);
+            console.log(
+              '🔍 LoginScreen - RevenueCat subscription status:',
+              subscriptionStatus
+            );
+          } catch (error) {
+            console.error(
+              '❌ LoginScreen - Failed to check RevenueCat subscription:',
+              error
+            );
+            setIsPro(false);
+          }
         }
 
         console.log('🔍 LoginScreen - Immediately after setting states:', {
@@ -225,6 +276,16 @@ export const LoginScreen: React.FC = () => {
             profile.meal_reminder_preferences_set || false,
         });
 
+        posthog.identify(userId, {
+          email: profile.email || email,
+          name: profile.display_name || profile.first_name,
+          signup_date: profile.created_at || new Date().toISOString(),
+          has_macros: profile.has_macros,
+          is_pro: profile.is_pro || false,
+          meal_reminder_preferences_set:
+            profile.meal_reminder_preferences_set || false,
+        });
+
         // Track successful login
         mixpanel?.track({
           name: 'sign_in_successful',
@@ -232,6 +293,17 @@ export const LoginScreen: React.FC = () => {
             login_method: 'email',
             has_macros: profile.has_macros,
             is_pro: profile.is_pro || false,
+          },
+        });
+
+        posthog?.track({
+          name: 'sign_in_successful',
+          properties: {
+            login_method: 'email',
+            has_macros: profile.has_macros,
+            is_pro: profile.is_pro || false,
+            $screen_name: 'LoginScreen',
+            $current_url: 'LoginScreen',
           },
         });
 
@@ -297,6 +369,17 @@ export const LoginScreen: React.FC = () => {
         },
       });
 
+      posthog?.track({
+        name: 'sign_in_failed',
+        properties: {
+          email_domain: email.split('@')[1] || '',
+          error_type: errorMessage,
+          platform: Platform.OS,
+          $screen_name: 'LoginScreen',
+          $current_url: 'LoginScreen',
+        },
+      });
+
       Alert.alert('Login Failed', errorMessage, [{ text: 'OK' }]);
     } finally {
       setIsLoading(false);
@@ -306,6 +389,14 @@ export const LoginScreen: React.FC = () => {
     mixpanel?.track({
       name: 'forgot_password_clicked',
       properties: { platform: Platform.OS },
+    });
+    posthog?.track({
+      name: 'forgot_password_clicked',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'LoginScreen',
+        $current_url: 'LoginScreen',
+      },
     });
     (navigation as any).navigate('ForgotPasswordScreen');
   };

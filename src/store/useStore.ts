@@ -28,6 +28,25 @@ const DEFAULT_USER_PREFERENCES: UserPreferences = {
     dietary_restrictions: [],
 };
 
+// Referral object from /user/me (promo-style code with limited redemptions and expiry)
+export interface ReferralRedemption {
+    user_id: string;
+    date_redeemed: string;
+    trial_end_date: string;
+}
+
+export interface ReferralObject {
+    id: string;
+    referral_code: string;
+    max_redemptions: number;
+    redemptions_used: number;
+    expiry_date: string;
+    metadata: Record<string, unknown>;
+    is_active: boolean;
+    created_at: string;
+    redemption?: ReferralRedemption;
+}
+
 // Add Profile interface
 export interface Profile {
     id?: string;
@@ -42,6 +61,15 @@ export interface Profile {
     meal_reminder_preferences_set?: boolean;
     has_macros?: boolean;
     has_used_trial?: boolean;
+    referral?: ReferralObject | null;
+}
+
+/**
+ * User should skip paywall only when both is_pro and active referral are true.
+ */
+export function shouldSkipPaywall(profile: Profile | null | undefined): boolean {
+    if (!profile) return false;
+    return profile.is_pro === true && (profile.referral?.is_active === true);
 }
 
 type MacrosPreferences = {

@@ -21,6 +21,8 @@ import { userService } from "../services/userService";
 import useStore from "../store/useStore";
 import { LinearProgress } from "../components/LinearProgress";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
+
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -60,6 +62,7 @@ const AIRecipeDetailsScreen: React.FC = () => {
   } | null>(null);
   const token = useStore((state) => state.token);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   // Animation values for pie chart
   const animatedValues = useRef({
@@ -80,6 +83,17 @@ const AIRecipeDetailsScreen: React.FC = () => {
         fats_g: recipe.fat,
       },
     });
+     posthog?.track({
+      name: "ai_recipe_detail_viewed",
+      properties: {
+        recipe_id: recipe.id,
+        calories: recipe.calories,
+        protein_g: recipe.protein,
+        carbs_g: recipe.carbs,
+        fats_g: recipe.fat,
+      },
+    });
+    
     checkIfFavorite();
     fetchUserPreferences();
     animatePieChart();
@@ -205,6 +219,15 @@ const AIRecipeDetailsScreen: React.FC = () => {
           recipe_id: recipe.id,
           favorite_state: newFavoriteStatus,
         },
+        
+      });
+        posthog?.track({
+        name: "ai_recipe_favorited",
+        properties: {
+          recipe_id: recipe.id,
+          favorite_state: newFavoriteStatus,
+        },
+        
       });
 
       if (newFavoriteStatus) {
@@ -255,6 +278,18 @@ const AIRecipeDetailsScreen: React.FC = () => {
           // serving_size_g: 1,
         },
       });
+      posthog?.track({
+        name: "add_to_log_from_ai_recipe_submitted",
+        properties: {
+          recipe_id: recipe.id,
+          meal_type: mealData.meal_type,
+          calories: recipe.calories,
+          protein_g: recipe.protein,
+          carbs_g: recipe.carbs,
+          fats_g: recipe.fat,
+          // serving_size_g: 1,
+        },
+      });
       console.log("Logging recipe:", mealData);
 
       // Use the mealService to log the meal
@@ -289,6 +324,12 @@ const AIRecipeDetailsScreen: React.FC = () => {
   };
   const handleBack = () => {
     mixpanel?.track({
+      name: "ai_recipe_back_to_add_meal",
+      properties: {
+        gesture_type: "button",
+      },
+    });
+     posthog?.track({
       name: "ai_recipe_back_to_add_meal",
       properties: {
         gesture_type: "button",

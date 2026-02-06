@@ -25,6 +25,7 @@ import { MealFinderMapView } from '../components/meal_finder_components/MealFind
 import { RemainingTodayView } from '../components/meal_finder_components/RemainingTodayView';
 import { mealService } from '../services/mealService';
 import { Meal } from '../types';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 interface MacroData {
   label: 'Protein' | 'Carbs' | 'Fat';
@@ -183,6 +184,20 @@ const MealFinderScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const isDataLoaded = !locationLoading && meals.length > 0;
+  const posthog = usePosthog();
+
+  useEffect(() => {
+    posthog?.track({
+      name: 'meal_finder_screen_viewed',
+      properties: {
+        $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
+        entry_point: 'meal_finder',
+        macros: macrosPreferences,
+        view_type: activeTab,
+      },
+    });
+  }, []);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -226,10 +241,9 @@ const MealFinderScreen: React.FC = () => {
     fetchProgress();
   }, [token]);
 
-  const fetchLocationAndSuggestions = async () => {
-    // setInitializing(true);
-    try {
-      // 1. Get location
+
+
+const handleLocationPermission = async (): Promise<boolean> => {
       const hasPermission = await locationService.requestPermissions();
       if (!hasPermission) {
         Alert.alert(
@@ -248,8 +262,18 @@ const MealFinderScreen: React.FC = () => {
           ]
         );
         // setInitializing(false);
-        return;
-      }
+         return false; 
+  }
+  
+  return true; 
+};
+
+
+  const fetchLocationAndSuggestions = async () => {
+    // setInitializing(true);
+    try {
+      // 1. Get location
+    
       const location = await locationService.getCurrentLocation();
       if (location) {
         const address = await locationService.reverseGeocode(
@@ -281,7 +305,10 @@ const MealFinderScreen: React.FC = () => {
         try {
           const mapPinsResponse = await mealService.getMapPins(
             location.coords.latitude,
-            location.coords.longitude
+            location.coords.longitude,
+            undefined,
+            undefined,
+           
           );
           // Keep only restaurants within ~50km of the user (based on API distance_km)
           const pins = (mapPinsResponse.pins || []).filter(
@@ -400,12 +427,23 @@ const MealFinderScreen: React.FC = () => {
         defaultResults: meals,
       });
     }, 100);
-  }, [navigation, meals]);
+    posthog?.track({
+      name: 'search_bar_engaged',
+      properties: {
+        $screen_name: 'MealFinderScreen',
+        $current_url: 'MealFinderScreen',
+        entry_point: 'meal_finder_screen',
+      },
+    });
+  }, [navigation, meals, posthog]);
 
   const handleSelectCurrentLocation = async () => {
     closeLocationSheet();
     setLocationLoading(true);
-    // await handleLocationPermission();
+    const permissionGranted:boolean = await handleLocationPermission();
+    if (permissionGranted) {
+      await fetchLocationAndSuggestions();
+    }
     setLocationLoading(false);
   };
 
@@ -433,7 +471,9 @@ const MealFinderScreen: React.FC = () => {
     try {
       const mapPinsResponse = await mealService.getMapPins(
         location.latitude,
-        location.longitude
+        location.longitude,
+        undefined,
+        undefined,
       );
       // Keep only restaurants within ~50km of the selected location
       const pins = (mapPinsResponse.pins || []).filter(
@@ -500,7 +540,17 @@ const MealFinderScreen: React.FC = () => {
         style={{ paddingTop: Platform.OS === 'android' ? 8 : 50 }}
       >
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            posthog?.track({
+              name: 'meal_finder_back_to_add_meal',
+              properties: {
+                $screen_name: 'MealFinderScreen',
+                $current_url: 'MealFinderScreen',
+                gesture: 'button',
+              },
+            });
+            navigation.goBack();
+          }}
           className={`flex-row w-8 h-8 rounded-full bg-white justify-center items-center`}
         >
           <Ionicons
@@ -521,6 +571,7 @@ const MealFinderScreen: React.FC = () => {
 
       {/* Search Bar - Only show when Map tab is active and data has loaded */}
       {activeTab === 'map' && isDataLoaded && (
+        
         <View className="px-5">
           <View className="flex-row items-center bg-white/90 rounded-3xl px-4 py-3 shadow-lg">
             <Ionicons name="search" size={20} color="#666" />
@@ -629,7 +680,20 @@ const MealFinderScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity
-            onPress={() => setActiveTab('map')}
+            onPress={() => {
+              if (activeTab !== 'map') {
+                posthog?.track({
+                  name: 'viewed_type_toggled',
+                  properties: {
+                    $screen_name: 'MealFinderScreen',
+                    $current_url: 'MealFinderScreen',
+                    from_view: activeTab,
+                    to_view: 'map',
+                  },
+                });
+              }
+              setActiveTab('map');
+            }}
             className={`flex-1 py-3 rounded-[1000px] ${
               activeTab === 'map'
                 ? 'bg-[#01675B1A] rounded-[96px] text-primary'
@@ -653,7 +717,20 @@ const MealFinderScreen: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setActiveTab('list')}
+            onPress={() => {
+              if (activeTab !== 'list') {
+                posthog?.track({
+                  name: 'viewed_type_toggled',
+                  properties: {
+                    $screen_name: 'MealFinderScreen',
+                    $current_url: 'MealFinderScreen',
+                    from_view: activeTab,
+                    to_view: 'list',
+                  },
+                });
+              }
+              setActiveTab('list');
+            }}
             className={`flex-1 py-3 rounded-[96px] ${
               activeTab === 'list'
                 ? 'bg-[#01675B1A] rounded-[96px]'

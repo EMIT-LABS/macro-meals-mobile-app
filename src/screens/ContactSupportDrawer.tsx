@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import CustomSafeAreaView from '../components/CustomSafeAreaView';
 import { IMAGE_CONSTANTS } from '../constants/imageConstants';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 const { height } = Dimensions.get('window');
 type ContactSupportDrawerProps = {
   onClose: () => void;
@@ -26,6 +27,7 @@ export default function ContactSupportDrawer({
 }: ContactSupportDrawerProps) {
   const mixpanel = useMixpanel();
   const [emailError, setEmailError] = useState<string | null>(null);
+  const posthog =usePosthog()
 
   const subject = encodeURIComponent(emailSubject);
   const body = encodeURIComponent(emailBody);
@@ -35,6 +37,13 @@ export default function ContactSupportDrawer({
     mixpanel?.track({
       name: 'contact_support_email_opened',
       properties: {},
+    });
+     posthog?.track({
+      name: 'contact_support_email_opened',
+      properties: {
+         $screen_name: 'ContactSupportDrawer',
+            $current_url: 'ContactSupportDrawer', 
+      },
     });
 
     try {
