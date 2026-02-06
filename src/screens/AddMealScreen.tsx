@@ -56,6 +56,7 @@ import { FavouriteIcon } from 'src/components/FavouriteIcon';
 import { RateMacroMeals } from 'src/components/RateMacroMeals';
 import { FavoriteMeal } from '../services/favoritesService';
 import { usePosthog } from '@macro-meals/posthog_service/src';
+import BarcodeScanScreen from './BarcodeScanScreen';
 
 /**
  * Screen for adding a new meal to the log
@@ -63,7 +64,7 @@ import { usePosthog } from '@macro-meals/posthog_service/src';
 export const AddMealScreen: React.FC = () => {
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'AddMeal'>>();
-  const route = useRoute<RouteProp<{ AddMeal: RouteParams, BarcodeScanScreen:RouteParams, SnapMeal:RouteParams }, 'AddMeal'| 'BarcodeScanScreen' | 'SnapMeal'>>();
+  const route = useRoute<RouteProp<{ AddMeal: RouteParams, AddMealScreen:RouteParams,   BarcodeScanScreen:RouteParams, SnapMeal:RouteParams }, 'AddMeal'| 'AddMealScreen'|'BarcodeScanScreen' | 'SnapMeal'>>();
   const params = route.params || {};
   const { barcodeData, analyzedData, defaultDate,  } = params;
 

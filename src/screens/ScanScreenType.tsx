@@ -1,6 +1,6 @@
 import { useMixpanel } from '@macro-meals/mixpanel/src';
 import { usePosthog } from '@macro-meals/posthog_service/src';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {

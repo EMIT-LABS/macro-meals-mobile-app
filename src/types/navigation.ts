@@ -33,7 +33,7 @@ export type RootStackParamList = {
   GoalSetupScreen: undefined;
   GoalsBasicInfo: undefined;
   AddMeal: undefined;
-  AddMealScreen: {
+  AddMealScreen?: {
     analyzedData?: {
       name: string;
       calories: number;
@@ -49,7 +49,6 @@ export type RootStackParamList = {
       logging_mode?: string;
     };
     defaultDate?: string;
-    day:string;
 
   };
   SnapMeal?: {defaultDate?: string;};
