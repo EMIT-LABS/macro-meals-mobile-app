@@ -43,12 +43,15 @@ allprojects {
   }
   
   // Force all subprojects to use minSdkVersion 24 (required for React Native 0.79.5)
+  // and compileSdk 35 (required for TIRAMISU, POST_NOTIFICATIONS, and modern androidx libraries)
   afterEvaluate { project ->
     if (project.hasProperty('android')) {
       def android = project.android
       if (android.hasProperty('defaultConfig')) {
         android.defaultConfig.minSdkVersion = 24
       }
+      // Force compileSdk 35 for all modules (fixes notifee and expo-modules-core compilation)
+      android.compileSdkVersion = 35
     }
   }
 }

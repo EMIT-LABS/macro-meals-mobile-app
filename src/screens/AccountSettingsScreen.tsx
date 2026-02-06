@@ -23,6 +23,7 @@ import { macroMealsCrashlytics } from "@macro-meals/crashlytics";
 import { useGoalsFlowStore } from "src/store/goalsFlowStore";
 import Header from "src/components/Header";
 import { useSyncBodyMetricToBackend } from "src/components/hooks/useBodyMetricsUpdate";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 
 function debounce(func: (...args: any[]) => void, wait: number) {
   let timeout: NodeJS.Timeout;
@@ -63,6 +64,7 @@ export default function AccountSettingsScreen() {
   const [tempWeightLb, setTempWeightLb] = useState<number | null>(null);
   const inputRefs = useRef<{ [key: string]: TextInput | null }>({});
   const userRef = useRef<any>(null);
+  const posthog = usePosthog()
   const { setAuthenticated } = useStore();
   const debouncedPatch = useRef<{ [key: string]: (...args: any[]) => void }>(
     {}
@@ -77,6 +79,17 @@ export default function AccountSettingsScreen() {
           user_id: _user.id,
           email: _user.email,
           is_pro: _user.is_pro,
+        },
+      });
+      posthog?.track({
+        name: "account_settings_screen_viewed",
+        properties: {
+           $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
+          user_id: _user.id,
+          email: _user.email,
+          is_pro: _user.is_pro,
+          platform:Platform.OS
         },
       });
     }
@@ -221,6 +234,7 @@ export default function AccountSettingsScreen() {
         console.log(`[PATCH] Field: ${field}, Value:`, value); // <-- ADD THIS
         if (!value || value === userRef.current[field]) return;
 
+        const oldValue = userRef.current[field]; 
         setUpdating((prev) => ({ ...prev, [field]: true }));
         try {
           const patch: any = {};
@@ -235,7 +249,18 @@ export default function AccountSettingsScreen() {
               new_value: value,
             },
           });
-          console.log("[PATCH] Backend update successful");
+          posthog?.track({
+            name: "account_field_updated",
+            properties: {
+               $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
+              user_id: userRef.current?.id,
+              field: field,
+              old_value:oldValue,
+              new_value: value,
+            },
+          });
+          console.log("[PATCH] Backend update successful", oldValue);
           // Update Mixpanel user properties
           updateMixpanelUserProperties(patch);
 
@@ -305,6 +330,16 @@ export default function AccountSettingsScreen() {
         to_unit: newUnit,
       },
     });
+      posthog?.track({
+      name: "height_unit_toggled",
+      properties: {
+         $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
+        user_id: _user?.id,
+        from_unit: height_unit_preference,
+        to_unit: newUnit,
+      },
+    });
     if (
       newUnit === "imperial" &&
       typeof heightCm === "number" &&
@@ -338,6 +373,16 @@ export default function AccountSettingsScreen() {
     mixpanel?.track({
       name: "weight_unit_toggled",
       properties: {
+        user_id: _user?.id,
+        from_unit: weight_unit_preference,
+        to_unit: newUnit,
+      },
+    });
+     posthog?.track({
+      name: "weight_unit_toggled",
+      properties: {
+         $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
         user_id: _user?.id,
         from_unit: weight_unit_preference,
         to_unit: newUnit,
@@ -427,6 +472,16 @@ export default function AccountSettingsScreen() {
         email: userRef.current?.email,
       },
     });
+     posthog?.track({
+      name: "delete_account_clicked",
+      properties: {
+         $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
+        user_id: userRef.current?.id,
+        email: userRef.current?.email,
+        entry_point:'account_settings'
+      },
+    });
     Alert.alert(
       "Delete Account",
       "Are you sure you want to delete your account? This action cannot be undone.",
@@ -442,6 +497,16 @@ export default function AccountSettingsScreen() {
                 email: userRef.current?.email,
               },
             });
+            posthog?.track({
+              name: "delete_account_cancelled",
+              properties: {
+                 $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
+                user_id: userRef.current?.id,
+                email: userRef.current?.email,
+                dialog_state:'cancel',
+              },
+            });
           },
         },
         {
@@ -453,6 +518,22 @@ export default function AccountSettingsScreen() {
               mixpanel?.track({
                 name: "delete_account_confirmed",
                 properties: {
+                  user_id: userRef.current?.id,
+                  email: userRef.current?.email,
+                  account_age_days: userRef.current?.created_at
+                    ? Math.floor(
+                        (Date.now() -
+                          new Date(userRef.current.created_at).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )
+                    : 0,
+                },
+              });
+               posthog?.track({
+                name: "delete_account_confirmed",
+                properties: {
+                  $screen_name: 'AccountSettingsScreen',
+            $current_url: 'AccountSettingsScreen', 
                   user_id: userRef.current?.id,
                   email: userRef.current?.email,
                   account_age_days: userRef.current?.created_at

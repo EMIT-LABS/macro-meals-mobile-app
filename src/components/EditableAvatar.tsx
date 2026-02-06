@@ -1,4 +1,5 @@
 import { useMixpanel } from "@macro-meals/mixpanel/src";
+import { usePosthog } from "@macro-meals/posthog_service/src";
 import React, { useState } from "react";
 import {
   View,
@@ -28,6 +29,7 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
   console.log("profile is:", profile);
   const setProfile = useStore((state) => state.setProfile);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   const handleAvatarEdit = async () => {
     mixpanel?.track({
@@ -35,6 +37,14 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
       properties: {
         user_id: profile?.id,
         email: profile?.email,
+      },
+    });
+     posthog?.track({
+      name: "avatar_edit_clicked",
+      properties: {
+        user_id: profile?.id,
+        email: profile?.email,
+        avatar_current_state:avatarUrl
       },
     });
     await handleEditAvatar((newProfile: any) => {
@@ -48,6 +58,8 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
   const avatarUrl = profile?.avatar_url
     ? `${profile.avatar_url}?t=${avatarVersion}` //cache busting to force reload
     : undefined;
+
+
 
   return (
     <TouchableOpacity
@@ -79,6 +91,15 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
                 attempted_url: avatarUrl,
               },
             });
+            posthog?.track({
+              name: "avatar_upload_failed",
+              properties: {
+                user_id: profile?.id,
+                email: profile?.email,
+                error_message: e.nativeEvent.error,
+                attempted_url: avatarUrl,
+              },
+            });
             setJustUploaded(false);
           }
         }}
@@ -90,6 +111,17 @@ const EditableAvatar: React.FC<EditableAvatarProps> = ({
                 user_id: profile?.id,
                 email: profile?.email,
                 avatar_url: avatarUrl,
+              },
+            });
+            posthog?.track({
+              name: "avatar_upload_success",
+              properties: {
+                user_id: profile?.id,
+                email: profile?.email,
+                avatar_url: avatarUrl,
+                file_type:'',
+                file_size:"",
+                source:''
               },
             });
             setJustUploaded(false);

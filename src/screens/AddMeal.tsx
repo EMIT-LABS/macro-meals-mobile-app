@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format, parseISO } from 'date-fns';
@@ -27,6 +28,7 @@ import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import { getMeals, mealService } from '../services/mealService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
+import DeviceInfo from 'react-native-device-info';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -91,6 +93,7 @@ const AddMeal: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const posthog = usePosthog();
   const [pagination, setPagination] = useState({
     has_next: false,
     has_previous: false,
@@ -104,8 +107,22 @@ const AddMeal: React.FC = () => {
   const deleteLoggedMeal = useStore(state => state.deleteLoggedMeal);
   const fetchTodayProgress = useStore(state => state.fetchTodayProgress);
   const mixpanel = useMixpanel();
+  const hasTrackedDaySummary = useRef(false);
   useEffect(() => {
     mixpanel?.track({ name: 'meals_page_viewed' });
+    posthog?.track({
+      name: 'meals_page_viewed',
+      properties: {
+        $screen_name: 'AddMeal',
+        $current_url: 'AddMeal',
+        platform: Platform.OS,
+        app_version: DeviceInfo.getVersion(),
+        selected_date: selectedRange,
+        date_range_start: customRange.endDate,
+        date_range_end: customRange.endDate,
+        total_meals_count: meals.length,
+      },
+    });
   }, []);
 
   // State for consumed calories (same as DashboardScreen)
@@ -163,20 +180,30 @@ const AddMeal: React.FC = () => {
     }, [meals]);
 
   useEffect(() => {
-    if (meals.length > 0) {
+    if (meals.length > 0 && !hasTrackedDaySummary.current) {
+      hasTrackedDaySummary.current = true;
       mixpanel?.track({
         name: 'meals_day_summary_displayed',
         properties: {
           days_displayed: Object.keys(mealsByMonth).length,
         },
       });
+      posthog?.track({
+        name: 'meals_day_summary_displayed',
+        properties: {
+          $screen_name: 'AddMeal',
+          $current_url: 'AddMeal',
+          days_displayed: Object.keys(mealsByMonth).length,
+          remaining_calories: macros.calories - periodMealsSum,
+          consumed_calories: periodMealsSum,
+          goal_calories: macros.calories,
+          protein_g: macros.protein,
+          carbs_g: macros.carbs,
+          fat_g: macros.fat,
+        },
+      });
     }
-  }, [meals]);
-
-  // Keep all accordions closed initially
-  useEffect(() => {
-    // No need to open any accordions by default
-  }, [mealsByMonth]);
+  }, [meals, mealsByMonth, macros, periodMealsSum, mixpanel, posthog]);
 
   // Toggle month accordion
 
@@ -313,7 +340,17 @@ const AddMeal: React.FC = () => {
               await mealService.deleteMeal(mealId);
               mixpanel?.track({
                 name: 'meal_deleted',
-                properties: { meal_id: mealId },
+                properties: { meal_id: mealId, selected_date: selectedRange },
+              });
+              posthog?.track({
+                name: 'meal_deleted',
+
+                properties: {
+                  meal_id: mealId,
+                  selected_date: selectedRange,
+                  $screen_name: 'AddMeal',
+                  $current_url: 'AddMeal',
+                },
               });
               // Remove meal from store immediately
               deleteLoggedMeal(mealId);
@@ -361,6 +398,7 @@ const AddMeal: React.FC = () => {
 
   const showFilterSheet = () => {
     mixpanel?.track({ name: 'meals_filter_icon_clicked' });
+
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -389,6 +427,17 @@ const AddMeal: React.FC = () => {
           // Cancel does nothing
         }
       );
+      posthog?.track({
+        name: 'meals_filter_icon_clicked',
+        properties: {
+          $screen_name: 'AddMeal',
+          $current_url: 'AddMeal',
+          current_view_period: selectedRange,
+          current_selected_date: selectedRange,
+          total_meals_count: meals.length,
+          entry_point: 'meal_screen',
+        },
+      });
     } else {
       setModalVisible(true); // fallback to your custom modal for Android
     }
@@ -426,6 +475,29 @@ const AddMeal: React.FC = () => {
                         entry_point: 'meals_page',
                       },
                     });
+                    posthog?.track({
+                      name: 'custom_date_picker_opened',
+                      properties: {
+                        $screen_name: 'AddMeal',
+                        $current_url: 'AddMeal',
+                        current_view_period: selectedRange,
+                        prefilled_start_date: customRange.startDate,
+                        prefilled_end_date: customRange.endDate,
+                        entry_point: 'meals_page',
+                      },
+                    });
+                    posthog.track({
+                      name: 'meals_period_navigated',
+                      properties: {
+                        $screen_name: 'AddMeal',
+                        $current_url: 'AddMeal',
+                        from_period: prevIndex,
+                        to_period: currentIndex,
+                        direction: 'backward',
+                        from_date: selectedRange,
+                        to_date: newRange,
+                      },
+                    });
                     setCustomPickerOpen(true);
                   }
                 }}
@@ -452,6 +524,18 @@ const AddMeal: React.FC = () => {
                   if (newRange === 'custom') {
                     setCustomPickerOpen(true);
                   }
+                  posthog.track({
+                    name: 'meals_period_navigated',
+                    properties: {
+                      $screen_name: 'AddMeal',
+                      $current_url: 'AddMeal',
+                      from_period: currentIndex,
+                      to_period: nextIndex,
+                      direction: 'forward',
+                      from_date: selectedRange,
+                      to_date: newRange,
+                    },
+                  });
                 }}
               >
                 <Text className="text-white text-2xl font-bold">›</Text>
@@ -721,6 +805,16 @@ const AddMeal: React.FC = () => {
                                                   mixpanel?.track({
                                                     name: 'edit_meal_from_meals_clicked',
                                                     properties: {
+                                                      meal_id: meal.id,
+                                                      selected_date:
+                                                        meal.meal_time,
+                                                    },
+                                                  });
+                                                  posthog?.track({
+                                                    name: 'edit_meal_from_meals_clicked',
+                                                    properties: {
+                                                      $screen_name: 'AddMeal',
+                                                      $current_url: 'AddMeal',
                                                       meal_id: meal.id,
                                                       selected_date:
                                                         meal.meal_time,
@@ -1220,6 +1314,22 @@ const AddMeal: React.FC = () => {
           mixpanel?.track({
             name: 'custom_date_range_selected',
             properties: {
+              date_range_start: startDate?.toISOString() ?? null,
+              date_range_end: endDate?.toISOString() ?? null,
+              total_days:
+                startDate && endDate
+                  ? Math.ceil(
+                      (endDate.getTime() - startDate.getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    ) + 1
+                  : null,
+            },
+          });
+          posthog?.track({
+            name: 'custom_date_range_selected',
+            properties: {
+              $screen_name: 'AddMeal',
+              $current_url: 'AddMeal',
               date_range_start: startDate?.toISOString() ?? null,
               date_range_end: endDate?.toISOString() ?? null,
               total_days:
