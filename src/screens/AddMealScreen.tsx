@@ -737,6 +737,7 @@ export const AddMealScreen: React.FC = () => {
                   onValueChange={setSelectedMealType}
                   style={{ width: '100%', color: 'black' }}
                   itemStyle={{ fontSize: 16, color: 'black' }}
+                  enabled={false}
                 >
                   <Picker.Item label="Breakfast" value="breakfast" />
                   <Picker.Item label="Lunch" value="lunch" />
@@ -753,6 +754,7 @@ export const AddMealScreen: React.FC = () => {
                     setShowMealTypeModal(true);
                   }}
                   activeOpacity={0.8}
+                  disabled={true}
                 >
                   <Text className="text-base text-[#222]">
                     {selectedMealType.charAt(0).toUpperCase() +
