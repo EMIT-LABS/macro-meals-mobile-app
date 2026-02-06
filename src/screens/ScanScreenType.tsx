@@ -50,6 +50,8 @@ interface SearchMealResponse {
   total_results: number;
   search_query: string;
 }
+interface RouteParams {
+defaultDate:string}
 
 /**
  * ScanScreen component displays the various meal logging options:
@@ -60,6 +62,9 @@ interface SearchMealResponse {
 const ScanScreenType: React.FC = () => {
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'ScanScreenType'>>();
+    const route = useRoute<RouteProp<RootStackParamList, 'ScanScreenType'>>();
+      const params = route.params  as RouteParams|| {};
+      const {defaultDate} = params;
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [localSearchResults, setLocalSearchResults] = useState<
@@ -292,7 +297,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('SnapMeal' as never);
+      navigation.navigate('SnapMeal',{defaultDate});
     }
   };
 
@@ -307,7 +312,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('BarcodeScanScreen' as never);
+      navigation.navigate('BarcodeScanScreen' ,{defaultDate});
     }
   };
 
@@ -319,10 +324,14 @@ const ScanScreenType: React.FC = () => {
       name: 'add_meal_option_selected',
       properties: { option_type: 'manual_entry' },
     });
+    mixpanel?.track({
+      name: 'add_meal_option_selected',
+      properties: { option_type: 'manual_entry' },
+    });
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('AddMealScreen' as never);
+      navigation.navigate('AddMealScreen', {defaultDate});
     }
   };
 
@@ -330,7 +339,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('AiMealSuggestionsScreen' as never);
+      navigation.navigate('AiMealSuggestionsScreen', {defaultDate});
     }
   };
 
@@ -484,7 +493,7 @@ const ScanScreenType: React.FC = () => {
             />
           </TouchableOpacity>
           <Text className="text-[20px] font-semibold text-primary text-center">
-            Log a meal
+            Log a meal 
           </Text>
           <View style={{ width: 32 }} />
         </View>

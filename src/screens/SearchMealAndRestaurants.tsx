@@ -47,6 +47,8 @@ interface StillHavingIssuesProps {
   onPress: () => void;
 }
 
+
+
 const StillHavingIssues: React.FC<StillHavingIssuesProps> = ({ onPress }) => {
   return (
     <View className="items-center justify-center gap-2 pb-4">

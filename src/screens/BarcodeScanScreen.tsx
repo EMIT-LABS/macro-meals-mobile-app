@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMixpanel } from '@macro-meals/mixpanel/src';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,16 +20,22 @@ import { usePosthog } from '@macro-meals/posthog_service/src';
 type RootStackParamList = {
   Dashboard: undefined;
   Stats: undefined;
-  AddMeal: { barcodeData: string; analyzedData?: any };
-  AddMealScreen: { barcodeData?: string; analyzedData?: any };
+  AddMeal: { barcodeData: string; analyzedData?: any,  };
+  AddMealScreen: { barcodeData?: string; analyzedData?: any, defaultDate?:string };
   MealList: undefined;
   Profile: undefined;
 };
+interface RouteParams{
+    defaultDate?: string;
+
+}
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
-
-const BarcodeScanScreen = () => {
+const BarcodeScanScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteProp<{ BarcodeScanScreen: RouteParams }, 'BarcodeScanScreen'>>();
+  const params = route.params || {};
+  const { defaultDate } = params;
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -188,7 +194,7 @@ const BarcodeScanScreen = () => {
     );
   };
 
-  const handleSuccessfulScan = (barcodeData: string, product: any) => {
+  const handleSuccessfulScan = (barcodeData: string, product: any,) => {
     mixpanel?.track({
       name: 'prefilled_form_shown_from_barcode',
       properties: {
@@ -233,6 +239,7 @@ const BarcodeScanScreen = () => {
         read_only: true,
         hideImage: true, // Flag to hide the image section
       },
+     defaultDate:defaultDate
     });
   };
 

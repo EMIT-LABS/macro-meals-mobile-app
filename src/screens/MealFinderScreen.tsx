@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -137,11 +137,19 @@ const defaultMacroData: MacroData[] = [
 
 type TabType = 'list' | 'map';
 
+
+interface RouteParams{
+  defaultDate:string
+}
+
 const MealFinderScreen: React.FC = () => {
   const navigation =
     useNavigation<
       NativeStackNavigationProp<RootStackParamList, 'MealFinderScreen'>
     >();
+      const route = useRoute<RouteProp<{ BarcodeScanScreen: RouteParams }, 'BarcodeScanScreen'>>();
+      const params = route.params || {};
+      const { defaultDate } = params;
   const macrosPreferences = useStore(state => state.macrosPreferences);
   const token = useStore(state => state.token);
   // const [initializing, setInitializing] = useState<boolean>(false);
@@ -324,7 +332,7 @@ const handleLocationPermission = async (): Promise<boolean> => {
             description: pin.top_meal?.description || '',
             price: pin.price_level || undefined,
             distance: pin.distance_km || undefined,
-            date: new Date().toISOString(),
+            date: new Date().toDateString(),
             mealType: 'lunch',
             matchScore: pin.top_meal?.match_score || 0,
             latitude: pin.latitude,
@@ -489,7 +497,7 @@ const handleLocationPermission = async (): Promise<boolean> => {
         description: pin.top_meal?.description || '',
         price: pin.price_level || undefined,
         distance: pin.distance_km || undefined,
-        date: new Date().toISOString(),
+       date: new Date().toDateString(),
         mealType: 'lunch',
         matchScore: pin.top_meal?.match_score || 0,
         latitude: pin.latitude,
@@ -519,6 +527,7 @@ const handleLocationPermission = async (): Promise<boolean> => {
             onRetry={handleRetry}
             navigation={navigation}
             currentLocation={currentLocationCoords || undefined}
+            defaultDate={defaultDate}
           />
         </View>
       )}
@@ -642,6 +651,7 @@ const handleLocationPermission = async (): Promise<boolean> => {
             navigation={navigation}
             onScrollBegin={handleScrollBegin}
             onScrollEnd={handleScrollEnd}
+            defaultDate={defaultDate}
           />
         </View>
       )}

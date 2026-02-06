@@ -19,7 +19,7 @@ import useStore from '../store/useStore';
 
 type RootStackParamList = {
   AddMeal: { analyzedData?: any };
-  AIRecipeDetailsScreen: { recipe: any };
+  AIRecipeDetailsScreen: { recipe: any, defaultDate?:string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'AddMeal'>;
@@ -53,8 +53,16 @@ const defaultMacroData: MacroData[] = [
   { label: 'Fat', value: 0, color: '#FF69B4' },
 ];
 
+interface RouteParams{
+    defaultDate?: string;
+
+}
+
 const AiMealSuggestionsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteProp<{ AiMealSuggestionsScreen: RouteParams }, 'AiMealSuggestionsScreen'>>();
+    const params = route.params || {};
+    const { defaultDate } = params;
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

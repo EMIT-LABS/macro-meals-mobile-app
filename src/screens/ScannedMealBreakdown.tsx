@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Animated,
 } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { IMAGE_CONSTANTS } from "../constants/imageConstants";
 import { RootStackParamList } from "../types/navigation";
@@ -24,8 +24,14 @@ import { usePosthog } from "@macro-meals/posthog_service/src";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 // type MacroColorKey = keyof typeof macroColors;
 
+
+interface RouteParams{
+    defaultDate?: string;
+
+}
+
 const ScannedMealBreakdownScreen: React.FC = () => {
-  const route = useRoute();
+    
   const navigation =
     useNavigation<
       NativeStackNavigationProp<
@@ -33,6 +39,9 @@ const ScannedMealBreakdownScreen: React.FC = () => {
         "ScannedMealBreakdownScreen"
       >
     >();
+     const route = useRoute<RouteProp<{ ScannedMealBreakdownScreen: RouteParams }, 'ScannedMealBreakdownScreen'>>();
+        const params = route.params || {};
+        const { defaultDate } = params;
   // Accept any shape for meal, fallback to empty object
   const { meal = {} } = (route.params as { meal?: any }) || {};
 
@@ -128,7 +137,7 @@ const ScannedMealBreakdownScreen: React.FC = () => {
         carbs: macros.carbs,
         fat: macros.fat,
         meal_type: "lunch", // Default to lunch, could be made configurable
-        meal_time: new Date().toISOString(),
+        meal_time: defaultDate,
         amount: 1,
         serving_size: "grams",
         description: `${mealName} from ${
