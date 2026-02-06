@@ -24,6 +24,8 @@ interface MealFinderMapViewProps {
   onRetry: () => void;
   navigation: NativeStackNavigationProp<RootStackParamList, 'MealFinderScreen'>;
   currentLocation?: { latitude: number; longitude: number };
+  defaultDate?: string; 
+
 }
 
 // Default fallback bounds (San Francisco)
@@ -39,6 +41,8 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
   onRetry,
   navigation,
   currentLocation,
+  defaultDate,
+
 }) => {
   const { selectedMarker, selectMarker } = useMap<Meal>();
   const posthog = usePosthog();
@@ -74,7 +78,7 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
     }
 
     selectMarker(marker);
-    navigation.navigate('MealFinderBreakdownScreen', { meal: marker.data });
+    navigation.navigate('MealFinderBreakdownScreen', { meal: marker.data, defaultDate });
   };
 
   // Convert meals to map markers with actual coordinates
@@ -304,7 +308,7 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
                   },
                 });
                 navigation.navigate('MealFinderBreakdownScreen', {
-                  meal: selectedMarker.data,
+                  meal: selectedMarker.data,defaultDate
                 });
               }
             }}
@@ -332,7 +336,7 @@ export const MealFinderMapView: React.FC<MealFinderMapViewProps> = ({
                     <Text className="text-white text-xs font-bold">C</Text>
                   </View>
                   <Text className="text-xs text-gray-600">
-                    {selectedMarker.data?.macros?.carbs || 0}g
+                    {selectedMarker.data?.macros?.carbs || 0}g 
                   </Text>
                 </View>
                 <View className="flex-row items-center mr-4">

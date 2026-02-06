@@ -48,6 +48,7 @@ interface RouteParams {
     scanned_image?: string;
   };
   defaultDate?: string;
+
 }
 
 import { SERVING_UNITS } from 'constants/serving_units';
@@ -55,6 +56,7 @@ import { FavouriteIcon } from 'src/components/FavouriteIcon';
 import { RateMacroMeals } from 'src/components/RateMacroMeals';
 import { FavoriteMeal } from '../services/favoritesService';
 import { usePosthog } from '@macro-meals/posthog_service/src';
+import BarcodeScanScreen from './BarcodeScanScreen';
 
 /**
  * Screen for adding a new meal to the log
@@ -62,9 +64,9 @@ import { usePosthog } from '@macro-meals/posthog_service/src';
 export const AddMealScreen: React.FC = () => {
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'AddMeal'>>();
-  const route = useRoute<RouteProp<{ AddMeal: RouteParams }, 'AddMeal'>>();
+  const route = useRoute<RouteProp<{ AddMeal: RouteParams, AddMealScreen:RouteParams,   BarcodeScanScreen:RouteParams, SnapMeal:RouteParams }, 'AddMeal'| 'AddMealScreen'|'BarcodeScanScreen' | 'SnapMeal'>>();
   const params = route.params || {};
-  const { barcodeData, analyzedData, defaultDate } = params;
+  const { barcodeData, analyzedData, defaultDate,  } = params;
 
   const [mealName, setMealName] = useState<string>('');
   const [calories, setCalories] = useState<string>('0');
@@ -327,6 +329,13 @@ export const AddMealScreen: React.FC = () => {
         setLoading(false);
         return;
       }
+
+
+      if (defaultDate){
+       const yesterdayTime = new Date(defaultDate); // Convert string to Date object
+      setTime(yesterdayTime)
+      }
+
 
       // Ensure amount is at least 1 and is an integer
       const amountValue = Math.max(1, parseInt(amount) || 1);
@@ -632,7 +641,7 @@ export const AddMealScreen: React.FC = () => {
         <TouchableOpacity onPress={handleGoBack} className="p-1">
           <Text className="text-2xl text-[#1a1a1a]">←</Text>
         </TouchableOpacity>
-        <Text className="text-lg font-semibold text-[#1a1a1a]">Add Meal</Text>
+        <Text className="text-lg font-semibold text-[#1a1a1a]">Add Meal </Text>
         <FavouriteIcon isFavourite={isFavorite} onPress={toggleFavorite} />
       </View>
 
@@ -729,6 +738,7 @@ export const AddMealScreen: React.FC = () => {
                   onValueChange={setSelectedMealType}
                   style={{ width: '100%', color: 'black' }}
                   itemStyle={{ fontSize: 16, color: 'black' }}
+                  enabled={false}
                 >
                   <Picker.Item label="Breakfast" value="breakfast" />
                   <Picker.Item label="Lunch" value="lunch" />
@@ -745,6 +755,7 @@ export const AddMealScreen: React.FC = () => {
                     setShowMealTypeModal(true);
                   }}
                   activeOpacity={0.8}
+                  disabled={true}
                 >
                   <Text className="text-base text-[#222]">
                     {selectedMealType.charAt(0).toUpperCase() +

@@ -574,6 +574,14 @@ const PaymentScreen = () => {
                     $current_url: 'PaymentScreen',
                   },
                 });
+                posthog?.track({
+                  name: 'subscription_plan_selected',
+                  properties: {
+                    plan: 'yearly',
+                    price: yearlyProductInfo?.price,
+                    platform: Platform.OS,
+                  },
+                });
               }}
             >
               <View className="absolute px-2 py-1.5 top-[-10px] flex-row bg-primaryLight rounded-3xl">
