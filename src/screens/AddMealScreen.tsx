@@ -282,7 +282,47 @@ export const AddMealScreen: React.FC = () => {
    * Adds the current meal to the log
    */
   const handleAddMealLog = async (): Promise<void> => {
-    mixpanel?.track({
+    if (defaultDate){
+        const defaultDateValue = defaultDate.split('T')[0]; 
+        const currentDateValue = new Date().toISOString().split('T')[0]; 
+        if(defaultDateValue === currentDateValue){
+           const defaultTimeString = new Date(defaultDate).toLocaleTimeString('en-US', { hour12: false });
+            const [defaultHours, defaultMinutes] = defaultTimeString.split(':');
+            const defaultTimeFormatted = `${defaultHours}:${defaultMinutes}`;
+            const currentTimeISO = time.toISOString();
+            const currentTimeString = currentTimeISO.split('T')[1]; 
+            const [currentHours, currentMinutes] = currentTimeString.split(':');
+            const currentTimeFormatted = `${currentHours}:${currentMinutes}`;
+            console.log("Default Time:", defaultTimeFormatted); 
+            console.log("Current Time:", currentTimeFormatted); 
+            if(defaultTimeFormatted < currentTimeFormatted){
+               Alert.alert('Error', 'You can’t log a meal for a future time today.');
+                setLoading(false);
+                const currentDateValue =new Date()
+                  setTime(currentDateValue)
+                return;
+            }
+            else if(defaultTimeFormatted == currentTimeFormatted){
+              handleAddMealLogAdd()
+            
+            }else{
+             
+                 handleAddMealLogAdd()
+            }
+        }else{
+          handleAddMealLogAdd()
+        }
+    }else{
+      handleAddMealLogAdd()
+    }
+
+  }
+
+
+
+  const handleAddMealLogAdd = async (): Promise<void> => {
+    
+      mixpanel?.track({
       name: 'add_to_log_from_manual_submitted',
       properties: {
         meal_id: mealName,
@@ -448,7 +488,7 @@ export const AddMealScreen: React.FC = () => {
       );
     } finally {
       setLoading(false);
-    }
+  }
   };
 
   const handleOnLike = async () => {
