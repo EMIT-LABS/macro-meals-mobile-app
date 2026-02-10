@@ -501,7 +501,7 @@ export const LoginScreen: React.FC = () => {
                         ...prev,
                         email: 'Email is required',
                       }));
-                    } else if (!/\S+@\S+\.\S+/.test(text)) {
+                    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(text)){
                       setErrors(prev => ({
                         ...prev,
                         email: 'Email is invalid',

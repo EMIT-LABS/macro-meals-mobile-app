@@ -84,7 +84,7 @@ export const SignupScreen: React.FC = () => {
     if (!email) {
       newErrors.email = 'Email is required';
       isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(email)) {
       newErrors.email = 'Email is invalid';
       isValid = false;
     }
@@ -306,7 +306,7 @@ export const SignupScreen: React.FC = () => {
                         ...prev,
                         email: 'Email is required',
                       }));
-                    } else if (!/\S+@\S+\.\S+/.test(text)) {
+                    } else if (!/^[^\s@]+@[^\s@]+\.(com|org|net)$/.test(text)) {
                       setErrors(prev => ({
                         ...prev,
                         email: 'Email is invalid',
