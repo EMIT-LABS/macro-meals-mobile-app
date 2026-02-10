@@ -119,7 +119,7 @@ android {
         applicationId 'com.macromeals.app'
         minSdkVersion 24
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 39
+        versionCode 38
         versionName "1.1.2"
         testBuildType System.getProperty('testBuildType', 'debug')
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
