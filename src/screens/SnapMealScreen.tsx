@@ -46,6 +46,10 @@ const SnapMealScreen = () => {
   const [scanError, setScanError] = useState(false);
   const [_isAlertVisible, setIsAlertVisible] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [scanProgress, setScanProgress] = useState<number | null>(null);
+  const progressIntervalRef =
+    useRef<ReturnType<typeof setInterval> | null>(null);
+  const slowPhaseTicksRef = useRef(0);
   const mixpanel = useMixpanel();
   const posthog = usePosthog();
 
@@ -92,6 +96,24 @@ const SnapMealScreen = () => {
     try {
       setLoading(true);
       setScanError(false);
+      setScanProgress(0);
+      slowPhaseTicksRef.current = 0;
+
+      // 0→90% in ~5s (1% every 56ms), then 90→99% slower until API returns; result jumps to 100%.
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+      progressIntervalRef.current = setInterval(() => {
+        setScanProgress(prev => {
+          if (prev === null) return 0;
+          if (prev < 90) return prev + 1;
+          if (prev >= 99) return prev;
+          // Slow creep 90→99: 1% every ~500ms
+          slowPhaseTicksRef.current += 1;
+          if (slowPhaseTicksRef.current % 9 === 0) return prev + 1;
+          return prev;
+        });
+      }, 56);
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
@@ -105,6 +127,16 @@ const SnapMealScreen = () => {
       // Send to API
       const data = await scanService.scanImage(fileUri);
       console.log('AI Scan Response:', data);
+
+      // Stop incremental progress and smoothly complete to 100%
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      setScanProgress(100);
+
+      // Small delay so users can actually see 100% before navigating
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       if (data && data.items && data.items.length > 0) {
         mixpanel?.track({
@@ -159,10 +191,24 @@ const SnapMealScreen = () => {
         setCapturedImage(null);
       }
     } catch {
+      // On error, complete progress to 100% before showing error state
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      if (scanProgress !== null && scanProgress < 100) {
+        setScanProgress(100);
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
       setScanError(true);
       setIsAlertVisible(true);
       setCapturedImage(null);
     } finally {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      setScanProgress(null);
       setLoading(false);
       setCapturedImage(null);
     }
@@ -307,7 +353,14 @@ const SnapMealScreen = () => {
         {/* Loading Indicator */}
         {loading && (
           <View className="absolute inset-0 bg-black/40 justify-center items-center z-50">
-            <ActivityIndicator size="large" color="#fff" />
+            <View className="items-center">
+              <ActivityIndicator size="large" color="#fff" />
+              <Text className="mt-4 text-white text-base font-semibold">
+                {`Scanning your meal…${
+                  scanProgress !== null ? ` ${scanProgress}%` : ''
+                }`}
+              </Text>
+            </View>
           </View>
         )}
         <View className="absolute bottom-32 left-0 right-0 items-center">
