@@ -47,6 +47,7 @@ interface RouteParams {
 import { SERVING_UNITS } from 'constants/serving_units';
 import { FavouriteIcon } from 'src/components/FavouriteIcon';
 import { FavoriteMeal } from '../services/favoritesService';
+import { usePosthog } from '@macro-meals/posthog_service/src';
 
 /**
  * Screen for adding a searched meal to the log with macro calculations
@@ -94,6 +95,7 @@ export const AddSearchedLoggedMealScreen: React.FC = () => {
   // const [loadingFavorites, setLoadingFavorites] = useState<boolean>(false);
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
   const mixpanel = useMixpanel();
+  const posthog = usePosthog()
 
   // Initialize form with searched meal data
   React.useEffect(() => {
@@ -195,6 +197,14 @@ export const AddSearchedLoggedMealScreen: React.FC = () => {
     setCarbs(meal.macros.carbs.toString());
     setNoOfServings(meal.no_of_servings.toString());
     setFats(meal.macros.fat.toString());
+    posthog.track({
+      name:'favorites_quick_add_used_from_search',
+      properties:{
+        favourite_meal_id:meal.id,
+        replacing_existing:searchedMeal.name
+      }
+    })
+
   };
 
   /**
@@ -260,6 +270,17 @@ export const AddSearchedLoggedMealScreen: React.FC = () => {
         name: 'meal_logged',
         properties: {
           method: 'searched',
+          meal_type: tempMealType,
+          amount: amount,
+          serving_size: servingUnit,
+          ...adjustedMacros,
+        },
+      });
+      posthog?.track({
+        name: 'add_to_log_from_search_submitted',
+        properties: {
+          method: 'searched',
+          meal_id:mealName,
           meal_type: tempMealType,
           amount: amount,
           serving_size: servingUnit,
