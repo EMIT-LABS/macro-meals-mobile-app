@@ -89,6 +89,8 @@ const SnapMealScreen = () => {
        posthog?.track({
         name: 'meal_scan_permission_response',
         properties: {
+           $screen_name: 'SnapMealScreen',
+        $current_url: 'SnapMealScreen',
           granted: permission.granted,
           response_time_ms:responseTime,
           permission_denied: permission.granted ? 'true' : 'false',
