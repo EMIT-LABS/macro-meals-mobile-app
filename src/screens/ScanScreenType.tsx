@@ -309,6 +309,14 @@ const ScanScreenType: React.FC = () => {
       name: 'add_meal_option_selected',
       properties: { option_type: 'scan_barcode' },
     });
+    posthog?.track({
+      name:'add_meal_option_selected',
+      properties:{
+        option_type: 'scan_barcode',
+        $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
+      }
+    })
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
@@ -324,10 +332,14 @@ const ScanScreenType: React.FC = () => {
       name: 'add_meal_option_selected',
       properties: { option_type: 'manual_entry' },
     });
-    mixpanel?.track({
-      name: 'add_meal_option_selected',
-      properties: { option_type: 'manual_entry' },
-    });
+   posthog?.track({
+      name:'add_meal_option_selected',
+      properties:{
+        option_type: 'manual_entry',
+        $screen_name: 'ScanScreenType',
+        $current_url: 'ScanScreenType',
+      }
+    })
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
@@ -408,8 +420,8 @@ const ScanScreenType: React.FC = () => {
       posthog?.track({
         name: 'prefilled_form_shown_from_search',
         properties: {
-          $screen_name: 'ScanScreenType',
-          $current_url: 'ScanScreenType',
+          $screen_name: 'AddSearchedMealScreen',
+          $current_url: 'AddSearchedMeal',
           result_id: meal.id,
           meal_name: meal.name,
           meal_type: meal.meal_type,
@@ -448,7 +460,7 @@ const ScanScreenType: React.FC = () => {
       properties: {
         $screen_name: 'ScanScreenType',
         $current_url: 'ScanScreenType',
-        entry_point: 'main_hub',
+        entry_point: 'ScanScreenTypeScreen',
         return_destination: 'main_hub',
       },
     });
