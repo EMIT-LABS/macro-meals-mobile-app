@@ -19,6 +19,7 @@ import FavoritesService from '../services/favoritesService';
 import { mealService } from '../services/mealService';
 import { userService } from '../services/userService';
 import useStore from '../store/useStore';
+import { LoggingMode } from 'src/types';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -190,6 +191,7 @@ const MealFinderSearchMealBreakdownScreen: React.FC = () => {
         description: `${meal.name} from ${meal.restaurant.name}`,
         meal_time: new Date().toISOString(),
         meal_type: 'lunch', // Default to lunch, could be made configurable
+        logging_mode: LoggingMode.meal_finder, // Indicate this meal was logged from meal finder
       };
 
       console.log('Logging meal:', mealData);

@@ -22,6 +22,7 @@ import useStore from "../store/useStore";
 import { LinearProgress } from "../components/LinearProgress";
 import { useMixpanel } from "@macro-meals/mixpanel/src";
 import { usePosthog } from "@macro-meals/posthog_service/src";
+import { LoggingMode } from "src/types";
 
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -265,6 +266,7 @@ const AIRecipeDetailsScreen: React.FC = () => {
         description: recipe.description,
         meal_time: defaultDate,
         meal_type: "lunch", // Default to lunch, could be made configurable
+        logging_mode: LoggingMode.ai_recipe, // Indicate this meal was logged from AI recipe
       };
       mixpanel?.track({
         name: "add_to_log_from_ai_recipe_submitted",

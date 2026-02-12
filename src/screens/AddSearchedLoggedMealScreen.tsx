@@ -47,6 +47,7 @@ interface RouteParams {
 import { SERVING_UNITS } from 'constants/serving_units';
 import { FavouriteIcon } from 'src/components/FavouriteIcon';
 import { FavoriteMeal } from '../services/favoritesService';
+import { LoggingMode } from 'src/types';
 
 /**
  * Screen for adding a searched meal to the log with macro calculations
@@ -238,6 +239,7 @@ export const AddSearchedLoggedMealScreen: React.FC = () => {
               name: 'meal_photo.jpg',
             }
           : undefined,
+        logging_mode: LoggingMode.search, // Indicate this meal was logged from search
       };
 
       // Log the request data for debugging

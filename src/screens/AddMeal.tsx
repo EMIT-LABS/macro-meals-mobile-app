@@ -928,17 +928,28 @@ const AddMeal: React.FC = () => {
                                                     : meal.logging_mode ===
                                                         'scanned'
                                                       ? IMAGE_CONSTANTS.scanMealIcon
+                                                      : meal.logging_mode === 'ai_recipe'
+                                                      ? IMAGE_CONSTANTS.aiRecipeIcon
+                                                       :meal.logging_mode === 'search'
+                                                       ? IMAGE_CONSTANTS.loggingSearchIcon
+                                                       :meal.logging_mode === 'meal_finder'
+                                                       ? IMAGE_CONSTANTS.mealFinderIcon
                                                       : IMAGE_CONSTANTS.fireIcon // default to fire icon
                                               }
                                               className="w-[12px] h-[12px] object-fill mr-1"
                                             />
                                             <Text className="text-sm text-textMediumGrey text-center font-medium">
-                                              {meal.logging_mode
-                                                ? meal.logging_mode
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                  meal.logging_mode.slice(1)
-                                                : 'Manual'}
+                                             {
+                                                meal.logging_mode
+                                                  ? meal.logging_mode
+                                                      .split('_')
+                                                      .map((word: string) => {
+                                                        if (word.toLowerCase() === 'ai') return 'AI'; // special case
+                                                        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                                                      })
+                                                      .join(' ')
+                                                  : 'Manual'
+                                              }
                                             </Text>
                                           </View>
                                           <View className="flex-row items-center gap-3">
@@ -1171,15 +1182,28 @@ const AddMeal: React.FC = () => {
                                       ? IMAGE_CONSTANTS.scanBarcodeIcon
                                       : meal.logging_mode === 'scanned'
                                         ? IMAGE_CONSTANTS.scanMealIcon
+                                      : meal.logging_mode === 'ai_recipe'
+                                        ? IMAGE_CONSTANTS.aiRecipeIcon
+                                       :meal.logging_mode === 'search'
+                                        ? IMAGE_CONSTANTS.loggingSearchIcon
+                                         :meal.logging_mode === 'meal_finder'
+                                          ? IMAGE_CONSTANTS.mealFinderIcon
                                         : IMAGE_CONSTANTS.fireIcon // default to fire icon
                                 }
                                 className="w-[12px] h-[12px] object-fill mr-1"
                               />
                               <Text className="text-sm text-textMediumGrey text-center font-medium">
-                                {meal.logging_mode
-                                  ? meal.logging_mode.charAt(0).toUpperCase() +
-                                    meal.logging_mode.slice(1)
-                                  : 'Manual'}
+                                {
+                                 meal.logging_mode
+                                ? meal.logging_mode
+                                  .split('_')
+                                 .map((word: string) => {
+                               if (word.toLowerCase() === 'ai') return 'AI'; // special case
+                                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                                  })
+                               .join(' ')
+                               : 'Manual'
+}
                               </Text>
                             </View>
                             <View className="flex-row items-center gap-3">
