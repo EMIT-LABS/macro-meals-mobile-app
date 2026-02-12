@@ -60,7 +60,7 @@ const BarcodeScanScreen: React.FC = () => {
       name: 'barcode_scan_opened',
       properties: {
         $screen_name: 'BarcodeScreen',
-                $current_url: 'BarcodeScreen',
+        $current_url: 'BarcodeScreen',
         entry_point: 'add_meal',
       },
     });
@@ -134,7 +134,7 @@ const BarcodeScanScreen: React.FC = () => {
           name: 'barcode_scanned',
           properties: {
             $screen_name: 'BarcodeScreen',
-                $current_url: 'BarcodeScreen',
+            $current_url: 'BarcodeScreen',
             barcode_value: barcode,
             match_found: true,
           },
@@ -166,7 +166,7 @@ const BarcodeScanScreen: React.FC = () => {
       name: 'barcode_unrecognized_prompt_manual',
       properties: {
         $screen_name: 'BarcodeScreen',
-                $current_url: 'BarcodeScreen',
+        $current_url: 'BarcodeScreen',
         barcode_value: barcodeData,
       },
     });
@@ -213,7 +213,7 @@ const BarcodeScanScreen: React.FC = () => {
       name: 'prefilled_form_shown_from_barcode',
       properties: {
         $screen_name: 'BarcodeScreen',
-                $current_url: 'BarcodeScreen',
+        $current_url: 'BarcodeScreen',
         barcode_value: barcodeData,
         meal_name: product.name,
         meal_type: product.meal_type,

@@ -241,7 +241,7 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - PostHog (3.40.0)
+  - PostHog (3.41.0)
   - posthog-react-native-session-replay (1.2.3):
     - DoubleConversion
     - glog
@@ -3118,7 +3118,7 @@ SPEC CHECKSUMS:
   Mixpanel-swift: 7b26468fc0e2e521104e51d65c4bbf7cab8162f8
   MixpanelReactNative: cdcfe933b8ce89aadd183f17aad3c8529daccb94
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  PostHog: 1118eb27c5f54a0f7f11fe669d60f1a77c6b3a9d
+  PostHog: ac624b64bc43f36a262f5385ef822da8efe9b471
   posthog-react-native-session-replay: 9b103d979d8b12ac6ea9fd2b540f7cf219619291
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851

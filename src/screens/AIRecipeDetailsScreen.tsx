@@ -225,6 +225,8 @@ const AIRecipeDetailsScreen: React.FC = () => {
         posthog?.track({
         name: "ai_recipe_favorited",
         properties: {
+          $screen_name: 'AiRecipeDetailsScreen',
+        $current_url: 'AiRecipeDetailsScreen',
           recipe_id: recipe.id,
           favorite_state: newFavoriteStatus,
         },
@@ -282,14 +284,17 @@ const AIRecipeDetailsScreen: React.FC = () => {
       });
       posthog?.track({
         name: "add_to_log_from_ai_recipe_submitted",
+        
         properties: {
+            $screen_name: 'AiRecipeDetailsScreen',
+        $current_url: 'AiRecipeDetailsScreen',
           recipe_id: recipe.id,
           meal_type: mealData.meal_type,
           calories: recipe.calories,
           protein_g: recipe.protein,
           carbs_g: recipe.carbs,
           fats_g: recipe.fat,
-          // serving_size_g: 1,
+          serving_size_g: 1,
         },
       });
       console.log("Logging recipe:", mealData);
@@ -334,6 +339,8 @@ const AIRecipeDetailsScreen: React.FC = () => {
      posthog?.track({
       name: "ai_recipe_back_to_add_meal",
       properties: {
+          $screen_name: 'AiRecipeDetailsScreen',
+        $current_url: 'AiRecipeDetailsScreen',
         gesture_type: "button",
       },
     });
