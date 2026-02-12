@@ -201,46 +201,33 @@ export const AddSearchedLoggedMealScreen: React.FC = () => {
   /**
    * Adds the current meal to the log
    */
-    const handleAddMealLog = async (): Promise<void> => {
-      if (defaultDate){
+  const handleSubmitMealLog = async (): Promise<void> => {
+      if (defaultDate) {
           const defaultDateValue = defaultDate.split('T')[0]; 
           const currentDateValue = new Date().toISOString().split('T')[0]; 
-          if(defaultDateValue === currentDateValue){
-             const defaultTimeString = new Date(defaultDate).toLocaleTimeString('en-US', { hour12: false });
+          
+          if (defaultDateValue === currentDateValue) {
+              const defaultTimeString = new Date(defaultDate).toLocaleTimeString('en-US', { hour12: false });
               const [defaultHours, defaultMinutes] = defaultTimeString.split(':');
               const defaultTimeFormatted = `${defaultHours}:${defaultMinutes}`;
               const currentTimeISO = time.toISOString();
               const currentTimeString = currentTimeISO.split('T')[1]; 
               const [currentHours, currentMinutes] = currentTimeString.split(':');
               const currentTimeFormatted = `${currentHours}:${currentMinutes}`;
-              if(defaultTimeFormatted < currentTimeFormatted){
-                 Alert.alert('Error', 'You can’t log a meal for a future time today.');
+  
+              if (defaultTimeFormatted < currentTimeFormatted) {
+                  Alert.alert('Error', 'You can’t log a meal for a future time today.');
                   setLoading(false);
-                  const currentDateValue =new Date()
-                    setTime(currentDateValue)
+                  const currentDateValue = new Date();
+                  setTime(currentDateValue);
                   return;
               }
-              else if(defaultTimeFormatted == currentTimeFormatted){
-                handleAddMealLogAdd()
-              
-              }else{
-               
-                   handleAddMealLogAdd()
-              }
-          }else{
-            handleAddMealLogAdd()
-            console.log("Selected Time yesterday:");
           }
-      }else{
-        handleAddMealLogAdd()
       }
   
-    }
-  
-
-
-
-  const handleAddMealLogAdd = async (): Promise<void> => {
+      handleAddMealLog();
+  };
+    const handleAddMealLog = async (): Promise<void> => {
     setLoading(true);
     try {
       if (!mealName.trim()) {
@@ -737,7 +724,7 @@ export const AddSearchedLoggedMealScreen: React.FC = () => {
         <View className="mx-5 border-t border-gray">
           <TouchableOpacity
             className={`bg-primaryLight mt-1 mb-1 rounded-full py-5 items-center ${!mealName.trim() ? 'opacity-50' : ''}`}
-            onPress={handleAddMealLog}
+            onPress={handleSubmitMealLog}
             disabled={loading || !mealName.trim()}
           >
             {loading ? (
