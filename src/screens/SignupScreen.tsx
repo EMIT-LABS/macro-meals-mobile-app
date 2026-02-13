@@ -1,3 +1,8 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { useMixpanel } from '@macro-meals/mixpanel';
+import { usePosthog } from '@macro-meals/posthog_service/src';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -10,16 +15,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
 import DeviceInfo from 'react-native-device-info';
-import { useMixpanel } from '@macro-meals/mixpanel';
-import { usePosthog } from '@macro-meals/posthog_service/src';
 import BackButton from '../components/BackButton';
 import CustomSafeAreaView from '../components/CustomSafeAreaView';
 import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
 import { authService } from '../services/authService';
+import { referralService } from '../services/referralService';
 import { RootStackParamList } from '../types/navigation';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -152,6 +153,31 @@ export const SignupScreen: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // If user entered a referral code, verify it before proceeding with signup
+      if (referralCode.trim()) {
+        try {
+          await referralService.verifyReferralCode(referralCode.trim());
+        } catch (verifyError: any) {
+          let verifyMessage =
+            'Invalid referral code. Please check and try again.';
+          if (verifyError?.response?.data?.detail) {
+            verifyMessage = verifyError.response.data.detail;
+            if (verifyMessage.toLowerCase().includes('not found')) {
+              verifyMessage =
+                'Referral code not found. Please check and try again.';
+            } else if (verifyMessage.toLowerCase().includes('already')) {
+              verifyMessage = 'This referral code has already been used.';
+            }
+          }
+          setErrors(prev => ({ ...prev, referralCode: verifyMessage }));
+          Alert.alert('Invalid Referral Code', verifyMessage);
+          return;
+        } finally {
+          setIsLoading(false);
+        }
+        setIsLoading(true);
+      }
+
       const signUpTime = new Date().toISOString();
       const signupData = {
         email,
@@ -399,11 +425,11 @@ export const SignupScreen: React.FC = () => {
                   spellCheck={false}
                 />
               </View>
-              {errors.referralCode ? (
+              {/* {errors.referralCode ? (
                 <Text className="text-red-500 text-sm mt-2">
                   {errors.referralCode}
                 </Text>
-              ) : null}
+              ) : null} */}
 
               {errors.terms ? (
                 <Text className="text-red-500 text-sm mb-3">

@@ -23,6 +23,26 @@ export const referralService = {
       throw error;
     }
   },
+
+  /**
+   * Verify a referral code
+   * @param referralCode - The referral code to verify
+   * @returns Response from the backend
+   * @throws Error if the request fails
+   */
+  verifyReferralCode: async (referralCode: string): Promise<any> => {
+    try {
+      console.log('🔍 Verifying referral code:', referralCode);
+      const response = await axiosInstance.post('/referral-code/validate', {
+        referral_code: referralCode,
+      });
+      console.log('✅ Referral code verified successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error verifying referral code:', error);
+      throw error;
+    }
+  },
 };
 
 export default referralService;

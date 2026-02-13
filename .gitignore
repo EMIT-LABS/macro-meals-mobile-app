@@ -22,6 +22,10 @@ npm-debug.*
 *.key
 *.mobileprovision
 
+# Fastlane / deploy credentials (CI writes from secrets)
+android/firebase-service-account.json
+android/google-play-service-account.json
+
 # macOS
 .DS_Store
 *.pem

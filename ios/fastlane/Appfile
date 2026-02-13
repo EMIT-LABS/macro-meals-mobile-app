@@ -1,0 +1,5 @@
+# App Store Connect / TestFlight
+# Override in CI with env: APPLE_APP_ID, APPLE_TEAM_ID, FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD or App Store Connect API key
+app_identifier(ENV["APPLE_APP_IDENTIFIER"] || "com.macromeals.app")
+apple_id(ENV["APPLE_ID"] || "tech@emit-labs.com")
+team_id(ENV["APPLE_TEAM_ID"] || "B7JY43F6R4")

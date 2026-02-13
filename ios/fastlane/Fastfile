@@ -1,0 +1,49 @@
+# iOS: staging (macromeals-stg) and production (macromeals)
+# Schemes set .env via Pre-Action in Xcode (macromeals-stg -> .env.staging, macromeals -> .env.production)
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload staging to TestFlight"
+  lane :staging do
+    build_app(
+      scheme: "macromeals-stg",
+      workspace: "macromeals.xcworkspace",
+      export_method: "app-store-connect",
+      output_directory: "./build",
+      output_name: "MacroMeals-Staging.ipa",
+      clean: true,
+      export_options: {
+        provisioningProfiles: {},
+        signingStyle: "automatic",
+        teamID: ENV["APPLE_TEAM_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:team_id)
+      }
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      apple_id: ENV["APPLE_APP_ID"] || "6747797496"
+    )
+  end
+
+  desc "Build and upload production to TestFlight"
+  lane :production do
+    build_app(
+      scheme: "macromeals",
+      workspace: "macromeals.xcworkspace",
+      export_method: "app-store-connect",
+      output_directory: "./build",
+      output_name: "MacroMeals.ipa",
+      clean: true,
+      export_options: {
+        provisioningProfiles: {},
+        signingStyle: "automatic",
+        teamID: ENV["APPLE_TEAM_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:team_id)
+      }
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      apple_id: ENV["APPLE_APP_ID"] || "6747797496"
+    )
+  end
+end

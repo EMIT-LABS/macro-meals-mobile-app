@@ -50,9 +50,29 @@ export const RedeemReferralCodeScreen: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Verify referral code before redeeming
+      try {
+        await referralService.verifyReferralCode(referralCode.trim());
+      } catch (verifyError: any) {
+        let verifyMessage = 'Invalid referral code. Please check and try again.';
+        if (verifyError?.response?.data?.detail) {
+          verifyMessage = verifyError.response.data.detail;
+          if (verifyMessage.toLowerCase().includes('not found')) {
+            verifyMessage = 'Referral code not found. Please check and try again.';
+          } else if (verifyMessage.toLowerCase().includes('already')) {
+            verifyMessage = 'This referral code has already been used.';
+          }
+        }
+        Alert.alert('Invalid Referral Code', verifyMessage);
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+      setIsLoading(true);
+
       console.log('🎁 Redeeming referral code from settings:', referralCode);
       await referralService.redeemReferralCode(referralCode.trim());
-      
+
       // Fetch updated profile to get new is_pro and referral
       const updatedProfile = await userService.getProfile();
       const { setProfile } = useStore.getState();

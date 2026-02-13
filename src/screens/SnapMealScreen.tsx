@@ -46,9 +46,11 @@ const SnapMealScreen = () => {
   const [scanError, setScanError] = useState(false);
   const [_isAlertVisible, setIsAlertVisible] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [scanProgress, setScanProgress] = useState<number | null>(null);
+  const [scanStatus, setScanStatus] = useState<string>('');
   const mixpanel = useMixpanel();
   const posthog = usePosthog();
-    const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
+  const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
 
 
   useEffect(() => {
@@ -108,6 +110,8 @@ const SnapMealScreen = () => {
     try {
       setLoading(true);
       setScanError(false);
+      setScanProgress(0);
+      setScanStatus('Preparing…');
 
       const captureStartTime = Date.now();
 
@@ -115,19 +119,25 @@ const SnapMealScreen = () => {
         quality: 0.8,
       });
 
-      // Set captured image to freeze camera preview
       setCapturedImage(photo.uri);
-
-      // Prepare the file for upload
       const fileUri = photo.uri;
 
-      // Send to API
+      setScanStatus('Uploading…');
 
-      const data = await scanService.scanImage(fileUri);
+      const data = await scanService.scanImageStream(
+        fileUri,
+        (progress, status, stage) => {
+          setScanProgress(progress);
+          setScanStatus(status || stage || '');
+        }
+      );
       console.log('AI Scan Response:', data);
 
       const scanResponseTime = Date.now() - captureStartTime;
 
+      setScanProgress(100);
+      setScanStatus('');
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       if (data && data.items && data.items.length > 0) {
         mixpanel?.track({
@@ -178,10 +188,14 @@ const SnapMealScreen = () => {
         setCapturedImage(null);
       }
     } catch {
+      setScanProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 300));
       setScanError(true);
       setIsAlertVisible(true);
       setCapturedImage(null);
     } finally {
+      setScanProgress(null);
+      setScanStatus('');
       setLoading(false);
       setCapturedImage(null);
     }
@@ -326,7 +340,19 @@ const SnapMealScreen = () => {
         {/* Loading Indicator */}
         {loading && (
           <View className="absolute inset-0 bg-black/40 justify-center items-center z-50">
-            <ActivityIndicator size="large" color="#fff" />
+            <View className="items-center">
+              <ActivityIndicator size="large" color="#fff" />
+              <Text className="mt-4 text-white text-base font-semibold">
+                {`Scanning your meal…${
+                  scanProgress !== null ? ` ${scanProgress}%` : ''
+                }`}
+              </Text>
+              {scanStatus ? (
+                <Text className="mt-2 text-white/80 text-sm">
+                  {scanStatus}
+                </Text>
+              ) : null}
+            </View>
           </View>
         )}
         <View className="absolute bottom-32 left-0 right-0 items-center">
