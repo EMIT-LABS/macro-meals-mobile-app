@@ -46,6 +46,7 @@ interface SearchMealResponse {
     amount: number;
     read_only: boolean;
     favorite: boolean;
+    search_tag: string;
   }>;
   total_results: number;
   search_query: string;
@@ -72,7 +73,7 @@ const ScanScreenType: React.FC = () => {
     SearchMealResponse['results']
   >([]);
   const [localSearchLoading, setLocalSearchLoading] = useState(false);
-  const [globalSearchLoading, setGlobalSearchLoading] = useState(false);
+  // const [globalSearchLoading, setGlobalSearchLoading] = useState(false);
   const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
   const [networkError, setNetworkError] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -122,7 +123,7 @@ const ScanScreenType: React.FC = () => {
 
             // Start both searches simultaneously
             setLocalSearchLoading(true);
-            setGlobalSearchLoading(true);
+            // setGlobalSearchLoading(true);
 
             // Local search (user's logged meals)
             const localSearchPromise = (async () => {
@@ -151,6 +152,7 @@ const ScanScreenType: React.FC = () => {
 
                 const results = response.results || [];
                 setLocalSearchResults(results);
+
 
                 mixpanel?.track({
                   name: 'local_search_results_viewed',
@@ -183,73 +185,73 @@ const ScanScreenType: React.FC = () => {
             })();
 
             // Global search (all meals in database)
-            const globalSearchPromise = (async () => {
-              try {
-                console.log('🔍 Sending global search query:', trimmedQuery);
-                const baseUrl = 'https://api.macromealsapp.com/api/v1';
-                const globalSearchUrl = `${baseUrl}/products/search-meals-format?query=${encodeURIComponent(trimmedQuery)}`;
-                console.log('🔍 Global search URL:', globalSearchUrl);
+            // const globalSearchPromise = (async () => {
+            //   try {
+            //     console.log('🔍 Sending global search query:', trimmedQuery);
+            //     const baseUrl = 'https://api.macromealsapp.com/api/v1';
+            //     const globalSearchUrl = `${baseUrl}/products/search-meals-format?query=${encodeURIComponent(trimmedQuery)}`;
+            //     console.log('🔍 Global search URL:', globalSearchUrl);
 
-                const response = await mealService.searchMealsApi(trimmedQuery);
-                console.log('🔍 Global search response:', response);
+            //     const response = await mealService.searchMealsApi(trimmedQuery);
+            //     console.log('🔍 Global search response:', response);
 
-                const results = response.results || [];
-                setGlobalSearchResults(results);
+            //     const results = response.results || [];
+            //     setGlobalSearchResults(results);
 
-                mixpanel?.track({
-                  name: 'global_search_results_viewed',
-                  properties: {
-                    query: trimmedQuery,
-                    results_count: results.length,
-                  },
-                });
-                posthog?.track({
-                  name: 'global_search_results_viewed',
-                  properties: {
-                    $screen_name: 'ScanScreenType',
-                    $current_url: 'ScanScreenType',
-                    query: trimmedQuery,
-                    results_count: results.length,
-                  },
-                });
+            //     mixpanel?.track({
+            //       name: 'global_search_results_viewed',
+            //       properties: {
+            //         query: trimmedQuery,
+            //         results_count: results.length,
+            //       },
+            //     });
+            //     posthog?.track({
+            //       name: 'global_search_results_viewed',
+            //       properties: {
+            //         $screen_name: 'ScanScreenType',
+            //         $current_url: 'ScanScreenType',
+            //         query: trimmedQuery,
+            //         results_count: results.length,
+            //       },
+            //     });
 
-                // Track combined search query
-                mixpanel?.track({
-                  name: 'search_query_submitted',
-                  properties: {
-                    query: trimmedQuery,
-                  },
-                });
-                posthog?.track({
-                  name: 'search_query_submitted',
-                  properties: {
-                    $screen_name: 'ScanScreenType',
-                    $current_url: 'ScanScreenType',
-                    query: trimmedQuery,
-                    results_count: results.length,
-                  },
-                });
-              } catch (error) {
-                console.error('Error in global search:', error);
-                if (
-                  error instanceof Error &&
-                  error.message.includes('internet connection')
-                ) {
-                  setNetworkError(error.message);
-                }
-                setGlobalSearchResults([]);
-              } finally {
-                setGlobalSearchLoading(false);
-              }
-            })();
+            //     // Track combined search query
+            //     mixpanel?.track({
+            //       name: 'search_query_submitted',
+            //       properties: {
+            //         query: trimmedQuery,
+            //       },
+            //     });
+            //     posthog?.track({
+            //       name: 'search_query_submitted',
+            //       properties: {
+            //         $screen_name: 'ScanScreenType',
+            //         $current_url: 'ScanScreenType',
+            //         query: trimmedQuery,
+            //         results_count: results.length,
+            //       },
+            //     });
+            //   } catch (error) {
+            //     console.error('Error in global search:', error);
+            //     if (
+            //       error instanceof Error &&
+            //       error.message.includes('internet connection')
+            //     ) {
+            //       setNetworkError(error.message);
+            //     }
+            //     setGlobalSearchResults([]);
+            //   } finally {
+            //     setGlobalSearchLoading(false);
+            //   }
+            // })();
 
             // Wait for both searches to complete
-            await Promise.all([localSearchPromise, globalSearchPromise]);
+            await Promise.all([localSearchPromise]);
           } else {
             setLocalSearchResults([]);
-            setGlobalSearchResults([]);
+            // setGlobalSearchResults([]);
             setLocalSearchLoading(false);
-            setGlobalSearchLoading(false);
+            // setGlobalSearchLoading(false);
           }
         }, 1500); // 1.5 second delay
       };
@@ -263,9 +265,9 @@ const ScanScreenType: React.FC = () => {
       debouncedSearch(searchText);
     } else {
       setLocalSearchResults([]);
-      setGlobalSearchResults([]);
+      // setGlobalSearchResults([]);
       setLocalSearchLoading(false);
-      setGlobalSearchLoading(false);
+      // setGlobalSearchLoading(false);
       setNetworkError(null);
     }
   }, [searchText, searchFocused, debouncedSearch]);
@@ -310,14 +312,6 @@ const ScanScreenType: React.FC = () => {
       name: 'add_meal_option_selected',
       properties: { option_type: 'scan_barcode' },
     });
-    posthog?.track({
-      name:'add_meal_option_selected',
-      properties:{
-        option_type: 'scan_barcode',
-        $screen_name: 'ScanScreenType',
-        $current_url: 'ScanScreenType',
-      }
-    })
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
@@ -333,14 +327,10 @@ const ScanScreenType: React.FC = () => {
       name: 'add_meal_option_selected',
       properties: { option_type: 'manual_entry' },
     });
-   posthog?.track({
-      name:'add_meal_option_selected',
-      properties:{
-        option_type: 'manual_entry',
-        $screen_name: 'ScanScreenType',
-        $current_url: 'ScanScreenType',
-      }
-    })
+    mixpanel?.track({
+      name: 'add_meal_option_selected',
+      properties: { option_type: 'manual_entry' },
+    });
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
@@ -372,7 +362,7 @@ const ScanScreenType: React.FC = () => {
     setSearchText('');
     setSearchFocused(false);
     setLocalSearchResults([]);
-    setGlobalSearchResults([]);
+    // setGlobalSearchResults([]);
     setNetworkError(null);
     Keyboard.dismiss();
   };
@@ -424,8 +414,8 @@ const ScanScreenType: React.FC = () => {
       posthog?.track({
         name: 'prefilled_form_shown_from_search',
         properties: {
-          $screen_name: 'AddSearchedMealScreen',
-          $current_url: 'AddSearchedMeal',
+          $screen_name: 'ScanScreenType',
+          $current_url: 'ScanScreenType',
           result_id: meal.id,
           meal_name: meal.name,
           meal_type: meal.meal_type,
@@ -464,7 +454,7 @@ const ScanScreenType: React.FC = () => {
       properties: {
         $screen_name: 'ScanScreenType',
         $current_url: 'ScanScreenType',
-        entry_point: 'ScanScreenTypeScreen',
+        entry_point: 'main_hub',
         return_destination: 'main_hub',
       },
     });
@@ -475,8 +465,7 @@ const ScanScreenType: React.FC = () => {
     if (
       searchText &&
       searchText.trim().length >= 2 &&
-      !localSearchLoading &&
-      !globalSearchLoading
+      !localSearchLoading 
     ) {
       posthog.track({
         name: 'search_no_results_prompt_shown',
@@ -487,9 +476,23 @@ const ScanScreenType: React.FC = () => {
         },
       });
     }
-  }, [searchText, localSearchLoading, globalSearchLoading]);
+  }, [searchText, localSearchLoading]);
+
+  const fromLogsResults = localSearchResults.filter(
+  item => item.search_tag === 'meal_log'
+);
+
+const globalResults = localSearchResults.filter(
+  item => item.search_tag === 'global_search'
+);
+
+const combinedResults = [
+  ...fromLogsResults.map(item => ({ ...item, source: 'local' })),
+  ...globalResults.map(item => ({ ...item, source: 'global' })),
+]
 
   return (
+    
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <CustomSafeAreaView
         edges={['left', 'right']}
@@ -558,7 +561,7 @@ const ScanScreenType: React.FC = () => {
             {searchFocused ? (
               <View className="flex-1 px-5 pt-2">
                 {/* Loading state */}
-                {localSearchLoading || globalSearchLoading ? (
+                {localSearchLoading  ? (
                   <View className="items-center mt-10">
                     <ActivityIndicator size="small" color="#19a28f" />
                     <Text className="text-center text-base text-gray-500 mt-4">
@@ -577,48 +580,53 @@ const ScanScreenType: React.FC = () => {
                     ) : (
                       <>
                         {/* Combined results */}
-                        {localSearchResults.length > 0 ||
-                        globalSearchResults.length > 0 ? (
+                        {localSearchResults.length > 0 && (
+                          
                           <FlatList
                             style={{ flex: 1 }}
                             contentContainerStyle={{
                               paddingBottom: 0,
                             }}
                             showsVerticalScrollIndicator={false}
-                            data={[
-                              // Local results with source indicator
-                              ...localSearchResults.map(item => ({
-                                ...item,
-                                source: 'local',
-                              })),
-                              // Global results with source indicator
-                              ...globalSearchResults.map(item => ({
-                                ...item,
-                                source: 'global',
-                              })),
-                            ]}
+                            // data={[
+                            //   // Local results with source indicator
+                            //   ...localSearchResults.map(item => ({
+                            //     ...item,
+                            //     source: 'local',
+                            //   })),
+                            //   // Global results with source indicator
+                            //   ...localSearchResults.filter(item => item.search_tag === 'global_search').map(item => ({
+                            //     ...item,
+                            //     source: 'global',
+                            //   })),
+                            // ]}
+                            data={combinedResults}
                             keyExtractor={(item, idx) =>
                               `${item.source}-${item.id}-${idx}`
                             }
+                            // renderItem={({ item, index }) => {
+                            //   const isLocal = item.source === 'local';
+                            //   const isFirstLocal = isLocal && index === 0;
+                            //   const isFirstGlobal = item.source === 'global' 
+                                // !isLocal && localSearchResults.length === 0
+                                //   ? index === 0
+                                //   : index === localSearchResults.length;
                             renderItem={({ item, index }) => {
-                              const isLocal = item.source === 'local';
-                              const isFirstLocal = isLocal && index === 0;
-                              const isFirstGlobal =
-                                !isLocal && localSearchResults.length === 0
-                                  ? index === 0
-                                  : index === localSearchResults.length;
+  const isLocal = item.source === 'local';
+  const isFirstLocal = isLocal && index === 0;
 
+  const isFirstGlobal =
+    item.source === 'global' &&
+    index === fromLogsResults.length;
                               return (
                                 <View>
                                   {/* Section headers */}
-                                  {isFirstLocal &&
-                                    localSearchResults.length > 0 && (
+                                  {/* {isFirstLocal && (
                                       <Text className="text-sm font-semibold text-gray-500 mt-3 mb-1.5">
                                         From your logs
                                       </Text>
                                     )}
-                                  {isFirstGlobal &&
-                                    globalSearchResults.length > 0 && (
+                                  {isFirstGlobal && (
                                       <View className="mt-3 mb-1.5">
                                         {localSearchResults.length > 0 && (
                                           <View className="h-px bg-gray-300 mb-1.5" />
@@ -627,7 +635,25 @@ const ScanScreenType: React.FC = () => {
                                           Global search results
                                         </Text>
                                       </View>
-                                    )}
+                                    )} */}
+                                     {/* From your logs */}
+      {isFirstLocal && (
+        <Text className="text-sm font-semibold text-gray-500 mt-3 mb-1.5">
+          From your logs
+        </Text>
+      )}
+
+      {/* Global search results */}
+      {isFirstGlobal && (
+        <View className="mt-3 mb-1.5">
+          {fromLogsResults.length > 0 && (
+            <View className="h-px bg-gray-300 mb-1.5" />
+          )}
+          <Text className="text-sm font-semibold text-gray-500">
+            Global search results
+          </Text>
+        </View>
+      )}
 
                                   {/* Meal item */}
                                   <View className="bg-white rounded-lg py-4 px-4 mb-3 flex-row items-center justify-between">
@@ -729,12 +755,12 @@ const ScanScreenType: React.FC = () => {
                               );
                             }}
                           />
-                        ) : (
+                        )} : {(
                           /* No results - only show if both searches completed and both are empty */
                           searchText &&
                           searchText.trim().length >= 2 &&
                           !localSearchLoading &&
-                          !globalSearchLoading && (
+                         (
                             <Text className="text-center text-base text-gray-500 mt-10">
                               No results found
                             </Text>

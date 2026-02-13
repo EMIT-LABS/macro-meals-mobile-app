@@ -89,7 +89,7 @@ export enum LoggingMode {
     manual = "manual",
     scan = "scan",
     ai_recipe = "ai_recipe",
-    search = "search",
+    search = "meal_search",
     meal_finder = "meal_finder"
 }
 

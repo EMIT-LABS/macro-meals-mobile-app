@@ -404,6 +404,8 @@ export const mealService = {
    */
   searchMeal: async (query: string): Promise<Meal[]> => {
     const url = `/meals/search?query=${encodeURIComponent(query)}`;
+    // const url = `/meals/search?query=Fufu`;
+
     console.log('🔍 Search URL:', url);
 
     try {
