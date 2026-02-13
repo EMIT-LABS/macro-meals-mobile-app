@@ -35,6 +35,7 @@ import { useMixpanel } from '@macro-meals/mixpanel';
 import { usePosthog } from '@macro-meals/posthog_service/src';
 import axiosInstance from 'src/services/axios';
 import { Profile } from '../store/useStore';
+import getMealIcons from 'src/utils/mealIcons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -466,7 +467,8 @@ export const DashboardScreen: React.FC = () => {
         is_first_time_user: (loggedMeals?.length ?? 0) === 0,
       },
     });
-    navigation.navigate('ScanScreenType');
+    const defaultDate =  new Date().toISOString();
+    navigation.navigate('ScanScreenType', {defaultDate: new Date().toISOString()});
   };
 
   const handleRefresh = () => {
@@ -872,13 +874,7 @@ export const DashboardScreen: React.FC = () => {
                         <Image
                           tintColor="#000000"
                           source={
-                            meal.logging_mode === 'manual'
-                              ? IMAGE_CONSTANTS.fireIcon
-                              : meal.logging_mode === 'barcode'
-                                ? IMAGE_CONSTANTS.scanBarcodeIcon
-                                : meal.logging_mode === 'scanned'
-                                  ? IMAGE_CONSTANTS.scanMealIcon
-                                  : IMAGE_CONSTANTS.fireIcon // default to fire icon
+                            getMealIcons(meal.logging_mode)
                           }
                           className="w-[12px] h-[12px] object-fill mr-1"
                         />

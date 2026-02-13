@@ -53,9 +53,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
+                   const defaultDate = new Date();
                   navigation.dispatch(
                     CommonActions.navigate({
                       name: 'ScanScreenType',
+                       params: { defaultDate: defaultDate.toISOString()},
                     })
                   );
                 }}
