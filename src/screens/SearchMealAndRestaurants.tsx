@@ -512,9 +512,31 @@ const SearchMealAndRestaurants: React.FC = () => {
   };
 
 
-  const renderRestaurantItem = (meal: Meal) => (
+  const renderRestaurantItem = (meal: Meal) => {
+    const transformedMeal = {
+      name: meal.name,
+      macros: meal.macros,
+      image: meal.imageUrl
+        ? { uri: String(meal.imageUrl) }
+        : IMAGE_CONSTANTS.restaurantIcon,
+      restaurant: {
+        name: meal.restaurant.name,
+        location: meal.restaurant.location || '',
+      },
+      matchScore: meal.matchScore,
+      latitude: meal.latitude,
+      longitude: meal.longitude,
+    };
+
+    return(
     <TouchableOpacity
       key={meal.id}
+        onPress={() => {
+          
+          navigation.navigate('MealFinderBreakdownScreen', {
+            meal: transformedMeal,
+          });
+        }}
       className="flex-row bg-white rounded-xl mb-4 px-4 py-4 shadow-sm"
     >
       <View className="flex-row items-center justify-center bg-cornflowerBlue h-[48px] w-[48px] rounded-full mr-3 flex-shrink-0">
@@ -583,7 +605,8 @@ const SearchMealAndRestaurants: React.FC = () => {
         </View>
       </View>
     </TouchableOpacity>
-  );
+  )
+};
 
   const renderMacroChips = (macros?: Meal['macros']) => {
     const items = [
