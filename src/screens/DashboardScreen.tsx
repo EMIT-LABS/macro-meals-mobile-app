@@ -467,6 +467,7 @@ export const DashboardScreen: React.FC = () => {
         is_first_time_user: (loggedMeals?.length ?? 0) === 0,
       },
     });
+    const defaultDate =  new Date().toISOString();
     navigation.navigate('ScanScreenType', {defaultDate: new Date().toISOString()});
   };
 
