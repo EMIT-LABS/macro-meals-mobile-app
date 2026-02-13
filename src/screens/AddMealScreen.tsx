@@ -48,7 +48,6 @@ interface RouteParams {
     scanned_image?: string;
   };
   defaultDate?: string;
-
 }
 
 import { SERVING_UNITS } from 'constants/serving_units';
@@ -64,9 +63,20 @@ import BarcodeScanScreen from './BarcodeScanScreen';
 export const AddMealScreen: React.FC = () => {
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'AddMeal'>>();
-  const route = useRoute<RouteProp<{ AddMeal: RouteParams, AddMealScreen:RouteParams,   BarcodeScanScreen:RouteParams, SnapMeal:RouteParams }, 'AddMeal'| 'AddMealScreen'|'BarcodeScanScreen' | 'SnapMeal'>>();
+  const route =
+    useRoute<
+      RouteProp<
+        {
+          AddMeal: RouteParams;
+          AddMealScreen: RouteParams;
+          BarcodeScanScreen: RouteParams;
+          SnapMeal: RouteParams;
+        },
+        'AddMeal' | 'AddMealScreen' | 'BarcodeScanScreen' | 'SnapMeal'
+      >
+    >();
   const params = route.params || {};
-  const { barcodeData, analyzedData, defaultDate,  } = params;
+  const { barcodeData, analyzedData, defaultDate } = params;
 
   const [mealName, setMealName] = useState<string>('');
   const [calories, setCalories] = useState<string>('0');
@@ -98,7 +108,7 @@ export const AddMealScreen: React.FC = () => {
   const [mealType, setMealType] = useState('breakfast');
   const [logging_mode, setLoggingMode] = useState('manual');
   const [favoriteMeals, setFavoriteMeals] = useState<FavoriteMeal[]>([]);
-  const posthog = usePosthog()
+  const posthog = usePosthog();
   // const [loadingFavorites, setLoadingFavorites] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<{
     calories: string;
@@ -119,7 +129,7 @@ export const AddMealScreen: React.FC = () => {
         entry_point: 'add_meal',
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'manual_entry_opened',
       properties: {
           $screen_name: 'AddMealScreen',
@@ -186,7 +196,7 @@ export const AddMealScreen: React.FC = () => {
         gesture_type: 'button',
       },
     });
-      posthog?.track({
+    posthog?.track({
       name: 'manual_back_to_add_meal',
       properties: {
         $screen_name: 'AddMealScreen',
@@ -216,17 +226,15 @@ export const AddMealScreen: React.FC = () => {
         favorite_meal_id: meal.id,
         replaced_existing: Boolean(mealName),
       },
-      
     });
-        posthog?.track({
+    posthog?.track({
       name: 'manual_favorite_selected',
       properties: {
-         $screen_name: 'AddMealScreen',
+        $screen_name: 'AddMealScreen',
         $current_url: 'AddMealScreen',
         favorite_meal_id: meal.id,
         replaced_existing: Boolean(mealName),
       },
-      
     });
     setMealName(meal.name);
     setCalories(meal.macros.calories.toString());
@@ -283,6 +291,32 @@ export const AddMealScreen: React.FC = () => {
   /**
    * Adds the current meal to the log
    */
+ const handleSubmitMealLog = async (): Promise<void> => {
+    if (defaultDate) {
+        const defaultDateValue = defaultDate.split('T')[0]; 
+        const currentDateValue = new Date().toISOString().split('T')[0]; 
+        
+        if (defaultDateValue === currentDateValue) {
+            const defaultTimeString = new Date(defaultDate).toLocaleTimeString('en-US', { hour12: false });
+            const [defaultHours, defaultMinutes] = defaultTimeString.split(':');
+            const defaultTimeFormatted = `${defaultHours}:${defaultMinutes}`;
+            const currentTimeISO = time.toISOString();
+            const currentTimeString = currentTimeISO.split('T')[1]; 
+            const [currentHours, currentMinutes] = currentTimeString.split(':');
+            const currentTimeFormatted = `${currentHours}:${currentMinutes}`;
+
+            if (defaultTimeFormatted < currentTimeFormatted) {
+                Alert.alert('Error', 'You can’t log a meal for a future time today.');
+                setLoading(false);
+                const currentDateValue = new Date();
+                setTime(currentDateValue);
+                return;
+            }
+        }
+    }
+
+    handleAddMealLog();
+};
   const handleAddMealLog = async (): Promise<void> => {
     mixpanel?.track({
       name: 'add_to_log_from_manual_submitted',
@@ -298,10 +332,10 @@ export const AddMealScreen: React.FC = () => {
         serving_unit: servingUnit,
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'add_to_log_from_manual_submitted',
       properties: {
-         $screen_name: 'AddMealScreen',
+        $screen_name: 'AddMealScreen',
         $current_url: 'AddMealScreen',
         meal_id: mealName,
         meal_type: tempMealType,
@@ -332,12 +366,10 @@ export const AddMealScreen: React.FC = () => {
         return;
       }
 
-
-      if (defaultDate){
-       const yesterdayTime = new Date(defaultDate); // Convert string to Date object
-      setTime(yesterdayTime)
+      if (defaultDate) {
+        const yesterdayTime = new Date(defaultDate); // Convert string to Date object
+        setTime(yesterdayTime);
       }
-
 
       // Ensure amount is at least 1 and is an integer
       const amountValue = Math.max(1, parseInt(amount) || 1);
@@ -395,8 +427,8 @@ export const AddMealScreen: React.FC = () => {
       posthog?.track({
         name: 'meal_saved_from_meals',
         properties: {
-           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+          $screen_name: 'AddMealScreen',
+          $current_url: 'AddMealScreen',
           meal_name: mealName ?? null,
           target_date: mealRequest.meal_time,
           meal_type: mealRequest.meal_type,
@@ -426,11 +458,11 @@ export const AddMealScreen: React.FC = () => {
           ...mealMacros,
         },
       });
-       posthog?.track({
+      posthog?.track({
         name: 'meal_logged',
         properties: {
-           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+          $screen_name: 'AddMealScreen',
+          $current_url: 'AddMealScreen',
           logging_mode: logging_mode,
           meal_type: tempMealType,
           meal_time: time.toISOString(),
@@ -525,11 +557,11 @@ export const AddMealScreen: React.FC = () => {
             file_size: result.assets[0].fileSize ?? null,
           },
         });
-         posthog?.track({
+        posthog?.track({
           name: 'manual_photo_uploaded',
           properties: {
-             $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+            $screen_name: 'AddMealScreen',
+            $current_url: 'AddMealScreen',
             file_type: result.assets[0].type ?? 'image',
             file_size: result.assets[0].fileSize ?? null,
           },
@@ -592,11 +624,11 @@ export const AddMealScreen: React.FC = () => {
           favorite_state: newFavoriteStatus,
         },
       });
-        posthog?.track({
+      posthog?.track({
         name: 'favorite_toggled_in_manual',
         properties: {
-           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+          $screen_name: 'AddMealScreen',
+          $current_url: 'AddMealScreen',
           favorite_state: newFavoriteStatus,
         },
       });
@@ -629,8 +661,13 @@ export const AddMealScreen: React.FC = () => {
   const [selectedMealType, setSelectedMealType] = useState(tempMealType);
   const handleOpenTimeModal = () => {
     mixpanel?.track({ name: 'custom_date_picker_opened' });
-        posthog?.track({ name: 'custom_date_picker_opened',properties:{ $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',} });
+    posthog?.track({
+      name: 'custom_date_picker_opened',
+      properties: {
+        $screen_name: 'AddMealScreen',
+        $current_url: 'AddMealScreen',
+      },
+    });
 
     setShowTimeModal(true);
   };
@@ -711,11 +748,11 @@ export const AddMealScreen: React.FC = () => {
                         new_value: text,
                       },
                     });
-                     posthog?.track({
+                    posthog?.track({
                       name: 'manual_field_updated',
                       properties: {
-                         $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+                        $screen_name: 'AddMealScreen',
+                        $current_url: 'AddMealScreen',
                         field_name: 'meal_name',
                         old_value: mealName,
                         new_value: text,
@@ -814,11 +851,11 @@ export const AddMealScreen: React.FC = () => {
                           new_value: text,
                         },
                       });
-                         posthog?.track({
+                      posthog?.track({
                         name: 'manual_field_updated',
                         properties: {
-                           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+                          $screen_name: 'AddMealScreen',
+                          $current_url: 'AddMealScreen',
                           field_name: 'calories',
                           old_value: calories,
                           new_value: text,
@@ -872,11 +909,11 @@ export const AddMealScreen: React.FC = () => {
                           new_value: text,
                         },
                       });
-                       posthog?.track({
+                      posthog?.track({
                         name: 'manual_field_updated',
                         properties: {
-                           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+                          $screen_name: 'AddMealScreen',
+                          $current_url: 'AddMealScreen',
                           field_name: 'protein',
                           old_value: protein,
                           new_value: text,
@@ -930,11 +967,11 @@ export const AddMealScreen: React.FC = () => {
                           new_value: text,
                         },
                       });
-                       posthog?.track({
+                      posthog?.track({
                         name: 'manual_field_updated',
                         properties: {
-                           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+                          $screen_name: 'AddMealScreen',
+                          $current_url: 'AddMealScreen',
                           field_name: 'carbs',
                           old_value: carbs,
                           new_value: text,
@@ -984,11 +1021,11 @@ export const AddMealScreen: React.FC = () => {
                           new_value: text,
                         },
                       });
-                         posthog?.track({
+                      posthog?.track({
                         name: 'manual_field_updated',
                         properties: {
-                           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+                          $screen_name: 'AddMealScreen',
+                          $current_url: 'AddMealScreen',
                           field_name: 'fats',
                           old_value: fats,
                           new_value: text,
@@ -1044,8 +1081,8 @@ export const AddMealScreen: React.FC = () => {
                       posthog?.track({
                         name: 'manual_field_updated',
                         properties: {
-                           $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
+                          $screen_name: 'AddMealScreen',
+                          $current_url: 'AddMealScreen',
                           field_name: 'amount',
                           old_value: amount,
                           new_value: cleanText,
@@ -1174,7 +1211,7 @@ export const AddMealScreen: React.FC = () => {
             className={`bg-primaryLight mt-1 mb-3 rounded-full py-5 items-center ${
               !mealName.trim() ? 'opacity-50' : ''
             }`}
-            onPress={handleAddMealLog}
+            onPress={handleSubmitMealLog}
             disabled={loading || !mealName.trim()}
           >
             {loading ? (
@@ -1319,28 +1356,28 @@ export const AddMealScreen: React.FC = () => {
                   setTempServingUnit(value);
                   // Close modal after selection
                   setShowServingUnitModal(false);
-                  if(tempServingUnit){
+                  if (tempServingUnit) {
                     posthog.track({
-                    name:'serving_unit_selected',
-                    properties:{
-                       $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
-                      serving_unit:tempServingUnit
-                    }
-                  })
+                      name: 'serving_unit_selected',
+                      properties: {
+                        $screen_name: 'AddMealScreen',
+                        $current_url: 'AddMealScreen',
+                        serving_unit: tempServingUnit,
+                      },
+                    });
                   }
                 } else {
                   // On iOS, use temp state for modal mode
                   setTempServingUnit(value);
-                  if(tempServingUnit){
+                  if (tempServingUnit) {
                     posthog.track({
-                    name:'serving_unit_selected',
-                    properties:{
-                       $screen_name: 'AddMealScreen',
-        $current_url: 'AddMealScreen',
-                      serving_unit:tempServingUnit
-                    }
-                  })
+                      name: 'serving_unit_selected',
+                      properties: {
+                        $screen_name: 'AddMealScreen',
+                        $current_url: 'AddMealScreen',
+                        serving_unit: tempServingUnit,
+                      },
+                    });
                   }
                 }
               }}

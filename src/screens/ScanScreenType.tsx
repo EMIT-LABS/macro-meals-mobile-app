@@ -52,7 +52,8 @@ interface SearchMealResponse {
   search_query: string;
 }
 interface RouteParams {
-defaultDate:string}
+  defaultDate: string;
+}
 
 /**
  * ScanScreen component displays the various meal logging options:
@@ -63,9 +64,9 @@ defaultDate:string}
 const ScanScreenType: React.FC = () => {
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'ScanScreenType'>>();
-    const route = useRoute<RouteProp<RootStackParamList, 'ScanScreenType'>>();
-      const params = route.params  as RouteParams|| {};
-      const {defaultDate} = params;
+  const route = useRoute<RouteProp<RootStackParamList, 'ScanScreenType'>>();
+  const params = (route.params as RouteParams) || {};
+  const { defaultDate } = params;
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [localSearchResults, setLocalSearchResults] = useState<
@@ -299,7 +300,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('SnapMeal',{defaultDate});
+      navigation.navigate('SnapMeal', { defaultDate });
     }
   };
 
@@ -314,7 +315,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('BarcodeScanScreen' ,{defaultDate});
+      navigation.navigate('BarcodeScanScreen', { defaultDate });
     }
   };
 
@@ -333,7 +334,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('AddMealScreen', {defaultDate});
+      navigation.navigate('AddMealScreen', { defaultDate });
     }
   };
 
@@ -341,7 +342,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('AiMealSuggestionsScreen', {defaultDate});
+      navigation.navigate('AiMealSuggestionsScreen', { defaultDate });
     }
   };
 
@@ -391,7 +392,10 @@ const ScanScreenType: React.FC = () => {
       };
 
       // Navigate to the new screen with the meal data
-      navigation.navigate('AddSearchedLoggedMeal', { searchedMeal });
+      navigation.navigate('AddSearchedLoggedMeal', {
+        searchedMeal,
+        defaultDate,
+      });
       mixpanel?.track({
         name: 'prefilled_form_shown_from_search',
         properties: {
@@ -508,7 +512,7 @@ const combinedResults = [
             />
           </TouchableOpacity>
           <Text className="text-[20px] font-semibold text-primary text-center">
-            Log a meal 
+            Log a meal
           </Text>
           <View style={{ width: 32 }} />
         </View>

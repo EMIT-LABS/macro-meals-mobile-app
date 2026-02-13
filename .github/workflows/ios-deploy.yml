@@ -1,0 +1,77 @@
+# iOS: Build and deploy to TestFlight via Fastlane (staging or production)
+# Runs on macos-latest; uses Xcode + Fastlane. No EAS.
+# Secrets: APPLE_TEAM_ID, APPLE_APP_ID (asc), and either App Store Connect API key or app-specific password.
+
+name: iOS Deploy to TestFlight (Fastlane)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to build and submit'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  build-and-submit-ios:
+    name: Build & Submit iOS (Fastlane)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set profile
+        id: set-profile
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "profile=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "profile=production" >> $GITHUB_OUTPUT
+          else
+            echo "profile=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Setup Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install Fastlane (Gemfile at repo root)
+        run: bundle install
+
+      - name: Install CocoaPods (iOS)
+        working-directory: ios
+        run: pod install
+
+      - name: Build and upload to TestFlight
+        working-directory: ios
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_ID: ${{ secrets.APPLE_APP_ID }}
+          # App Store Connect API key (preferred in CI); or set FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          PROFILE="${{ steps.set-profile.outputs.profile }}"
+          bundle exec fastlane ios "$PROFILE"
