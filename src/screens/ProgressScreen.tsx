@@ -312,7 +312,7 @@ const ProgressScreen = () => {
                     start_date: data?.start_date,
                     end_date: data?.end_date,
                     chart_points_count: macroBarData.length,
-                    is_first_load: data?.start_date == new Date().toISOString().split('T')[0] ? 'True':'False'
+                    is_first_load: data?.start_date 
                   },
                 });
                 setSelectedRange(r.value);
