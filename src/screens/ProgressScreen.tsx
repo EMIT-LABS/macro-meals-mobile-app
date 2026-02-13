@@ -76,7 +76,7 @@ const ProgressScreen = () => {
         name: 'progression_screen_viewed',
         properties: {
           $screen_name: 'ProgressScreen',
-                    $current_url: 'ProgressScreen',
+          $current_url: 'ProgressScreen',
           entry_point: 'app_tab',
           default_period: selectedRange,
           start_date: data?.start_date,
@@ -142,7 +142,7 @@ const ProgressScreen = () => {
       name: 'progress_data_fetch_failed',
       properties: {
         $screen_name: 'ProgressScreen',
-         $current_url: 'ProgressScreen',
+        $current_url: 'ProgressScreen',
         error_type: 'server',
         period: selectedRange,
         start_date: data?.start_date,
@@ -222,7 +222,7 @@ const ProgressScreen = () => {
         name: 'progress_chart_empty_state_shown',
         properties: {
           $screen_name: 'ProgressScreen',
-                    $current_url: 'ProgressScreen',
+          $current_url: 'ProgressScreen',
           period: selectedRange,
           start_date: data?.start_date,
           end_date: data?.end_date,
@@ -312,6 +312,7 @@ const ProgressScreen = () => {
                     start_date: data?.start_date,
                     end_date: data?.end_date,
                     chart_points_count: macroBarData.length,
+                    is_first_load: data?.start_date === new Date().toISOString().split('T')[0] 
                   },
                 });
                 setSelectedRange(r.value);
