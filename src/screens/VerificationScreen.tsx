@@ -218,8 +218,8 @@ export const VerificationScreen: React.FC = () => {
           <Text className="text-3xl font-medium text-black mb-2">
             Enter verification code
           </Text>
-          <Text className="text-[18px] font-normal text-textMediumGrey mb-8 leading-7">
-            We've sent a 6-digit code to {routeEmail}
+          <Text className="text-[16px] font-normal text-textMediumGrey mb-8 leading-7">
+            We've sent a 6-digit code to {routeEmail}. If you don’t see it in your inbox, please check your spam or junk folder.
           </Text>
 
           <View className="w-full mb-5">

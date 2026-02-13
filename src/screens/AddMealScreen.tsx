@@ -122,6 +122,8 @@ export const AddMealScreen: React.FC = () => {
      posthog?.track({
       name: 'manual_entry_opened',
       properties: {
+          $screen_name: 'AddMealScreen',
+          $current_url: 'AddMealScreen',
         entry_point: 'add_meal',
       },
     });

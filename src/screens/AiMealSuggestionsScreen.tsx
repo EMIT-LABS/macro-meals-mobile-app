@@ -97,7 +97,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
     if (recipes.length > 0 && !hasTrackedCardView.current) {
       hasTrackedCardView.current = true;
       posthog.track({
-        name: 'ai_recipe_card_viewed',
+        name: 'ai_recipe_list_viewed',
         properties: {
           $screen_name: 'AiMealSuggestionsScreen',
           $current_url: 'AiMealSuggestionsScreen',
@@ -114,6 +114,7 @@ const AiMealSuggestionsScreen: React.FC = () => {
 
       const result = await mealService.getAiMealSuggestionsRecipes();
       setRecipes(result.suggestions);
+    
     } catch {
       setError('Failed to fetch recipe suggestions');
     } finally {
@@ -126,6 +127,17 @@ const AiMealSuggestionsScreen: React.FC = () => {
   };
 
   const handleRecipeSelect = (recipe: Recipe) => {
+
+        posthog.track({
+        name: 'ai_recipe_card_viewed',
+        properties: {
+          $screen_name: 'AiMealSuggestionsScreen',
+          $current_url: 'AiMealSuggestionsScreen',
+          result_count: recipes.length,
+          position_index:recipes.indexOf(recipe)
+        },
+      });
+      
     mixpanel?.track({
       name: 'ai_recipe_selected',
       properties: {

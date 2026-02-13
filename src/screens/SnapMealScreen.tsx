@@ -52,8 +52,12 @@ const SnapMealScreen = () => {
   const slowPhaseTicksRef = useRef(0);
   const mixpanel = useMixpanel();
   const posthog = usePosthog();
+    const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
+
 
   useEffect(() => {
+        setRequestStartTime(Date.now());
+
     mixpanel?.track({
       name: 'meal_scan_opened',
       properties: {
@@ -77,10 +81,22 @@ const SnapMealScreen = () => {
 
   useEffect(() => {
     if (permission && permission.status !== undefined) {
+            const responseTime = requestStartTime ? Date.now() - requestStartTime : 0; 
+
       mixpanel?.track({
         name: 'meal_scan_permission_response',
         properties: {
           granted: permission.granted,
+          permission_denied: permission.granted ? 'true' : 'false',
+        },
+      });
+       posthog?.track({
+        name: 'meal_scan_permission_response',
+        properties: {
+           $screen_name: 'SnapMealScreen',
+        $current_url: 'SnapMealScreen',
+          granted: permission.granted,
+          response_time_ms:responseTime,
           permission_denied: permission.granted ? 'true' : 'false',
         },
       });
@@ -98,6 +114,8 @@ const SnapMealScreen = () => {
       setScanError(false);
       setScanProgress(0);
       slowPhaseTicksRef.current = 0;
+
+      const captureStartTime = Date.now();
 
       // 0→90% in ~5s (1% every 56ms), then 90→99% slower until API returns; result jumps to 100%.
       if (progressIntervalRef.current) {
@@ -125,8 +143,11 @@ const SnapMealScreen = () => {
       const fileUri = photo.uri;
 
       // Send to API
+
       const data = await scanService.scanImage(fileUri);
       console.log('AI Scan Response:', data);
+
+      const scanResponseTime = Date.now() - captureStartTime;
 
       // Stop incremental progress and complete to 100%
       if (progressIntervalRef.current) {
@@ -152,15 +173,11 @@ const SnapMealScreen = () => {
           name: 'meal_scanned',
           properties: {
             $screen_name: 'SnapMealScreen',
-        $current_url: 'SnapMealScreen',
+            $current_url: 'SnapMealScreen',
             detected_meal_name: data.items[0].name,
             ingredients_count: data.detected_ingredients.length,
-            match_found: true,
-            meal_name: data.items[0].name,
-            calories: data.items[0].calories,
-            protein_g: data.items[0].protein,
-            carbs_g: data.items[0].carbs,
-            fats_g: data.items[0].fat,
+            inference_time_ms: scanResponseTime
+            
           },
         });
         navigation.navigate('ScannedMealBreakdownScreen', {

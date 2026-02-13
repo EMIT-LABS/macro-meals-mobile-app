@@ -32,11 +32,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-<<<<<<< HEAD
 	<string>3</string>
-=======
-	<string>1</string>
->>>>>>> 49736d2 (bump app version)
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>
