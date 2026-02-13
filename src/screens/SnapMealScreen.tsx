@@ -47,12 +47,10 @@ const SnapMealScreen = () => {
   const [_isAlertVisible, setIsAlertVisible] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [scanProgress, setScanProgress] = useState<number | null>(null);
-  const progressIntervalRef =
-    useRef<ReturnType<typeof setInterval> | null>(null);
-  const slowPhaseTicksRef = useRef(0);
+  const [scanStatus, setScanStatus] = useState<string>('');
   const mixpanel = useMixpanel();
   const posthog = usePosthog();
-    const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
+  const [requestStartTime, setRequestStartTime] = useState<number | null>(null);
 
 
   useEffect(() => {
@@ -113,48 +111,32 @@ const SnapMealScreen = () => {
       setLoading(true);
       setScanError(false);
       setScanProgress(0);
-      slowPhaseTicksRef.current = 0;
+      setScanStatus('Preparing…');
 
       const captureStartTime = Date.now();
 
-      // 0→90% in ~5s (1% every 56ms), then 90→99% slower until API returns; result jumps to 100%.
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-      progressIntervalRef.current = setInterval(() => {
-        setScanProgress(prev => {
-          if (prev === null) return 0;
-          if (prev < 90) return prev + 1;
-          if (prev >= 99) return prev;
-          // Slow creep 90→99: 1% every ~500ms
-          slowPhaseTicksRef.current += 1;
-          if (slowPhaseTicksRef.current % 9 === 0) return prev + 1;
-          return prev;
-        });
-      }, 56);
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
 
-      // Set captured image to freeze camera preview
       setCapturedImage(photo.uri);
-
-      // Prepare the file for upload
       const fileUri = photo.uri;
 
-      // Send to API
+      setScanStatus('Uploading…');
 
-      const data = await scanService.scanImage(fileUri);
+      const data = await scanService.scanImageStream(
+        fileUri,
+        (progress, status, stage) => {
+          setScanProgress(progress);
+          setScanStatus(status || stage || '');
+        }
+      );
       console.log('AI Scan Response:', data);
 
       const scanResponseTime = Date.now() - captureStartTime;
 
-      // Stop incremental progress and complete to 100%
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
       setScanProgress(100);
+      setScanStatus('');
       await new Promise(resolve => setTimeout(resolve, 300));
 
       if (data && data.items && data.items.length > 0) {
@@ -206,21 +188,14 @@ const SnapMealScreen = () => {
         setCapturedImage(null);
       }
     } catch {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
       setScanProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
       setScanError(true);
       setIsAlertVisible(true);
       setCapturedImage(null);
     } finally {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
       setScanProgress(null);
+      setScanStatus('');
       setLoading(false);
       setCapturedImage(null);
     }
@@ -372,6 +347,11 @@ const SnapMealScreen = () => {
                   scanProgress !== null ? ` ${scanProgress}%` : ''
                 }`}
               </Text>
+              {scanStatus ? (
+                <Text className="mt-2 text-white/80 text-sm">
+                  {scanStatus}
+                </Text>
+              ) : null}
             </View>
           </View>
         )}

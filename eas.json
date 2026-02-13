@@ -7,59 +7,55 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": {
-        "ENV": "development"
-      },
+      "env": { "ENV": "development" },
       "prebuildCommand": "node scripts/copy-icons.js",
-      "android": {
-        "gradleCommand": ":app:assembleDebug"
-      },
-      "ios": {
-        "simulator": true
-      }
+      "android": { "gradleCommand": ":app:assembleDebug" },
+      "ios": { "simulator": true }
     },
     "staging": {
       "distribution": "internal",
-      "env": {
-        "ENV": "staging"
-      },
+      "env": { "ENV": "staging", "ENVFILE": ".env.staging" },
       "prebuildCommand": "node scripts/copy-icons.js",
       "ios": {
         "buildConfiguration": "Release",
+        "scheme": "macromeals-stg",
         "autoIncrement": false
       },
-      "android": {
-        "buildType": "apk"
-      }
+      "android": { "buildType": "apk" }
     },
     "preview": {
       "distribution": "internal",
-      "env": {
-        "ENV": "staging"
-      },
+      "env": { "ENV": "staging" },
       "prebuildCommand": "node scripts/copy-icons.js",
-      "ios": {
-        "buildConfiguration": "Release"
-      }
+      "ios": { "buildConfiguration": "Release" }
     },
     "production": {
-      "env": {
-        "ENV": "production",
-        "ENVFILE": ".env.production"
-      },
+      "env": { "ENV": "production", "ENVFILE": ".env.production" },
       "prebuildCommand": "node scripts/copy-icons.js",
       "ios": {
         "buildConfiguration": "Release",
+        "scheme": "macromeals",
         "autoIncrement": true
-      }
+      },
+      "android": { "buildType": "app-bundle" }
     }
   },
   "submit": {
+    "staging": {
+      "ios": {
+        "appleId": "tech@emit-labs.com",
+        "ascAppId": "6747797496",
+        "appleTeamId": "B7JY43F6R4"
+      }
+    },
     "production": {
       "ios": {
         "appleId": "tech@emit-labs.com",
         "ascAppId": "6747797496",
         "appleTeamId": "B7JY43F6R4"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json"
       }
     }
   }

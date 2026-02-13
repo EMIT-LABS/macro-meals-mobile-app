@@ -1,0 +1,36 @@
+# Android: staging (stg → Firebase App Distribution), production (prod → Play Store)
+# Flavors already set .env in build.gradle (stg -> .env.staging, prod -> .env.production)
+default_platform(:android)
+
+platform :android do
+  desc "Build staging APK and upload to Firebase App Distribution"
+  lane :staging do
+    gradle(
+      project_dir: "..",
+      task: "assembleStgRelease"
+    )
+    firebase_app_distribution(
+      app: ENV["FIREBASE_ANDROID_APP_ID"],
+      service_credentials_file: ENV["FIREBASE_SERVICE_ACCOUNT_FILE"] || "firebase-service-account.json",
+      apk_path: "../app/build/outputs/apk/stg/release/app-stg-release.apk",
+      groups: "testers",
+      release_notes: "Staging build - #{ENV['GITHUB_SHA'] || 'manual'}"
+    )
+  end
+
+  desc "Build production AAB and upload to Play Store (internal track)"
+  lane :production do
+    gradle(
+      project_dir: "..",
+      task: "bundleProdRelease"
+    )
+    upload_to_play_store(
+      track: "internal",
+      aab: "../app/build/outputs/bundle/prodRelease/app-prod-release.aab",
+      json_key: ENV["SUPPLY_JSON_KEY"] || "google-play-service-account.json",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
