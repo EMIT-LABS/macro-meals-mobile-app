@@ -29,6 +29,7 @@ import { getMeals, mealService } from '../services/mealService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
 import DeviceInfo from 'react-native-device-info';
+import getMealIcons from 'src/utils/mealIcons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -178,6 +179,20 @@ const AddMeal: React.FC = () => {
       });
       return grouped;
     }, [meals]);
+
+    // Set icons for every meal based on logging mode (manual, scanned, ai_recipe, search, meal_finder)
+
+function formatLoggingMode(mode: any) {
+  return mode
+ ? mode
+ .split('_')
+ .map((word: string) => {
+if (word.toLowerCase() === 'ai') return 'AI'; // special case
+   return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+})
+.join(' ')
+: 'Manual'
+}
 
   useEffect(() => {
     if (meals.length > 0 && !hasTrackedDaySummary.current) {
@@ -919,26 +934,14 @@ const AddMeal: React.FC = () => {
                                             <View className="w-[4px] h-[4px] rounded-full bg-[#253238] mr-2"></View>
                                             <Image
                                               tintColor="#000000"
-                                              source={
-                                                meal.logging_mode === 'manual'
-                                                  ? IMAGE_CONSTANTS.fireIcon
-                                                  : meal.logging_mode ===
-                                                      'barcode'
-                                                    ? IMAGE_CONSTANTS.scanBarcodeIcon
-                                                    : meal.logging_mode ===
-                                                        'scanned'
-                                                      ? IMAGE_CONSTANTS.scanMealIcon
-                                                      : IMAGE_CONSTANTS.fireIcon // default to fire icon
-                                              }
+                                              source={getMealIcons(meal.logging_mode)}
+                                              
                                               className="w-[12px] h-[12px] object-fill mr-1"
                                             />
                                             <Text className="text-sm text-textMediumGrey text-center font-medium">
-                                              {meal.logging_mode
-                                                ? meal.logging_mode
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                  meal.logging_mode.slice(1)
-                                                : 'Manual'}
+                                             {
+                                                formatLoggingMode(meal.logging_mode)
+                                              }
                                             </Text>
                                           </View>
                                           <View className="flex-row items-center gap-3">
@@ -1165,21 +1168,14 @@ const AddMeal: React.FC = () => {
                               <Image
                                 tintColor="#000000"
                                 source={
-                                  meal.logging_mode === 'manual'
-                                    ? IMAGE_CONSTANTS.fireIcon
-                                    : meal.logging_mode === 'barcode'
-                                      ? IMAGE_CONSTANTS.scanBarcodeIcon
-                                      : meal.logging_mode === 'scanned'
-                                        ? IMAGE_CONSTANTS.scanMealIcon
-                                        : IMAGE_CONSTANTS.fireIcon // default to fire icon
+                                 getMealIcons(meal.logging_mode)
                                 }
                                 className="w-[12px] h-[12px] object-fill mr-1"
                               />
                               <Text className="text-sm text-textMediumGrey text-center font-medium">
-                                {meal.logging_mode
-                                  ? meal.logging_mode.charAt(0).toUpperCase() +
-                                    meal.logging_mode.slice(1)
-                                  : 'Manual'}
+                                {
+                                formatLoggingMode(meal.logging_mode)
+}
                               </Text>
                             </View>
                             <View className="flex-row items-center gap-3">

@@ -84,6 +84,15 @@ export interface LoggedMeal {
     meal_time?: string;
 }
 
+export enum LoggingMode {
+    barcode = "barcode",
+    manual = "manual",
+    scan = "scan",
+    ai_recipe = "ai_recipe",
+    search = "search",
+    meal_finder = "meal_finder"
+}
+
 /**
  * Request payload for meal suggestions.
  */
