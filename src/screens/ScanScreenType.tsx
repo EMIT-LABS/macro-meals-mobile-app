@@ -72,7 +72,7 @@ const ScanScreenType: React.FC = () => {
     SearchMealResponse['results']
   >([]);
   const [localSearchLoading, setLocalSearchLoading] = useState(false);
-  const [globalSearchLoading, setGlobalSearchLoading] = useState(false);
+  // const [globalSearchLoading, setGlobalSearchLoading] = useState(false);
   const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
   const [networkError, setNetworkError] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -122,7 +122,7 @@ const ScanScreenType: React.FC = () => {
 
             // Start both searches simultaneously
             setLocalSearchLoading(true);
-            setGlobalSearchLoading(true);
+            // setGlobalSearchLoading(true);
 
             // Local search (user's logged meals)
             const localSearchPromise = (async () => {
@@ -250,7 +250,7 @@ const ScanScreenType: React.FC = () => {
             setLocalSearchResults([]);
             // setGlobalSearchResults([]);
             setLocalSearchLoading(false);
-            setGlobalSearchLoading(false);
+            // setGlobalSearchLoading(false);
           }
         }, 1500); // 1.5 second delay
       };
@@ -266,7 +266,7 @@ const ScanScreenType: React.FC = () => {
       setLocalSearchResults([]);
       // setGlobalSearchResults([]);
       setLocalSearchLoading(false);
-      setGlobalSearchLoading(false);
+      // setGlobalSearchLoading(false);
       setNetworkError(null);
     }
   }, [searchText, searchFocused, debouncedSearch]);
@@ -461,8 +461,7 @@ const ScanScreenType: React.FC = () => {
     if (
       searchText &&
       searchText.trim().length >= 2 &&
-      !localSearchLoading &&
-      !globalSearchLoading
+      !localSearchLoading 
     ) {
       posthog.track({
         name: 'search_no_results_prompt_shown',
@@ -473,7 +472,7 @@ const ScanScreenType: React.FC = () => {
         },
       });
     }
-  }, [searchText, localSearchLoading, globalSearchLoading]);
+  }, [searchText, localSearchLoading]);
 
   const fromLogsResults = localSearchResults.filter(
   item => item.search_tag === 'meal_log'
@@ -757,7 +756,7 @@ const combinedResults = [
                           searchText &&
                           searchText.trim().length >= 2 &&
                           !localSearchLoading &&
-                          !globalSearchLoading && (
+                         (
                             <Text className="text-center text-base text-gray-500 mt-10">
                               No results found
                             </Text>
