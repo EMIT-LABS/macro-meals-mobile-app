@@ -409,6 +409,12 @@ if (word.toLowerCase() === 'ai') return 'AI'; // special case
       label: 'Dinner',
       meals: meals.filter(m => m.meal_type === 'dinner'),
     },
+    {
+      key: 'other',
+      emoji: '🍴',
+      label: 'Other',
+      meals: meals.filter(m => m.meal_type === 'other'),
+    },
   ].filter(section => section.meals.length > 0); // Only show sections that have meals
 
   const showFilterSheet = () => {
