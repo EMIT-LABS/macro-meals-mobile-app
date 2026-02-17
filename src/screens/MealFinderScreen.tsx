@@ -3,6 +3,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -19,6 +20,11 @@ import { IMAGE_CONSTANTS } from '../constants/imageConstants';
 import { locationService } from '../services/locationService';
 import useStore from '../store/useStore';
 import { RootStackParamList } from '../types/navigation';
+import MapsService from '../../packages/maps_service/src/maps_service';
+import {
+  RestaurantService,
+  type AutocompletePrediction,
+} from '../../packages/maps_service/src/services/restaurant_service';
 
 import { MealFinderListView } from '../components/meal_finder_components/MealFinderListView';
 import { MealFinderMapView } from '../components/meal_finder_components/MealFinderMapView';
@@ -39,93 +45,6 @@ interface MockLocation {
   latitude?: number;
   longitude?: number;
 }
-
-const mockLocations: MockLocation[] = [
-  {
-    label: 'Eiffel Tower',
-    description: 'Champ de Mars, Paris, France',
-    latitude: 48.8584,
-    longitude: 2.2945,
-  },
-  {
-    label: 'Sydney Opera House',
-    description: 'Bennelong Point, Sydney NSW, Australia',
-    latitude: -33.8568,
-    longitude: 151.2153,
-  },
-  {
-    label: 'Shibuya Crossing',
-    description: 'Shibuya City, Tokyo, Japan',
-    latitude: 35.6595,
-    longitude: 139.7005,
-  },
-  {
-    label: 'Table Mountain',
-    description: 'Cape Town, South Africa',
-    latitude: -33.9628,
-    longitude: 18.4098,
-  },
-  {
-    label: 'Kakum National Park',
-    description: 'Rainforest canopy walkway, Central Region, Ghana',
-    latitude: 5.4107,
-    longitude: -1.2732,
-  },
-  {
-    label: 'Cape Coast Castle',
-    description: 'Historic slave castle, Cape Coast, Ghana',
-    latitude: 5.1036,
-    longitude: -1.2466,
-  },
-  {
-    label: 'Kwame Nkrumah Mausoleum',
-    description: 'Memorial park, Accra, Ghana',
-    latitude: 5.556,
-    longitude: -0.1969,
-  },
-  {
-    label: 'Labadi Beach',
-    description: 'Popular beach, Accra, Ghana',
-    latitude: 5.5586,
-    longitude: -0.1635,
-  },
-  {
-    label: 'Kumasi Central Market',
-    description: 'Large open-air market, Kumasi, Ghana',
-    latitude: 6.693,
-    longitude: -1.6244,
-  },
-  {
-    label: 'Lake Bosomtwe',
-    description: 'Crater lake, Ashanti Region, Ghana',
-    latitude: 6.5053,
-    longitude: -1.4187,
-  },
-  {
-    label: 'Independence Arch',
-    description: 'Iconic monument, Accra, Ghana',
-    latitude: 5.5502,
-    longitude: -0.1921,
-  },
-  {
-    label: 'Elmina Castle',
-    description: 'Historic castle, Elmina, Ghana',
-    latitude: 5.0847,
-    longitude: -1.3509,
-  },
-  {
-    label: 'Mole National Park',
-    description: 'Wildlife reserve, Northern Region, Ghana',
-    latitude: 9.7036,
-    longitude: -1.8032,
-  },
-  {
-    label: 'Wli Waterfalls',
-    description: 'Tallest waterfall in Ghana, Volta Region',
-    latitude: 7.1306,
-    longitude: 0.5736,
-  },
-];
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -167,8 +86,16 @@ const MealFinderScreen: React.FC = () => {
     'Getting location...'
   );
   const [search, setSearch] = useState<string>('');
+  const [nearbyPlaces, setNearbyPlaces] = useState<MockLocation[]>([]);
+  const [nearbyPlacesLoading, setNearbyPlacesLoading] = useState(false);
   const [filteredLocations, setFilteredLocations] =
-    useState<MockLocation[]>(mockLocations);
+    useState<MockLocation[]>([]);
+  const [placeSuggestions, setPlaceSuggestions] = useState<AutocompletePrediction[]>([]);
+  const [showPlaceSuggestions, setShowPlaceSuggestions] = useState(false);
+  const [placesSearchLoading, setPlacesSearchLoading] = useState(false);
+  const restaurantServiceRef = useRef<RestaurantService | null>(null);
+  const autocompleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isSelectingPlaceRef = useRef(false);
   const modalizeRef = useRef<Modalize>(null);
   const [macroData, setMacroData] = useState<MacroData[]>(defaultMacroData);
   const [_consumed, setConsumed] = useState({
@@ -398,16 +325,194 @@ const handleLocationPermission = async (): Promise<boolean> => {
   }, [activeTab, tabOpacity]);
 
   useEffect(() => {
-    setFilteredLocations(
-      search.trim() === ''
-        ? mockLocations
-        : mockLocations.filter(
-            loc =>
-              loc.label.toLowerCase().includes(search.toLowerCase()) ||
-              loc.description.toLowerCase().includes(search.toLowerCase())
-          )
-    );
-  }, [search]);
+    const list = search.trim() === ''
+      ? nearbyPlaces
+      : nearbyPlaces.filter(
+          loc =>
+            (loc.label && loc.label.toLowerCase().includes(search.toLowerCase())) ||
+            (loc.description && loc.description.toLowerCase().includes(search.toLowerCase()))
+        );
+    setFilteredLocations(list);
+  }, [search, nearbyPlaces]);
+
+  const fetchNearbyPlaces = useCallback(async () => {
+    if (!currentLocationCoords || !restaurantServiceRef.current) return;
+    setNearbyPlacesLoading(true);
+    try {
+      const restaurants = await restaurantServiceRef.current.searchNearbyRestaurants(
+        currentLocationCoords,
+        { radius: 5000, type: 'restaurant' }
+      );
+      const places: MockLocation[] = restaurants.map((r: any) => ({
+        label: r.name,
+        description: r.vicinity || '',
+        latitude: r.location?.latitude,
+        longitude: r.location?.longitude,
+      })).filter((p: MockLocation) => typeof p.latitude === 'number' && typeof p.longitude === 'number');
+      setNearbyPlaces(places);
+      setFilteredLocations(places);
+    } catch (err) {
+      console.error('[MealFinder] Nearby places error:', err);
+      setNearbyPlaces([]);
+      setFilteredLocations([]);
+    } finally {
+      setNearbyPlacesLoading(false);
+    }
+  }, [currentLocationCoords]);
+
+  useEffect(() => {
+    if (!currentLocationCoords) {
+      setNearbyPlaces([]);
+      setFilteredLocations([]);
+      return;
+    }
+    if (restaurantServiceRef.current) {
+      fetchNearbyPlaces();
+    }
+  }, [currentLocationCoords, fetchNearbyPlaces]);
+
+  const initRestaurantService = useCallback(() => {
+    if (restaurantServiceRef.current) return true;
+    try {
+      if (!MapsService.getIsInitialized()) return false;
+      const apiKey = MapsService.getApiKey();
+      if (apiKey) {
+        restaurantServiceRef.current = new RestaurantService(apiKey);
+        return true;
+      }
+    } catch (e) {
+      console.error('[MealFinder] RestaurantService init error:', e);
+    }
+    return false;
+  }, []);
+
+  useEffect(() => {
+    if (MapsService.getIsInitialized()) {
+      if (initRestaurantService() && currentLocationCoords) {
+        fetchNearbyPlaces();
+      }
+    }
+  }, [initRestaurantService, currentLocationCoords, fetchNearbyPlaces]);
+
+  const fetchPlaceSuggestions = useCallback(async (input: string) => {
+    if (!input || input.trim().length < 2) {
+      setPlaceSuggestions([]);
+      setShowPlaceSuggestions(false);
+      return;
+    }
+    if (!restaurantServiceRef.current) {
+      if (!initRestaurantService()) return;
+    }
+    if (!restaurantServiceRef.current) return;
+    try {
+      setPlacesSearchLoading(true);
+      const predictions = await restaurantServiceRef.current.getAutocompletePredictions(
+        input.trim(),
+        'geocode|establishment'
+      );
+      setPlaceSuggestions(predictions);
+      setShowPlaceSuggestions(predictions.length > 0);
+    } catch (err) {
+      console.error('[MealFinder] Places autocomplete error:', err);
+      setPlaceSuggestions([]);
+      setShowPlaceSuggestions(false);
+    } finally {
+      setPlacesSearchLoading(false);
+    }
+  }, [initRestaurantService]);
+
+  const handleAddressSearchChange = useCallback(
+    (text: string) => {
+      setSearch(text);
+      if (autocompleteTimeoutRef.current) {
+        clearTimeout(autocompleteTimeoutRef.current);
+      }
+      if (text.trim().length < 2) {
+        setPlaceSuggestions([]);
+        setShowPlaceSuggestions(false);
+        return;
+      }
+      autocompleteTimeoutRef.current = setTimeout(() => {
+        fetchPlaceSuggestions(text);
+      }, 300);
+    },
+    [fetchPlaceSuggestions]
+  );
+
+  const handleSelectPlace = useCallback(
+    async (prediction: AutocompletePrediction) => {
+      isSelectingPlaceRef.current = true;
+      setShowPlaceSuggestions(false);
+      setPlaceSuggestions([]);
+      setSearch(prediction.description);
+      setSelectedLocation(prediction.description);
+      modalizeRef.current?.close();
+      setLocationLoading(true);
+
+      if (!restaurantServiceRef.current) {
+        isSelectingPlaceRef.current = false;
+        setLocationLoading(false);
+        return;
+      }
+      const coords = await restaurantServiceRef.current.getPlaceCoordinates(prediction.place_id);
+      setTimeout(() => {
+        isSelectingPlaceRef.current = false;
+      }, 300);
+
+      if (!coords) {
+        setError('Could not get coordinates for this place.');
+        setLocationLoading(false);
+        return;
+      }
+
+      setCurrentLocationCoords({ latitude: coords.latitude, longitude: coords.longitude });
+
+      try {
+        const mapPinsResponse = await mealService.getMapPins(
+          coords.latitude,
+          coords.longitude,
+          undefined,
+          undefined
+        );
+        const pins = (mapPinsResponse.pins || []).filter(
+          (pin: any) =>
+            typeof pin.distance_km !== 'number' || pin.distance_km <= 50
+        );
+        const mealList: Meal[] = pins.map((pin: any) => ({
+          id: pin.id || pin.google_place_id || String(Math.random()),
+          name: pin.top_meal?.name || '',
+          macros: {
+            calories: pin.top_meal?.macros?.calories || 0,
+            carbs: pin.top_meal?.macros?.carbs || 0,
+            fat: pin.top_meal?.macros?.fat || 0,
+            protein: pin.top_meal?.macros?.protein || 0,
+          },
+          restaurant: {
+            name: pin.name || '',
+            location: pin.address || '',
+          },
+          imageUrl: pin.photo_url || undefined,
+          description: pin.top_meal?.description || '',
+          price: pin.price_level || undefined,
+          distance: pin.distance_km || undefined,
+          date: new Date().toDateString(),
+          mealType: 'lunch',
+          matchScore: pin.top_meal?.match_score || 0,
+          latitude: pin.latitude,
+          longitude: pin.longitude,
+        }));
+        setMeals(mealList);
+        setError(null);
+      } catch (apiError: any) {
+        console.error('[MealFinder] API error after place select:', apiError);
+        setError('Failed to fetch restaurant locations.');
+        setMeals([]);
+      } finally {
+        setLocationLoading(false);
+      }
+    },
+    []
+  );
 
   const openLocationSheet = useCallback(() => {
     modalizeRef.current?.open();
@@ -587,8 +692,8 @@ const handleLocationPermission = async (): Promise<boolean> => {
         </View>
       )}
 
-      {/* List View - Only show when List tab is active and data has loaded */}
-      {activeTab === 'list' && isDataLoaded && (
+      {/* List View - show when List tab is active (content shows loading/error/meals) */}
+      {activeTab === 'list' && (
         <View className="flex-1 px-5 mt-8">
           {/* Search Bar for List Tab */}
           <View className="mb-4">
@@ -622,15 +727,20 @@ const handleLocationPermission = async (): Promise<boolean> => {
                 Current location
               </Text>
               <View className="flex-row items-center">
+                {locationLoading ? (
+                  <ActivityIndicator size="small" color="#01675B" style={{ marginRight: 8 }} />
+                ) : null}
                 <Text className="mt-2 text-base font-semibold text-primary mr-1">
-                  {selectedLocation}
+                  {locationLoading ? 'Loading…' : selectedLocation}
                 </Text>
-                <Ionicons
-                  name="chevron-down"
-                  size={18}
-                  color="#222"
-                  className="mt-2"
-                />
+                {!locationLoading && (
+                  <Ionicons
+                    name="chevron-down"
+                    size={18}
+                    color="#222"
+                    className="mt-2"
+                  />
+                )}
               </View>
             </TouchableOpacity>
           </View>
@@ -781,12 +891,15 @@ const handleLocationPermission = async (): Promise<boolean> => {
               style={{ marginRight: 6 }}
             />
             <TextInput
-              placeholder="Enter a new address"
+              placeholder="Search for an address or place"
               value={search}
-              onChangeText={setSearch}
+              onChangeText={handleAddressSearchChange}
               className="flex-1 h-[48px] rounded-2xl text-base text-[#222]"
               placeholderTextColor="#888"
             />
+            {placesSearchLoading && (
+              <ActivityIndicator size="small" color="#01675B" style={{ marginLeft: 8 }} />
+            )}
           </View>
           <TouchableOpacity
             onPress={handleSelectCurrentLocation}
@@ -800,30 +913,77 @@ const handleLocationPermission = async (): Promise<boolean> => {
               Use your current location
             </Text>
           </TouchableOpacity>
-          {filteredLocations.map((loc, idx) => (
-            <React.Fragment key={idx}>
-              <TouchableOpacity
-                onPress={() => handleSelectMockLocation(loc)}
-                className="flex-row items-center"
-              >
-                <Image
-                  source={IMAGE_CONSTANTS.locationIcon}
-                  className="w-[32px] h-[32px] mr-4 rounded-full"
-                />
-                <View>
-                  <Text className="text-sm font-medium text-[#222]">
-                    {loc.label}
-                  </Text>
-                  <Text className="text-mediumGrey text-xs">
-                    {loc.description}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              {idx !== filteredLocations.length - 1 && (
-                <View className="h-px bg-gray-200 my-5" />
-              )}
-            </React.Fragment>
-          ))}
+          {showPlaceSuggestions && placeSuggestions.length > 0 ? (
+            <>
+              <Text className="text-mediumGrey text-xs mb-2">Suggestions</Text>
+              {placeSuggestions.map((prediction, idx) => (
+                <React.Fragment key={prediction.place_id}>
+                  <TouchableOpacity
+                    onPress={() => handleSelectPlace(prediction)}
+                    className="flex-row items-center py-3"
+                  >
+                    <Image
+                      source={IMAGE_CONSTANTS.locationIcon}
+                      className="w-[32px] h-[32px] mr-4 rounded-full"
+                    />
+                    <View className="flex-1">
+                      <Text className="text-sm font-medium text-[#222]">
+                        {prediction.structured_formatting?.main_text || prediction.description}
+                      </Text>
+                      {prediction.structured_formatting?.secondary_text ? (
+                        <Text className="text-mediumGrey text-xs">
+                          {prediction.structured_formatting.secondary_text}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
+                  {idx !== placeSuggestions.length - 1 && (
+                    <View className="h-px bg-gray-200" />
+                  )}
+                </React.Fragment>
+              ))}
+              <View className="h-px bg-gray-200 my-4" />
+            </>
+          ) : null}
+          {!currentLocationCoords ? (
+            <Text className="text-mediumGrey text-sm py-4">
+              Enable location to see nearby places
+            </Text>
+          ) : nearbyPlacesLoading ? (
+            <View className="py-6 items-center">
+              <ActivityIndicator size="small" color="#01675B" />
+              <Text className="text-mediumGrey text-sm mt-2">Loading nearby places…</Text>
+            </View>
+          ) : filteredLocations.length === 0 ? (
+            <Text className="text-mediumGrey text-sm py-4">
+              No restaurants found nearby
+            </Text>
+          ) : (
+            filteredLocations.map((loc, idx) => (
+              <React.Fragment key={`${loc.latitude}-${loc.longitude}-${idx}`}>
+                <TouchableOpacity
+                  onPress={() => handleSelectMockLocation(loc)}
+                  className="flex-row items-center"
+                >
+                  <Image
+                    source={IMAGE_CONSTANTS.locationIcon}
+                    className="w-[32px] h-[32px] mr-4 rounded-full"
+                  />
+                  <View>
+                    <Text className="text-sm font-medium text-[#222]">
+                      {loc.label}
+                    </Text>
+                    <Text className="text-mediumGrey text-xs">
+                      {loc.description}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                {idx !== filteredLocations.length - 1 && (
+                  <View className="h-px bg-gray-200 my-5" />
+                )}
+              </React.Fragment>
+            ))
+          )}
         </View>
       </Modalize>
     </View>
