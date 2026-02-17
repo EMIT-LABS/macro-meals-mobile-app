@@ -174,6 +174,34 @@ export class RestaurantService {
         }
     }
 
+    /**
+     * Get coordinates for a place (e.g. for map/search).
+     */
+    async getPlaceCoordinates(placeId: string): Promise<{ latitude: number; longitude: number } | null> {
+        const queryParams: Record<string, string> = {
+            place_id: placeId,
+            fields: 'geometry',
+            key: this.apiKey,
+        };
+        const queryString = Object.entries(queryParams)
+            .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+            .join('&');
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/details/json?${queryString}`
+            );
+            const data = await response.json();
+            if (data.status !== 'OK' || !data.result?.geometry?.location) {
+                return null;
+            }
+            const loc = data.result.geometry.location;
+            return { latitude: loc.lat, longitude: loc.lng };
+        } catch (error) {
+            console.error('Error getting place coordinates:', error);
+            return null;
+        }
+    }
+
     async getRestaurantDetails(placeId: string): Promise<RestaurantDetails | null> {
         const queryParams: Record<string, string> = {
             place_id: placeId,

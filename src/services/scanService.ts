@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Config from 'react-native-config';
 import axiosInstance from "./axios";
 
+/* global XMLHttpRequest */
+
 export type ScanStreamProgressCallback = (
   progress: number,
   status: string,
@@ -48,8 +50,10 @@ class ScanService {
     }
 
     /**
-     * Scan image via streaming endpoint with progress updates (SSE).
-     * POST multipart/form-data to /scan/image/stream; reads SSE stream and calls onProgress.
+     * Scan image via streaming endpoint. Server sends NDJSON lines over time
+     * (e.g. {"progress": 65, "status": "...", "stage": "analysis"}).
+     * Uses XMLHttpRequest so we can read responseText in onprogress and emit
+     * progress as each line arrives (React Native fetch does not support streaming).
      */
     async scanImageStream(
         imageUri: string,
@@ -66,62 +70,108 @@ class ScanService {
             name: 'photo.jpg',
         } as any);
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: formData,
-        });
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            let processedLength = 0;
+            let lineBuffer = '';
+            let settled = false;
+            const doResolve = (value: any) => {
+                if (settled) return;
+                settled = true;
+                resolve(value);
+            };
+            const doReject = (err: any) => {
+                if (settled) return;
+                settled = true;
+                reject(err);
+            };
 
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(text || `Scan failed: ${response.status}`);
-        }
+            const processLine = (trimmed: string): any => {
+                if (!trimmed) return null;
+                const jsonStr = trimmed.startsWith('data: ')
+                    ? trimmed.slice(6).trim()
+                    : trimmed.startsWith('{')
+                      ? trimmed
+                      : null;
+                if (jsonStr == null) return null;
+                const data = JSON.parse(jsonStr);
+                onProgress(
+                    data.progress ?? 0,
+                    data.status ?? '',
+                    data.stage ?? ''
+                );
+                if (data.progress === 100 && data.result != null) return data.result;
+                if (data.progress === -1 && data.error) throw new Error(data.error);
+                return null;
+            };
 
-        if (!response.body) {
-            throw new Error('No response body');
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const jsonStr = line.slice(6);
+            const processNewChunk = (): any => {
+                const text = xhr.responseText || '';
+                const newPart = text.slice(processedLength);
+                processedLength = text.length;
+                lineBuffer += newPart;
+                const lines = lineBuffer.split('\n');
+                lineBuffer = lines.pop() ?? '';
+                for (const line of lines) {
                     try {
-                        const data = JSON.parse(jsonStr);
-
-                        onProgress(
-                            data.progress ?? 0,
-                            data.status ?? '',
-                            data.stage ?? ''
-                        );
-
-                        if (data.progress === 100 && data.result != null) {
-                            return data.result;
-                        }
-                        if (data.progress === -1 && data.error) {
-                            throw new Error(data.error);
-                        }
+                        const result = processLine(line.trim());
+                        if (result != null) return result;
                     } catch (e) {
                         if (e instanceof SyntaxError) continue;
                         throw e;
                     }
                 }
-            }
-        }
+                return null;
+            };
 
-        throw new Error('Stream ended without result');
+            xhr.open('POST', url);
+            if (token) {
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            }
+
+            xhr.onprogress = () => {
+                try {
+                    const result = processNewChunk();
+                    if (result != null) {
+                        xhr.abort();
+                        doResolve(result);
+                    }
+                } catch (e) {
+                    xhr.abort();
+                    doReject(e);
+                }
+            };
+
+            xhr.onload = () => {
+                try {
+                    const result = processNewChunk();
+                    if (result != null) {
+                        doResolve(result);
+                        return;
+                    }
+                    if (lineBuffer.trim()) {
+                        const result = processLine(lineBuffer.trim());
+                        if (result != null) {
+                            doResolve(result);
+                            return;
+                        }
+                    }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        doReject(new Error('Stream ended without result'));
+                    } else {
+                        doReject(new Error(xhr.responseText || `Scan failed: ${xhr.status}`));
+                    }
+                } catch (e) {
+                    doReject(e);
+                }
+            };
+
+            xhr.onerror = () => doReject(new Error('Network request failed'));
+            xhr.ontimeout = () => doReject(new Error('Request timed out'));
+
+            xhr.responseType = 'text';
+            xhr.send(formData);
+        });
     }
 }
 
