@@ -48,6 +48,7 @@ interface RouteParams {
     scanned_image?: string;
   };
   defaultDate?: string;
+  mealNameFromSearch?: string | null; 
 }
 
 import { SERVING_UNITS } from 'constants/serving_units';
@@ -76,7 +77,7 @@ export const AddMealScreen: React.FC = () => {
       >
     >();
   const params = route.params || {};
-  const { barcodeData, analyzedData, defaultDate } = params;
+  const { barcodeData, analyzedData, defaultDate, mealNameFromSearch } = params;
 
   const [mealName, setMealName] = useState<string>('');
   const [calories, setCalories] = useState<string>('0');
@@ -94,6 +95,7 @@ export const AddMealScreen: React.FC = () => {
       return new Date();
     }
   });
+  const [searchMealName, setSearchMealName] = useState<string | null | undefined>(mealNameFromSearch ?? "");
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [tempTime, setTempTime] = useState<Date | null>(null);
   const [mealImage, setMealImage] = useState<string | null>(null);
@@ -646,8 +648,8 @@ export const AddMealScreen: React.FC = () => {
   const getMealTypeByTime = (date: Date): string => {
     const hour = date.getHours();
     if (hour >= 5 && hour < 12) return 'breakfast';
-    if (hour >= 12 && hour < 18) return 'lunch';
-    if (hour >= 18 && hour <= 23) return 'dinner';
+    if (hour >= 12 && hour < 17) return 'lunch';
+    if (hour >= 17 && hour <= 23) return 'dinner';
     return 'other';
   };
 
@@ -671,6 +673,12 @@ export const AddMealScreen: React.FC = () => {
 
     setShowTimeModal(true);
   };
+
+  useEffect(() => {
+  if (mealNameFromSearch) {
+    setMealName(mealNameFromSearch);
+  }
+}, [mealNameFromSearch]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
