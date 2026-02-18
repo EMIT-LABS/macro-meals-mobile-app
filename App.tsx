@@ -39,6 +39,10 @@ import {
   validateSession,
 } from './src/services/sessionService';
 // Polyfill crypto.getRandomValues for Hermes before any Sentry/uuid usage in release
+import {
+  ChottuLinkProvider,
+  buildPostHogAttributionHandler,
+} from '@macro-meals/chottulink-service';
 import { PosthogProvider, usePosthog } from '@macro-meals/posthog_service/src';
 // PostHog client is now created in PosthogProvider
 // import PostHog from 'posthog-react-native';
@@ -160,6 +164,24 @@ function MixpanelIdentifier() {
   }, [isAuthenticated, userId]); // Removed mixpanel/posthog from deps to prevent re-identifies
 
   return null;
+}
+
+// Wraps children with ChottuLinkProvider and sends attribution to PostHog (first_open + UTM)
+function ChottuLinkWithPostHog({ children }: { children: React.ReactNode }) {
+  const posthog = usePosthog();
+  const apiKey = (Config as Record<string, string>).CHOTTULINK_API_KEY ?? '';
+  if (!apiKey) {
+    return <>{children}</>;
+  }
+  return (
+    <ChottuLinkProvider
+      apiKey={apiKey}
+      onAttribution={posthog ? buildPostHogAttributionHandler(posthog) : undefined}
+      debug={__DEV__}
+    >
+      {children}
+    </ChottuLinkProvider>
+  );
 }
 
 // Component to manually start PostHog session replay
@@ -639,8 +661,9 @@ export function App() {
                   }}>
                   <MixpanelIdentifier />
                   <PosthogSessionReplayStarter />
-                  <RemoteConfigHandler />
-                  <RootStack
+                  <ChottuLinkWithPostHog>
+                    <RemoteConfigHandler />
+                    <RootStack
                     isOnboardingCompleted={isOnboardingCompleted}
                     initialAuthScreen={initialAuthScreen}
                     isAuthenticated={isAuthenticated}
@@ -650,6 +673,7 @@ export function App() {
                     isVisible={showUpdateReminder}
                     onClose={() => setShowUpdateReminder(false)}
                   />
+                  </ChottuLinkWithPostHog>
                      </PosthogProvider>
                 </NavigationContainer>
               </IsProContext.Provider>
