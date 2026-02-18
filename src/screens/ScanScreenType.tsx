@@ -54,6 +54,7 @@ interface SearchMealResponse {
 }
 interface RouteParams {
   defaultDate: string;
+  mealNameFromSearch?: string | null;
 }
 
 /**
@@ -67,7 +68,7 @@ const ScanScreenType: React.FC = () => {
     useNavigation<StackNavigationProp<RootStackParamList, 'ScanScreenType'>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ScanScreenType'>>();
   const params = (route.params as RouteParams) || {};
-  const { defaultDate } = params;
+  const { defaultDate, mealNameFromSearch } = params;
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [localSearchResults, setLocalSearchResults] = useState<
@@ -264,7 +265,7 @@ const ScanScreenType: React.FC = () => {
   /**
    * Navigate to manual meal entry/search screen
    */
-  const handleManualEntry = () => {
+  const handleManualEntry = (meal_name_from_search?: string) => {
     mixpanel?.track({
       name: 'add_meal_option_selected',
       properties: { option_type: 'manual_entry' },
@@ -276,7 +277,7 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('AddMealScreen', { defaultDate });
+      navigation.navigate('AddMealScreen', { defaultDate , mealNameFromSearch: meal_name_from_search });
     }
   };
 
@@ -681,7 +682,7 @@ const combinedResults = [
                         : { showNoResults() && (
                           <>
                             <Text className="text-center text-base text-gray-500 mt-10">
-                              No results found
+                              No results found. 
                               Can&apos;t find your meal? Log it manually.
                             </Text>
                               <DiscoverCard
@@ -693,7 +694,7 @@ const combinedResults = [
                       }
                       title="Manual entry"
                       description="Log your meal details including portion sizes and ingredients for precise macro tracking."
-                      onPress={handleManualEntry}
+                      onPress={() => handleManualEntry(searchText)}
                     />
                     </>
                           )

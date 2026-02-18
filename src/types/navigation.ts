@@ -49,7 +49,7 @@ export type RootStackParamList = {
       logging_mode?: string;
     };
     defaultDate?: string;
-
+    mealNameFromSearch?: string | null;
   };
   SnapMeal?: { defaultDate?: string; };
   MealLog: undefined;
