@@ -770,7 +770,9 @@ if (word.toLowerCase() === 'ai') return 'AI'; // special case
                                       ? '☀️'
                                       : type === 'lunch'
                                         ? '🥗'
-                                        : '🍽️',
+                                        : type === 'dinner'
+                                        ? '🍽️'
+                                        : '🍴',
                                   label:
                                     type.charAt(0).toUpperCase() +
                                     type.slice(1),
