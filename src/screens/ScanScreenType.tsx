@@ -679,9 +679,23 @@ const combinedResults = [
                           />
                         )}
                         : { showNoResults() && (
+                          <>
                             <Text className="text-center text-base text-gray-500 mt-10">
                               No results found
+                              Can&apos;t find your meal? Log it manually.
                             </Text>
+                              <DiscoverCard
+                      icon={
+                        <Image
+                          source={IMAGE_CONSTANTS.editIcon}
+                          className="w-6 h-6 object-fill"
+                        />
+                      }
+                      title="Manual entry"
+                      description="Log your meal details including portion sizes and ingredients for precise macro tracking."
+                      onPress={handleManualEntry}
+                    />
+                    </>
                           )
                           }
                       </>
