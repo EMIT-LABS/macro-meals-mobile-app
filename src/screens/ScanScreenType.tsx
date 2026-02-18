@@ -277,7 +277,8 @@ const ScanScreenType: React.FC = () => {
     if (profile?.has_macros === false || profile?.has_macros === undefined) {
       navigation.navigate('GoalSetupScreen' as never);
     } else {
-      navigation.navigate('AddMealScreen', { defaultDate , mealNameFromSearch: meal_name_from_search });
+      console.log("Meal name from search:", meal_name_from_search);
+      navigation.navigate('AddMealScreen', { defaultDate , mealNameFromSearch: meal_name_from_search ? meal_name_from_search : "" });
     }
   };
 
@@ -761,7 +762,7 @@ const combinedResults = [
                       }
                       title="Manual entry"
                       description="Log your meal details including portion sizes and ingredients for precise macro tracking."
-                      onPress={handleManualEntry}
+                      onPress={() => handleManualEntry("")}
                     />
                     <DiscoverCard
                       icon={
