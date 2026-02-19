@@ -71,10 +71,6 @@ console.log(
   __DEV__ ? 'development' : 'production'
 );
 
-console.log(
-  `\n\n\n\n\n\n\n\n\n\n\n\n\n\n🔍 Sentry DNS: ${Config.SENTRY_DNS}\n\n\n\n\n\n\n\n\n`
-);
-
 // Initialize Sentry via internal service (native enabled only in non-dev by default)
 sentryService.init({
   dsn: (Config.SENTRY_DNS as string) || (Config as any).SENTRY_DNS || '',
@@ -85,8 +81,6 @@ sentryService.init({
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
-
-
 // Component to handle Mixpanel identification for authenticated users
 function MixpanelIdentifier() {
   const { isAuthenticated, userId } = useStore();
@@ -95,17 +89,11 @@ function MixpanelIdentifier() {
   const appOpenedTracked = useRef(false);
   const lastIdentifiedUserId = useRef<string | null>(null);
 
-
-
-
-  
-  
-
   // Track app_opened only once on mount (not on every render!)
   useEffect(() => {
     if (!appOpenedTracked.current) {
       appOpenedTracked.current = true;
-      
+
       const appOpenedProps = {
         platform: Platform.OS,
         app_version: Constants.expoConfig?.version || '1.0.0',
@@ -126,15 +114,13 @@ function MixpanelIdentifier() {
         properties: appOpenedProps,
       });
 
-      if(SplashScreen){
-      posthog.track({
-        name: 'splash_screen_viewed',
-        properties: appOpenedProps,
-      })
+      if (SplashScreen) {
+        posthog.track({
+          name: 'splash_screen_viewed',
+          properties: appOpenedProps,
+        });
+      }
     }
-    }
-
-    
   }, [mixpanel, posthog, SplashScreen]); // Only track when analytics are initialized
 
   useEffect(() => {
@@ -142,9 +128,14 @@ function MixpanelIdentifier() {
     // 1. User is authenticated
     // 2. We have a userId
     // 3. This userId is different from the last one we identified
-    if (isAuthenticated && userId && userId !== lastIdentifiedUserId.current && mixpanel) {
+    if (
+      isAuthenticated &&
+      userId &&
+      userId !== lastIdentifiedUserId.current &&
+      mixpanel
+    ) {
       lastIdentifiedUserId.current = userId;
-      
+
       // Identify the user in Mixpanel and PostHog
       mixpanel.identify(userId);
       posthog.identify(userId, {
@@ -171,29 +162,33 @@ function PosthogSessionReplayStarter() {
     // Manually start session replay to ensure it's recording
     if (posthog && posthog.isInitialized && !replayStarted.current) {
       replayStarted.current = true;
-      
+
       console.log('[POSTHOG] 🔍 Checking session replay status...');
       console.log('[POSTHOG] 🔍 PostHog client:', {
         isInitialized: posthog.isInitialized,
-        hasStartRecording: typeof (posthog as any).startRecording === 'function',
+        hasStartRecording:
+          typeof (posthog as any).startRecording === 'function',
         hasStopRecording: typeof (posthog as any).stopRecording === 'function',
       });
-      
+
       try {
         // Check if startRecording method exists
         if (typeof (posthog as any).startRecording === 'function') {
           (posthog as any).startRecording();
           console.log('[POSTHOG] ✅ Session replay started manually');
-          
+
           // Verify recording status
           setTimeout(() => {
-            const isRecording = typeof (posthog as any).isRecording === 'function' 
-              ? (posthog as any).isRecording() 
-              : 'unknown';
+            const isRecording =
+              typeof (posthog as any).isRecording === 'function'
+                ? (posthog as any).isRecording()
+                : 'unknown';
             console.log('[POSTHOG] 🔍 Recording status:', isRecording);
           }, 1000);
         } else {
-          console.log('[POSTHOG] ℹ️ Session replay auto-start enabled (no manual start method available)');
+          console.log(
+            '[POSTHOG] ℹ️ Session replay auto-start enabled (no manual start method available)'
+          );
         }
       } catch (error) {
         console.error('[POSTHOG] ❌ Error starting session replay:', error);
@@ -434,39 +429,47 @@ export function App() {
             }
           );
 
-        // Set states in correct order
-        setHasMacros(profile.has_macros);
-        setReadyForDashboard(profile.has_macros);
-        setAuthenticated(true, profile.id, profile.id);
+          // Set states in correct order
+          setHasMacros(profile.has_macros);
+          setReadyForDashboard(profile.has_macros);
+          setAuthenticated(true, profile.id, profile.id);
 
-        // Skip paywall if is_pro OR active referral (promo)
-        if (shouldSkipPaywall(profile)) {
-          console.log('✅ App.tsx - User has pro or active referral, skipping paywall');
-          setIsPro(true);
-          
-          // Still set up RevenueCat for future subscription management
-          try {
-            await revenueCatService.setUserID(profile.id);
-            console.log('✅ App.tsx - RevenueCat user ID set for pro user');
-          } catch (error) {
-            console.error('❌ App.tsx - RevenueCat setup failed for pro user:', error);
-          }
-        } else {
-          // If backend says not pro, check RevenueCat for active subscription
-          try {
-            await revenueCatService.setUserID(profile.id);
-            const subscriptionStatus =
-              await revenueCatService.checkSubscriptionStatus();
-            setIsPro(subscriptionStatus.isPro);
-            console.log('🔍 App.tsx - RevenueCat subscription status:', subscriptionStatus.isPro);
-          } catch (error) {
-            console.error(
-              '❌ App.tsx - Failed to check RevenueCat subscription:',
-              error
+          // Skip paywall if is_pro OR active referral (promo)
+          if (shouldSkipPaywall(profile)) {
+            console.log(
+              '✅ App.tsx - User has pro or active referral, skipping paywall'
             );
-            setIsPro(false);
+            setIsPro(true);
+
+            // Still set up RevenueCat for future subscription management
+            try {
+              await revenueCatService.setUserID(profile.id);
+              console.log('✅ App.tsx - RevenueCat user ID set for pro user');
+            } catch (error) {
+              console.error(
+                '❌ App.tsx - RevenueCat setup failed for pro user:',
+                error
+              );
+            }
+          } else {
+            // If backend says not pro, check RevenueCat for active subscription
+            try {
+              await revenueCatService.setUserID(profile.id);
+              const subscriptionStatus =
+                await revenueCatService.checkSubscriptionStatus();
+              setIsPro(subscriptionStatus.isPro);
+              console.log(
+                '🔍 App.tsx - RevenueCat subscription status:',
+                subscriptionStatus.isPro
+              );
+            } catch (error) {
+              console.error(
+                '❌ App.tsx - Failed to check RevenueCat subscription:',
+                error
+              );
+              setIsPro(false);
+            }
           }
-        }
 
           console.log('🔍 App.tsx - Session restored successfully:', {
             hasMacros: profile.has_macros,
@@ -626,31 +629,32 @@ export function App() {
             >
               <IsProContext.Provider value={{ isPro, setIsPro }}>
                 <NavigationContainer>
-                  <PosthogProvider 
-                  apiKey={Config.POSTHOG_API_KEY as string || ''}
-                  host={Config.POSTHOG_HOST as string || ''}
-                  debug={__DEV__}
-                  autocapture={false}
-                  disableGeoip={false}
-                  enableSessionReplay={Config.ENVIRONMENT === 'production'}
-                  sessionReplayConfig={{
-                    maskAllTextInputs: false,
-                    maskAllImages: false,
-                  }}>
-                  <MixpanelIdentifier />
-                  <PosthogSessionReplayStarter />
-                  <RemoteConfigHandler />
-                  <RootStack
-                    isOnboardingCompleted={isOnboardingCompleted}
-                    initialAuthScreen={initialAuthScreen}
-                    isAuthenticated={isAuthenticated}
-                  />
-                  {/* Update Reminder Modal - must be inside RemoteConfigProvider */}
-                  <UpdateReminderModal
-                    isVisible={showUpdateReminder}
-                    onClose={() => setShowUpdateReminder(false)}
-                  />
-                     </PosthogProvider>
+                  <PosthogProvider
+                    apiKey={(Config.POSTHOG_API_KEY as string) || ''}
+                    host={(Config.POSTHOG_HOST as string) || ''}
+                    debug={__DEV__}
+                    autocapture={false}
+                    disableGeoip={false}
+                    enableSessionReplay={Config.ENVIRONMENT === 'production'}
+                    sessionReplayConfig={{
+                      maskAllTextInputs: false,
+                      maskAllImages: false,
+                    }}
+                  >
+                    <MixpanelIdentifier />
+                    <PosthogSessionReplayStarter />
+                    <RemoteConfigHandler />
+                    <RootStack
+                      isOnboardingCompleted={isOnboardingCompleted}
+                      initialAuthScreen={initialAuthScreen}
+                      isAuthenticated={isAuthenticated}
+                    />
+                    {/* Update Reminder Modal - must be inside RemoteConfigProvider */}
+                    <UpdateReminderModal
+                      isVisible={showUpdateReminder}
+                      onClose={() => setShowUpdateReminder(false)}
+                    />
+                  </PosthogProvider>
                 </NavigationContainer>
               </IsProContext.Provider>
             </HasMacrosContext.Provider>
