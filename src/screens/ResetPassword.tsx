@@ -1,158 +1,152 @@
-import React, { useState } from "react";
+import { MaterialIcons } from '@expo/vector-icons';
+import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from "react-native";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { authService } from "../services/authService";
-import CustomSafeAreaView from "../components/CustomSafeAreaView";
-import BackButton from "../components/BackButton";
-import CustomTouchableOpacityButton from "../components/CustomTouchableOpacityButton";
-import { MaterialIcons } from "@expo/vector-icons";
-import { RootStackParamList } from "src/types/navigation";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { useMixpanel } from "@macro-meals/mixpanel/src";
-import { usePosthog } from "@macro-meals/posthog_service/src";
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { RootStackParamList } from 'src/types/navigation';
+import BackButton from '../components/BackButton';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
+import { authService } from '../services/authService';
 
 type ResetPasswordScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "ResetPassword"
+  'ResetPassword'
 >;
 
 export const ResetPasswordScreen: React.FC = () => {
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const route = useRoute<RouteProp<RootStackParamList, "ResetPassword">>();
+  const route = useRoute<RouteProp<RootStackParamList, 'ResetPassword'>>();
   const {
     email: routeEmail,
     session_token: routeSessionToken,
-    otp: routeOtp,
-    source,
+    otp: _routeOtp,
+    source: _source,
   } = route.params;
-  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({ password: "", confirmPassword: "" });
-  const [isValid, setIsValid] = useState(false);
   const [touched, setTouched] = useState({
+    currentPassword: false,
     password: false,
     confirmPassword: false,
   });
   const navigation = useNavigation<ResetPasswordScreenNavigationProp>();
   const mixpanel = useMixpanel();
-    const posthog = usePosthog();
-
+  const posthog = usePosthog();
+  const screenViewedTracked = useRef(false);
 
   React.useEffect(() => {
+    if (screenViewedTracked.current) return;
+    screenViewedTracked.current = true;
     mixpanel?.track({
-      name: "reset_password_screen_viewed",
+      name: 'reset_password_screen_viewed',
       properties: { platform: Platform.OS },
     });
-     posthog?.track({
-      
-      name: "reset_password_screen_viewed",
-      properties: { platform: Platform.OS,
-                 $screen_name: 'ResetPassword',
- $current_url: 'ResetPassword',
-       },
+    posthog?.track({
+      name: 'reset_password_screen_viewed',
+      properties: {
+        platform: Platform.OS,
+        $screen_name: 'ResetPassword',
+        $current_url: 'ResetPassword',
+      },
     });
-  }, [mixpanel]);
+  }, [mixpanel, posthog]);
 
-  // Validation logic
-  React.useEffect(() => {
+  // Derive validation from fields (no useEffect → no setState loop)
+  const { errors, isValid } = useMemo(() => {
+    const e = {
+      currentPassword: '',
+      password: '',
+      confirmPassword: '',
+    };
     let valid = true;
-    const newErrors = { password: "", confirmPassword: "" };
+    if (!currentPassword.trim()) {
+      e.currentPassword = 'Current password is required';
+      valid = false;
+    }
     if (!password) {
-      newErrors.password = "Password is required";
+      e.password = 'Password is required';
       valid = false;
     } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      e.password = 'Password must be at least 8 characters';
       valid = false;
     }
     if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
+      e.confirmPassword = 'Please confirm your password';
       valid = false;
     } else if (confirmPassword !== password) {
-      newErrors.confirmPassword = "Passwords do not match";
+      e.confirmPassword = 'Passwords do not match';
       valid = false;
     }
-    setErrors(newErrors);
-    setIsValid(valid);
-  }, [password, confirmPassword]);
+    return { errors: e, isValid: valid };
+  }, [currentPassword, password, confirmPassword]);
 
   const handleResetPassword = async () => {
     mixpanel?.track({
-      name: "reset_password_attempted",
+      name: 'reset_password_attempted',
       properties: {
-        email_domain: routeEmail?.split("@")[1] || "",
+        email_domain: routeEmail?.split('@')[1] || '',
         platform: Platform.OS,
       },
     });
-     posthog?.track({
-      name: "reset_password_attempted",
+    posthog?.track({
+      name: 'reset_password_attempted',
       properties: {
-                 $screen_name: 'ResetPassword',
- $current_url: 'ResetPassword',
-        email_domain: routeEmail?.split("@")[1] || "",
+        $screen_name: 'ResetPassword',
+        $current_url: 'ResetPassword',
+        email_domain: routeEmail?.split('@')[1] || '',
         platform: Platform.OS,
       },
     });
     setIsLoading(true);
-    const resetPasswordData = {
-      email: routeEmail,
-      otp: routeOtp,
-      session_token: routeSessionToken,
-      password: password,
-    };
-
-    console.log("Sending reset password data:", {
-      email: resetPasswordData.email,
-      otp: resetPasswordData.otp
-        ? `${resetPasswordData.otp.substring(0, 2)}****`
-        : "undefined",
-      session_token: resetPasswordData.session_token
-        ? `${resetPasswordData.session_token.substring(0, 10)}...`
-        : "undefined",
-      password: resetPasswordData.password
-        ? `${resetPasswordData.password.substring(0, 3)}...`
-        : "undefined",
-    });
 
     try {
-      await authService.resetPassword(resetPasswordData);
+      await authService.changePasswordAfterVerification({
+        email: routeEmail,
+        old_password: currentPassword,
+        new_password: password,
+        session_token: routeSessionToken,
+      });
       mixpanel?.track({
-        name: "reset_password_successful",
+        name: 'reset_password_successful',
         properties: {
-          email_domain: routeEmail?.split("@")[1] || "",
+          email_domain: routeEmail?.split('@')[1] || '',
           platform: Platform.OS,
         },
       });
-       posthog?.track({
-        name: "reset_password_successful",
+      posthog?.track({
+        name: 'reset_password_successful',
         properties: {
-                   $screen_name: 'ResetPassword',
- $current_url: 'ResetPassword',
-          email_domain: routeEmail?.split("@")[1] || "",
+          $screen_name: 'ResetPassword',
+          $current_url: 'ResetPassword',
+          email_domain: routeEmail?.split('@')[1] || '',
           platform: Platform.OS,
         },
       });
-      if (source === "settings") {
-        navigation.navigate("MainTabs", { screen: "Settings" });
-      } else {
-        navigation.navigate("LoginScreen");
-      }
+
+      navigation.navigate('MainTabs', { screen: 'Settings' });
     } catch (error) {
       // Log the full error response for debugging
-      if (error && typeof error === "object" && "response" in error) {
+      if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as any;
-        console.log("Full error response:", {
+        console.log('Full error response:', {
           status: axiosError.response?.status,
           statusText: axiosError.response?.statusText,
           data: axiosError.response?.data,
@@ -161,7 +155,7 @@ export const ResetPasswordScreen: React.FC = () => {
 
         // Log the detail structure specifically
         if (axiosError.response?.data?.detail) {
-          console.log("Detail structure:", {
+          console.log('Detail structure:', {
             type: typeof axiosError.response.data.detail,
             isArray: Array.isArray(axiosError.response.data.detail),
             value: axiosError.response.data.detail,
@@ -173,9 +167,9 @@ export const ResetPasswordScreen: React.FC = () => {
       }
 
       // Extract error message from Axios error response
-      let errorMessage = "Failed to reset password. Please try again.";
+      let errorMessage = 'Failed to reset password. Please try again.';
 
-      if (error && typeof error === "object" && "response" in error) {
+      if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as any;
 
         // Handle nested detail structure (array of objects)
@@ -184,19 +178,19 @@ export const ResetPasswordScreen: React.FC = () => {
           if (Array.isArray(detail) && detail.length > 0) {
             // If detail is an array, extract the first error message
             const firstError = detail[0];
-            if (typeof firstError === "object" && firstError.msg) {
+            if (typeof firstError === 'object' && firstError.msg) {
               errorMessage = firstError.msg;
-            } else if (typeof firstError === "string") {
+            } else if (typeof firstError === 'string') {
               errorMessage = firstError;
-            } else if (firstError && typeof firstError === "object") {
+            } else if (firstError && typeof firstError === 'object') {
               // Try to find any string value in the object
               const values = Object.values(firstError);
-              const stringValue = values.find((val) => typeof val === "string");
+              const stringValue = values.find(val => typeof val === 'string');
               if (stringValue) {
                 errorMessage = stringValue as string;
               }
             }
-          } else if (typeof detail === "string") {
+          } else if (typeof detail === 'string') {
             errorMessage = detail;
           }
         } else if (axiosError.response?.data?.message) {
@@ -208,34 +202,34 @@ export const ResetPasswordScreen: React.FC = () => {
         errorMessage = error.message;
       }
       mixpanel?.track({
-        name: "reset_password_failed",
+        name: 'reset_password_failed',
         properties: {
-          email_domain: routeEmail?.split("@")[1] || "",
+          email_domain: routeEmail?.split('@')[1] || '',
           error_type: errorMessage,
           platform: Platform.OS,
         },
       });
       posthog?.track({
-        name: "reset_password_failed",
+        name: 'reset_password_failed',
         properties: {
           $screen_name: 'ResetPassword',
- $current_url: 'ResetPassword',
-          email_domain: routeEmail?.split("@")[1] || "",
+          $current_url: 'ResetPassword',
+          email_domain: routeEmail?.split('@')[1] || '',
           error_type: errorMessage,
           platform: Platform.OS,
         },
       });
-      Alert.alert("Error", errorMessage);
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <CustomSafeAreaView className="flex-1 bg-white" edges={["left", "right"]}>
+    <CustomSafeAreaView className="flex-1 bg-white" edges={['left', 'right']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={{
@@ -251,34 +245,75 @@ export const ResetPasswordScreen: React.FC = () => {
           <Text className="text-3xl font-medium text-black mb-2 text-left">
             Reset your password
           </Text>
-          <View className="mt-5">
+
+          <View className="mt-5 mb-4">
             <View
               className={`relative mb-2 ${
-                touched.password && errors.password
-                  ? "border border-[#ff6b6b] rounded-md"
-                  : ""
+                touched.currentPassword && errors.currentPassword
+                  ? 'border border-[#ff6b6b] rounded-md'
+                  : ''
               }`}
             >
               <TextInput
                 className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
-                placeholder="Create password"
+                placeholder="Current password"
+                value={currentPassword}
+                onChangeText={text => {
+                  setCurrentPassword(text);
+                  if (!touched.currentPassword)
+                    setTouched(t => ({ ...t, currentPassword: true }));
+                }}
+                secureTextEntry={!showCurrentPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowCurrentPassword(v => !v)}
+                className="absolute right-4 bottom-[30%]"
+              >
+                <Image
+                  source={
+                    showCurrentPassword
+                      ? require('../../assets/visibility-on-icon.png')
+                      : require('../../assets/visibility-off-icon.png')
+                  }
+                  className="w-6 h-6 ml-2"
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
+            {touched.currentPassword && errors.currentPassword ? (
+              <Text className="text-[#ff6b6b] text-sm mb-2">
+                {errors.currentPassword}
+              </Text>
+            ) : null}
+          </View>
+          <View className={'mt-5'}>
+            <View
+              className={`relative mb-2 ${
+                touched.password && errors.password
+                  ? 'border border-[#ff6b6b] rounded-md'
+                  : ''
+              }`}
+            >
+              <TextInput
+                className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                placeholder={'New password'}
                 value={password}
-                onChangeText={(text) => {
+                onChangeText={text => {
                   setPassword(text);
                   if (!touched.password)
-                    setTouched((t) => ({ ...t, password: true }));
+                    setTouched(t => ({ ...t, password: true }));
                 }}
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity
-                onPress={() => setShowPassword((v) => !v)}
+                onPress={() => setShowPassword(v => !v)}
                 className="absolute right-4 bottom-[30%]"
               >
                 <Image
                   source={
                     showPassword
-                      ? require("../../assets/visibility-on-icon.png")
-                      : require("../../assets/visibility-off-icon.png")
+                      ? require('../../assets/visibility-on-icon.png')
+                      : require('../../assets/visibility-off-icon.png')
                   }
                   className="w-6 h-6 ml-2"
                   resizeMode="contain"
@@ -295,30 +330,30 @@ export const ResetPasswordScreen: React.FC = () => {
           <View
             className={`relative mb-2 ${
               touched.confirmPassword && errors.confirmPassword
-                ? "border border-[#ff6b6b] rounded-md"
-                : ""
+                ? 'border border-[#ff6b6b] rounded-md'
+                : ''
             }`}
           >
             <TextInput
               className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
               placeholder="Confirm password"
               value={confirmPassword}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setConfirmPassword(text);
                 if (!touched.confirmPassword)
-                  setTouched((t) => ({ ...t, confirmPassword: true }));
+                  setTouched(t => ({ ...t, confirmPassword: true }));
               }}
               secureTextEntry={!showConfirmPassword}
             />
             <TouchableOpacity
-              onPress={() => setShowConfirmPassword((v) => !v)}
+              onPress={() => setShowConfirmPassword(v => !v)}
               className="absolute right-4 bottom-[30%]"
             >
               <Image
                 source={
                   showConfirmPassword
-                    ? require("../../assets/visibility-on-icon.png")
-                    : require("../../assets/visibility-off-icon.png")
+                    ? require('../../assets/visibility-on-icon.png')
+                    : require('../../assets/visibility-off-icon.png')
                 }
                 className="w-6 h-6 ml-2"
                 resizeMode="contain"
@@ -334,7 +369,7 @@ export const ResetPasswordScreen: React.FC = () => {
           <View className="flex-row items-center justify-start mt-2 w-full">
             <View
               className={`w-[20px] h-[20px] rounded-full justify-center items-center mr-2 ${
-                password.length >= 8 ? "bg-primary" : "bg-lightGrey"
+                password.length >= 8 ? 'bg-primary' : 'bg-lightGrey'
               }`}
             >
               <MaterialIcons name="check" size={16} color="white" />

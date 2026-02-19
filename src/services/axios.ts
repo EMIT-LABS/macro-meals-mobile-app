@@ -9,20 +9,23 @@ import useStore from '../store/useStore';
 import Config from 'react-native-config';
 import { clearSession } from './sessionService';
 
-// Define non-authenticated endpoints
+// Define non-authenticated endpoints (no Bearer token attached)
+// /auth/reset-password is NOT here — we send access_token for it (v2). /auth/change-password is here — we do not.
 const nonAuthEndpoints = [
   '/auth/login',
   '/auth/signup',
   '/auth/forgot-password',
-  '/auth/reset-password',
+  '/auth/change-password',
   '/auth/verify-code',
   '/auth/verify-email',
-  '/auth/reset-password',
   '/auth/refresh',
   '/auth/google',
   '/auth/apple',
   '/auth/facebook',
 ];
+
+// 401 on these endpoints means "bad input" (e.g. wrong old password), not expired token — do not refresh/retry
+const skipRefreshOn401Endpoints = ['/auth/reset-password', '/auth/change-password'];
 
 console.log(`\n\n\n\n\n\nAPI_BASE_URL: ${Config.API_BASE_URL}\n\n\n\n\n\n`);
 
@@ -129,6 +132,15 @@ axiosInstance.interceptors.response.use(
       // Don't handle auth errors for login/register endpoints
       if (
         nonAuthEndpoints.some(endpoint =>
+          originalRequest?.url?.includes(endpoint)
+        )
+      ) {
+        return Promise.reject(error);
+      }
+
+      // 401 on reset/change-password means wrong old password — do not refresh/retry (would loop)
+      if (
+        skipRefreshOn401Endpoints.some(endpoint =>
           originalRequest?.url?.includes(endpoint)
         )
       ) {

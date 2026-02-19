@@ -30,6 +30,7 @@ import PaymentScreen from './src/screens/PaymentScreen';
 import './src/globals.css';
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomBottomTabs from './src/navigation/BottomTabNavigation';
+import { ChangePasswordScreen } from './src/screens/ChangePasswordScreen';
 import { ResetPasswordScreen } from './src/screens/ResetPassword';
 import { RootStackParamList } from './src/types/navigation';
 // import AddMeal from "./src/screens/AddMeal";
@@ -47,14 +48,14 @@ import AIRecipeDetailsScreen from './src/screens/AIRecipeDetailsScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import AddMealScreen from './src/screens/AddMealScreen';
 import AdjustTargetsScreen from './src/screens/AdjustTargetsScreen';
-import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import NotificationsPreferences from './src/screens/NotificationsPreferences';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
+import RedeemReferralCodeScreen from './src/screens/RedeemReferralCodeScreen';
 import RequestRestaurantScreen from './src/screens/RequestRestaurantScreen';
+import ResetPasswordRequestScreen from './src/screens/ResetPasswordRequestScreen';
 import ScannedMealBreakdownScreen from './src/screens/ScannedMealBreakdown';
 import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
-import RedeemReferralCodeScreen from './src/screens/RedeemReferralCodeScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -149,6 +150,7 @@ const AuthNavigator = ({
         component={ForgotPasswordScreen}
       />
       <Stack.Screen name="VerificationScreen" component={VerificationScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="SignupScreen" component={SignupScreen} />
       <Stack.Screen
@@ -242,7 +244,10 @@ const DashboardNavigator = () => {
       />
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen
+        name="ResetPasswordRequest"
+        component={ResetPasswordRequestScreen}
+      />
       <Stack.Screen
         name="ForgotPasswordScreen"
         component={ForgotPasswordScreen}
@@ -262,6 +267,7 @@ const DashboardNavigator = () => {
         component={AddSearchedLoggedMealScreen}
       />
       <Stack.Screen name="VerificationScreen" component={VerificationScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="GoalsSetupFlow" component={GoalsSetupFlow} />
       <Stack.Screen

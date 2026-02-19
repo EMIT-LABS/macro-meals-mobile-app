@@ -398,7 +398,7 @@ export const SettingsScreen: React.FC = () => {
               <Text className="text-xl text-gray-400 ml-1">›</Text>
             }
             onPress={() => {
-              navigation.navigate('ChangePassword');
+              navigation.navigate('ResetPasswordRequest');
             }}
           />
         </ProfileSection>
