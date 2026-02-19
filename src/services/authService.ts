@@ -217,16 +217,15 @@ export const authService = {
     },
     
 
-    resetPassword: async (resetPasswordData: { email: string, session_token: string, password: string }) => {
+    resetPassword: async (resetPasswordData: { email: string, session_token: string, otp?: string, password: string }) => {
         try {
-            console.log('AuthService: Sending reset password request with data:', {
+            console.log('AuthService: Sending reset password request (password length):', resetPasswordData.password?.length);
+
+            const response = await axiosInstance.patch('/auth/change-password', {
                 email: resetPasswordData.email,
-                session_token: resetPasswordData.session_token ? `${resetPasswordData.session_token.substring(0, 10)}...` : 'undefined',
-                password: resetPasswordData.password ? `${resetPasswordData.password.substring(0, 3)}...` : 'undefined',
-                password_length: resetPasswordData.password?.length
+                password: resetPasswordData.password,
+                session_token: resetPasswordData.session_token,
             });
-            
-            const response = await axiosInstance.post('/auth/reset-password', resetPasswordData);
             console.log('AuthService: Reset password response:', response.data);
             return response.data;
         } catch (error) {
@@ -234,7 +233,22 @@ export const authService = {
             throw error;
         }
     },
-    
+
+    changePassword: async (params: {
+        email: string;
+        session_token: string;
+        old_password: string;
+        new_password: string;
+    }) => {
+        try {
+            const response = await axiosInstance.post('/auth/reset-password', params);
+            return response.data;
+        } catch (error) {
+            console.error('Change password error:', error);
+            throw error;
+        }
+    },
+
     getCurrentToken: async () => {
         try {
             return await AsyncStorage.getItem('my_token');

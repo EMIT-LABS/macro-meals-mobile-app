@@ -47,6 +47,7 @@ The app automatically detects the environment and loads the appropriate configur
 - `API_BASE_URL`: Environment-specific API endpoint
 - `APP_NAME`: Environment-specific app name
 - `DEBUG_MODE`: Debug logging enabled/disabled
+- `API_PASSWORD_BASE_URL`: (Optional) Alternate base URL used only for `/auth/reset-password` and `/auth/change-password`. When set (e.g. `https://api-dev.macromealsapp.com/api/v2`), those two endpoints use this URL instead of `API_BASE_URL` so you can point password flows at a different API version without changing the rest of the app.
 
 ## Building for Different Environments
 
