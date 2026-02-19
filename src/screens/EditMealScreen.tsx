@@ -52,6 +52,7 @@ import { SERVING_UNITS } from 'constants/serving_units';
 import { FavouriteIcon } from 'src/components/FavouriteIcon';
 import { FavoriteMeal } from '../services/favoritesService';
 import { usePosthog } from '@macro-meals/posthog_service/src';
+import { set } from 'lodash';
 
 // const SERVING_UNITS = [
 //     'g',
@@ -137,13 +138,15 @@ export const EditMealScreen: React.FC = () => {
       setIsReadOnly(analyzedData.read_only || false);
       setMealDescription(analyzedData.description || '');
       setLoggingMode(analyzedData.logging_mode || 'manual');
+      setTime(new Date(analyzedData.meal_time || new Date()));
+
       if (analyzedData.photo_url) {
         setMealImage(analyzedData.photo_url);
         console.log('🔄 ExpoImage started loading FOR Meal:', mealImage);
       }
-      if (analyzedData.meal_time) {
-        setTime(new Date(analyzedData.meal_time));
-      }
+      // if (analyzedData.meal_time) {
+      //   setTime(new Date(analyzedData.meal_time));
+      // }
     }
   }, [analyzedData]);
 
@@ -536,17 +539,18 @@ export const EditMealScreen: React.FC = () => {
   const getMealTypeByTime = (date: Date): string => {
     const hour = date.getHours();
     if (hour >= 5 && hour < 12) return 'breakfast';
-    if (hour >= 12 && hour < 18) return 'lunch';
-    if (hour >= 18 && hour <= 23) return 'dinner';
+    if (hour >= 12 && hour < 17) return 'lunch';
+    if (hour >= 17 && hour <= 23) return 'dinner';
     return 'other';
   };
 
   // Set initial meal type based on current time
   useEffect(() => {
-    const initialMealType = getMealTypeByTime(new Date());
+    const initialMealType = getMealTypeByTime(time);
     setTempMealType(initialMealType);
     setSelectedMealType(initialMealType);
-  }, []);
+    setMealType(initialMealType);
+  }, [time]);
 
   const [selectedMealType, setSelectedMealType] = useState(tempMealType);
 
@@ -640,6 +644,7 @@ export const EditMealScreen: React.FC = () => {
                   onValueChange={setSelectedMealType}
                   style={{ width: '100%', color: 'black' }}
                   itemStyle={{ fontSize: 16, color: 'black' }}
+                  enabled={false}
                 >
                   <Picker.Item label="Breakfast" value="breakfast" />
                   <Picker.Item label="Lunch" value="lunch" />
@@ -656,10 +661,12 @@ export const EditMealScreen: React.FC = () => {
                     setShowMealTypeModal(true);
                   }}
                   activeOpacity={0.8}
+                  disabled={true}
+                  
                 >
                   <Text className="text-base text-[#222]">
-                    {selectedMealType.charAt(0).toUpperCase() +
-                      selectedMealType.slice(1)}
+                    {mealType.charAt(0).toUpperCase() +
+                      mealType.slice(1)}
                   </Text>
                 </TouchableOpacity>
               </View>
