@@ -12,6 +12,7 @@ Builds and deployments use **Fastlane** on GitHub Actions (no EAS).
 
 - **ios-deploy.yml** – Build with Xcode on `macos-latest`, upload to TestFlight via Fastlane.
 - **android-deploy.yml** – Build with Gradle on `ubuntu-latest`, then Fastlane: staging → Firebase App Distribution, production → Play Store.
+- **branch-flow-check.yml** – Runs on PRs to `main`; fails unless the source branch is `staging` (blocks dev → main).
 
 ## GitHub secrets
 
@@ -39,10 +40,32 @@ Then **either** App Store Connect API key (recommended for CI):
 
 - **GOOGLE_PLAY_SERVICE_ACCOUNT_JSON** – Full JSON of the Google Play Console service account key (for `supply`).
 
+## Branches and deployment
+
+| Branch    | Deploy on push | How it gets updated |
+|-----------|----------------|---------------------|
+| **dev**   | None           | Default working branch. **All PRs go here** (feature branches → dev). No direct deploy. |
+| **staging** | iOS + Android **staging** (TestFlight staging, Firebase App Dist.) | **Only** by merging **dev → staging** via PR. Merge triggers staging deploy. |
+| **main**  | iOS + Android **production** (TestFlight prod, Play Store) | **Only** by merging **staging → main** via PR. Never merge dev → main; production must go through staging. |
+
+**Flow:** Feature PRs → **dev**. When ready for staging build: PR **dev → staging** (merge = staging deploy). When ready for production: PR **staging → main** (merge = production deploy).
+
+A workflow (**branch-flow-check.yml**) blocks PRs into **main** unless the source branch is **staging**, so dev → main cannot be merged.
+
+### Branch protection (GitHub)
+
+1. Repo **Settings** → **Branches** (or **Code and automation** → **Branches**).
+2. **main**: Add rule, branch name `main`. Enable **Require a pull request before merging** (and require status checks to pass — include “Require staging → main” so PRs from other branches cannot merge). Disable force push and deletion.
+3. **staging**: Add rule, branch name `staging`. Same: require PR, require status checks if you use any, no force push, no deletion.
+
+Set **dev** as the **default branch** (Settings → General → Default branch) so new PRs target dev by default.
+
 ## Triggering
 
-- **Push to `main`** – iOS and Android **production** (TestFlight + Play Store).
-- **Manual (workflow_dispatch)** – Choose **staging** or **production** for that run.
+- **Push to `main`** – iOS and Android **production** (TestFlight prod + Play Store).
+- **Push to `staging`** – iOS and Android **staging** (TestFlight staging + Firebase App Distribution).
+- **Push to `dev`** – No deploy.
+- **Manual (workflow_dispatch)** – Run from any branch, choose **staging** or **production**.
 
 ## Fastlane layout
 
