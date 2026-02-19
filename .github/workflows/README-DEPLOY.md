@@ -20,11 +20,13 @@ Builds and deployments use **Fastlane** on GitHub Actions (no EAS).
 - **APPLE_TEAM_ID** – Apple Developer team ID (e.g. `B7JY43F6R4`).
 - **APPLE_APP_ID** – App Store Connect app ID (numeric, e.g. `6747797496`).
 
-Then **either** App Store Connect API key (recommended for CI):
+Then **either** App Store Connect API key (recommended for CI). Use **one** of these naming sets in repo secrets:
 
-- **APP_STORE_CONNECT_API_KEY_ID** – API key ID.
-- **APP_STORE_CONNECT_ISSUER_ID** – Issuer ID.
-- **APP_STORE_CONNECT_API_KEY** – Full contents of the `.p8` key file.
+- **APPSTORE_KEY_ID** – API key ID (or legacy **APP_STORE_CONNECT_API_KEY_ID**).
+- **APPSTORE_ISSUER_ID** – Issuer ID (or legacy **APP_STORE_CONNECT_ISSUER_ID**).
+- **APPSTORE_PRIVATE_KEY** – Full contents of the `.p8` key file (or legacy **APP_STORE_CONNECT_API_KEY**).
+
+The workflow writes the key to a temp file so multiline `.p8` content is handled correctly.
 
 **Or** app-specific password:
 
@@ -39,10 +41,41 @@ Then **either** App Store Connect API key (recommended for CI):
 
 - **GOOGLE_PLAY_SERVICE_ACCOUNT_JSON** – Full JSON of the Google Play Console service account key (for `supply`).
 
+## Branches and deployment
+
+| Branch    | Deploy on push        | Use |
+|-----------|------------------------|-----|
+| **dev**   | None                   | Default working branch; push feature branches here and merge to staging via PR. |
+| **staging** | iOS + Android **staging** (TestFlight staging app, Firebase App Distribution) | Staging releases; update only by merging from `dev` (or a PR). |
+| **main**  | iOS + Android **production** (TestFlight prod app, Play Store) | Production releases; update only by merging from `staging` or `dev` (or a PR). |
+
+Flow: work on **dev** → open PR **dev → staging** for staging build → open PR **staging → main** (or **dev → main**) for production.
+
+### Enforcing “no direct push” to main and staging (GitHub)
+
+To block direct pushes to `main` and `staging` so all changes go via **dev** and pull requests:
+
+1. In the repo go to **Settings → Code and automation → Branches**.
+2. **Add branch protection rule** for **main**:
+   - Branch name pattern: `main`
+   - Enable **Require a pull request before merging** (require 1 approval if you want).
+   - Enable **Do not allow bypassing the above settings** (and add no bypass list, or restrict bypass to admins only if you prefer).
+   - Leave **Allow force pushes** and **Allow deletions** disabled.
+   - Save.  
+   Result: no one can push directly to `main`; updates must come from a PR (e.g. from `staging` or `dev`).
+3. **Add branch protection rule** for **staging**:
+   - Branch name pattern: `staging`
+   - Same as above: require a pull request, no force push, no deletions.  
+   Result: no direct push to `staging`; updates only via PR (typically from `dev`).
+
+Optional: under **Rules applied to everyone including administrators**, enable **Do not allow bypassing** so even admins must use PRs. If you allow bypass for admins, they can still push directly in emergencies.
+
 ## Triggering
 
-- **Push to `main`** – iOS and Android **production** (TestFlight + Play Store).
-- **Manual (workflow_dispatch)** – Choose **staging** or **production** for that run.
+- **Push to `main`** – iOS and Android **production** (TestFlight prod app + Play Store).
+- **Push to `staging`** – iOS and Android **staging** (TestFlight staging app + Firebase App Distribution).
+- **Push to `dev`** – No deploy (local/feature work only).
+- **Manual (workflow_dispatch)** – Run from any branch and choose **staging** or **production** for that run.
 
 ## Fastlane layout
 

@@ -31,6 +31,33 @@ After creating links in ChottuLink, add them to social bios and campaigns. Insta
 
 ## Testing
 
-- **iOS**: Use a ChottuLink short URL in Safari (or Notes); install the app if needed; open the link → app should open and PostHog should receive `first_open_attribution` with UTM.
-- **Android**: Same with a ChottuLink short URL in Chrome.
-- In PostHog, filter by event `first_open_attribution` or by user properties `utm_source`, `utm_medium`, `utm_campaign`.
+### 1. Create a test link
+
+- In the [ChottuLink Dashboard](https://chottulink.com), create a Dynamic Link for your domain `macromealsapp.chottu.link`.
+- Set **destination** to your app (or a fallback like `https://macromealsapp.com`).
+- Add UTM params for testing, e.g. `utm_source=test&utm_medium=manual&utm_campaign=testing`.
+- Copy the short URL (e.g. `https://macromealsapp.chottu.link/abc123`).
+
+### 2. Test on device
+
+- **App already installed**
+  - **iOS**: Paste the link in Safari or Notes and tap it. The app should open; PostHog should get `first_open_attribution` (or a link-open event) with UTM.
+  - **Android**: Paste the link in Chrome (or send via Slack/email) and tap it. Same as above.
+- **Deferred deep link (install from link)**
+  - Uninstall the app. Open the ChottuLink URL in the browser → you should go to App Store / Play Store (if configured) or fallback. Install, open the app. On first launch the SDK should resolve the link and send attribution to PostHog with `install_is_deferred: true`.
+
+### 3. Verify in PostHog
+
+- **Events**: Filter by `first_open_attribution`.
+- **User properties**: Check `utm_source`, `utm_medium`, `utm_campaign`, `install_attribution_link`, `install_is_deferred`.
+- With `debug={__DEV__}` in `ChottuLinkProvider`, check Metro/console logs when opening a link.
+
+### 4. Links from Twitter / Instagram / TikTok
+
+You don’t use “Twitter’s” link directly. You use **your ChottuLink short URLs** everywhere:
+
+- Create one (or more) links in ChottuLink with UTM, e.g. `utm_source=x&utm_medium=social&utm_campaign=post`.
+- Put that ChottuLink URL in tweets, Instagram bio, TikTok bio, ads, etc.
+- When someone taps it, they hit ChottuLink → your app opens (or store/fallback), and attribution is sent to PostHog with that `utm_source` (e.g. `x`, `instagram`, `tiktok`).
+
+Use **one link per channel** (or one link with different `utm_source` per placement) so PostHog can tell traffic apart.

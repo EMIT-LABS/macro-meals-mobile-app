@@ -1,4 +1,6 @@
 # iOS: Build and deploy to TestFlight via Fastlane (staging or production)
+# - Push to main → TestFlight production app
+# - Push to staging → TestFlight staging app
 # Runs on macos-latest; uses Xcode + Fastlane. No EAS.
 # Secrets: APPLE_TEAM_ID, APPLE_APP_ID (asc), and either App Store Connect API key or app-specific password.
 
@@ -6,7 +8,7 @@ name: iOS Deploy to TestFlight (Fastlane)
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
     inputs:
       environment:
@@ -37,6 +39,8 @@ jobs:
             echo "profile=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "profile=production" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+            echo "profile=staging" >> $GITHUB_OUTPUT
           else
             echo "profile=staging" >> $GITHUB_OUTPUT
           fi
@@ -63,15 +67,26 @@ jobs:
         working-directory: ios
         run: pod install
 
+      # Write App Store Connect .p8 key to file (multiline secrets work reliably this way)
+      - name: Create App Store Connect API key file
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          KEY_CONTENT="${APPSTORE_PRIVATE_KEY:-$APP_STORE_CONNECT_API_KEY}"
+          echo "$KEY_CONTENT" > "$RUNNER_TEMP/appstore_private_key.p8"
+          chmod 600 "$RUNNER_TEMP/appstore_private_key.p8"
+          echo "key_path=$RUNNER_TEMP/appstore_private_key.p8" >> $GITHUB_ENV
+
       - name: Build and upload to TestFlight
         working-directory: ios
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_ID: ${{ secrets.APPLE_APP_ID }}
-          # App Store Connect API key (preferred in CI); or set FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD
-          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          # App Store Connect API key (from repo secrets APPSTORE_* or legacy APP_STORE_CONNECT_*)
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APPSTORE_KEY_ID || secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID || secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY_FILEPATH: ${{ env.key_path }}
         run: |
           PROFILE="${{ steps.set-profile.outputs.profile }}"
           bundle exec fastlane ios "$PROFILE"
