@@ -14,15 +14,23 @@ const nonAuthEndpoints = [
   '/auth/login',
   '/auth/signup',
   '/auth/forgot-password',
-  '/auth/reset-password',
+  '/auth/change-password',
   '/auth/verify-code',
   '/auth/verify-email',
-  '/auth/reset-password',
   '/auth/refresh',
   '/auth/google',
   '/auth/apple',
   '/auth/facebook',
 ];
+
+// Optional alternate base URL for password endpoints only (e.g. api/v2).
+// Set API_PASSWORD_BASE_URL in env to use a different host/path for /auth/reset-password and /auth/change-password.
+const PASSWORD_ENDPOINTS_BASE_URL =
+  (Config as { API_PASSWORD_BASE_URL?: string }).API_PASSWORD_BASE_URL;
+const PASSWORD_ENDPOINT_PATHS = ['/auth/reset-password', '/auth/change-password'];
+
+const isPasswordEndpoint = (url?: string) =>
+  url && PASSWORD_ENDPOINT_PATHS.some(path => url.includes(path));
 
 console.log(`\n\n\n\n\n\nAPI_BASE_URL: ${Config.API_BASE_URL}\n\n\n\n\n\n`);
 
@@ -39,6 +47,11 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
+      // Use alternate base URL for password endpoints when configured
+      if (PASSWORD_ENDPOINTS_BASE_URL && isPasswordEndpoint(config.url)) {
+        config.baseURL = PASSWORD_ENDPOINTS_BASE_URL;
+      }
+
       const token = await AsyncStorage.getItem('my_token');
 
       // Only add token if endpoint requires auth and we have a token

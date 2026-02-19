@@ -26,6 +26,8 @@ type ResetPasswordScreenNavigationProp = StackNavigationProp<
   'ResetPassword'
 >;
 
+const isFromSettings = (source: string | undefined) => source === 'settings';
+
 export const ResetPasswordScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,12 +38,20 @@ export const ResetPasswordScreen: React.FC = () => {
     otp: routeOtp,
     source,
   } = route.params;
+  const fromSettings = isFromSettings(source);
+  const [oldPassword, setOldPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({ password: '', confirmPassword: '' });
+  const [errors, setErrors] = useState({
+    oldPassword: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [isValid, setIsValid] = useState(false);
   const [touched, setTouched] = useState({
+    oldPassword: false,
     password: false,
     confirmPassword: false,
   });
@@ -67,7 +77,13 @@ export const ResetPasswordScreen: React.FC = () => {
   // Validation logic
   React.useEffect(() => {
     let valid = true;
-    const newErrors = { password: '', confirmPassword: '' };
+    const newErrors = { oldPassword: '', password: '', confirmPassword: '' };
+    if (fromSettings) {
+      if (!oldPassword) {
+        newErrors.oldPassword = 'Current password is required';
+        valid = false;
+      }
+    }
     if (!password) {
       newErrors.password = 'Password is required';
       valid = false;
@@ -84,7 +100,7 @@ export const ResetPasswordScreen: React.FC = () => {
     }
     setErrors(newErrors);
     setIsValid(valid);
-  }, [password, confirmPassword]);
+  }, [fromSettings, oldPassword, password, confirmPassword]);
 
   const handleResetPassword = async () => {
     mixpanel?.track({
@@ -104,28 +120,24 @@ export const ResetPasswordScreen: React.FC = () => {
       },
     });
     setIsLoading(true);
-    const resetPasswordData = {
-      email: routeEmail,
-      otp: routeOtp,
-      session_token: routeSessionToken,
-      password: password,
-    };
-
-    console.log('Sending reset password data:', {
-      email: resetPasswordData.email,
-      otp: resetPasswordData.otp
-        ? `${resetPasswordData.otp.substring(0, 2)}****`
-        : 'undefined',
-      session_token: resetPasswordData.session_token
-        ? `${resetPasswordData.session_token.substring(0, 10)}...`
-        : 'undefined',
-      password: resetPasswordData.password
-        ? `${resetPasswordData.password.substring(0, 3)}...`
-        : 'undefined',
-    });
 
     try {
-      await authService.resetPassword(resetPasswordData);
+      if (fromSettings) {
+        await authService.changePassword({
+          email: routeEmail,
+          session_token: routeSessionToken,
+          old_password: oldPassword,
+          new_password: password,
+        });
+      } else {
+        const resetPasswordData = {
+          email: routeEmail,
+          otp: routeOtp,
+          session_token: routeSessionToken,
+          password,
+        };
+        await authService.resetPassword(resetPasswordData);
+      }
       mixpanel?.track({
         name: 'reset_password_successful',
         properties: {
@@ -172,7 +184,9 @@ export const ResetPasswordScreen: React.FC = () => {
       }
 
       // Extract error message from Axios error response
-      let errorMessage = 'Failed to reset password. Please try again.';
+      let errorMessage = fromSettings
+        ? 'Failed to change password. Please try again.'
+        : 'Failed to reset password. Please try again.';
 
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as any;
@@ -250,126 +264,213 @@ export const ResetPasswordScreen: React.FC = () => {
           <Text className="text-3xl font-medium text-black mb-2 text-left">
             Reset your password
           </Text>
-          <View className="mt-5">
-            <View
-              className={`relative mb-2 ${
-                touched.password && errors.password
-                  ? 'border border-[#ff6b6b] rounded-md'
-                  : ''
-              }`}
-            >
-              <TextInput
-                className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
-                placeholder="Old password"
-                value={password}
-                onChangeText={text => {
-                  setPassword(text);
-                  if (!touched.password)
-                    setTouched(t => ({ ...t, password: true }));
-                }}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(v => !v)}
-                className="absolute right-4 bottom-[30%]"
+
+          {/* From settings: Old password, New password, Confirm. From forgot: Password, Confirm only. */}
+          {fromSettings ? (
+            <>
+              <View className="mt-5">
+                <View
+                  className={`relative mb-2 ${
+                    touched.oldPassword && errors.oldPassword
+                      ? 'border border-[#ff6b6b] rounded-md'
+                      : ''
+                  }`}
+                >
+                  <TextInput
+                    className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                    placeholder="Old password"
+                    value={oldPassword}
+                    onChangeText={text => {
+                      setOldPassword(text);
+                      if (!touched.oldPassword)
+                        setTouched(t => ({ ...t, oldPassword: true }));
+                    }}
+                    secureTextEntry={!showOldPassword}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowOldPassword(v => !v)}
+                    className="absolute right-4 bottom-[30%]"
+                  >
+                    <Image
+                      source={
+                        showOldPassword
+                          ? require('../../assets/visibility-on-icon.png')
+                          : require('../../assets/visibility-off-icon.png')
+                      }
+                      className="w-6 h-6 ml-2"
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                </View>
+                {touched.oldPassword && errors.oldPassword ? (
+                  <Text className="text-[#ff6b6b] text-sm mb-3">
+                    {errors.oldPassword}
+                  </Text>
+                ) : null}
+              </View>
+              <View className="mt-5">
+                <View
+                  className={`relative mb-2 ${
+                    touched.password && errors.password
+                      ? 'border border-[#ff6b6b] rounded-md'
+                      : ''
+                  }`}
+                >
+                  <TextInput
+                    className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                    placeholder="New password"
+                    value={password}
+                    onChangeText={text => {
+                      setPassword(text);
+                      if (!touched.password)
+                        setTouched(t => ({ ...t, password: true }));
+                    }}
+                    secureTextEntry={!showPassword}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(v => !v)}
+                    className="absolute right-4 bottom-[30%]"
+                  >
+                    <Image
+                      source={
+                        showPassword
+                          ? require('../../assets/visibility-on-icon.png')
+                          : require('../../assets/visibility-off-icon.png')
+                      }
+                      className="w-6 h-6 ml-2"
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                </View>
+                {touched.password && errors.password ? (
+                  <Text className="text-[#ff6b6b] text-sm mb-3">
+                    {errors.password}
+                  </Text>
+                ) : null}
+              </View>
+              <View className="mb-4" />
+              <View
+                className={`relative mb-2 ${
+                  touched.confirmPassword && errors.confirmPassword
+                    ? 'border border-[#ff6b6b] rounded-md'
+                    : ''
+                }`}
               >
-                <Image
-                  source={
-                    showPassword
-                      ? require('../../assets/visibility-on-icon.png')
-                      : require('../../assets/visibility-off-icon.png')
-                  }
-                  className="w-6 h-6 ml-2"
-                  resizeMode="contain"
+                <TextInput
+                  className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChangeText={text => {
+                    setConfirmPassword(text);
+                    if (!touched.confirmPassword)
+                      setTouched(t => ({ ...t, confirmPassword: true }));
+                  }}
+                  secureTextEntry={!showConfirmPassword}
                 />
-              </TouchableOpacity>
-            </View>
-            {touched.password && errors.password ? (
-              <Text className="text-[#ff6b6b] text-sm mb-3">
-                {errors.password}
-              </Text>
-            ) : null}
-          </View>
-          <View className="" />
-          <View className="mt-5">
-            <View
-              className={`relative mb-2 ${
-                touched.password && errors.password
-                  ? 'border border-[#ff6b6b] rounded-md'
-                  : ''
-              }`}
-            >
-              <TextInput
-                className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
-                placeholder="New password"
-                value={password}
-                onChangeText={text => {
-                  setPassword(text);
-                  if (!touched.password)
-                    setTouched(t => ({ ...t, password: true }));
-                }}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(v => !v)}
-                className="absolute right-4 bottom-[30%]"
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(v => !v)}
+                  className="absolute right-4 bottom-[30%]"
+                >
+                  <Image
+                    source={
+                      showConfirmPassword
+                        ? require('../../assets/visibility-on-icon.png')
+                        : require('../../assets/visibility-off-icon.png')
+                    }
+                    className="w-6 h-6 ml-2"
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </View>
+              {touched.confirmPassword && errors.confirmPassword ? (
+                <Text className="text-[#ff6b6b] text-sm mb-3">
+                  {errors.confirmPassword}
+                </Text>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <View className="mt-5">
+                <View
+                  className={`relative mb-2 ${
+                    touched.password && errors.password
+                      ? 'border border-[#ff6b6b] rounded-md'
+                      : ''
+                  }`}
+                >
+                  <TextInput
+                    className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                    placeholder="Create password"
+                    value={password}
+                    onChangeText={text => {
+                      setPassword(text);
+                      if (!touched.password)
+                        setTouched(t => ({ ...t, password: true }));
+                    }}
+                    secureTextEntry={!showPassword}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(v => !v)}
+                    className="absolute right-4 bottom-[30%]"
+                  >
+                    <Image
+                      source={
+                        showPassword
+                          ? require('../../assets/visibility-on-icon.png')
+                          : require('../../assets/visibility-off-icon.png')
+                      }
+                      className="w-6 h-6 ml-2"
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                </View>
+                {touched.password && errors.password ? (
+                  <Text className="text-[#ff6b6b] text-sm mb-3">
+                    {errors.password}
+                  </Text>
+                ) : null}
+              </View>
+              <View className="mb-4" />
+              <View
+                className={`relative mb-2 ${
+                  touched.confirmPassword && errors.confirmPassword
+                    ? 'border border-[#ff6b6b] rounded-md'
+                    : ''
+                }`}
               >
-                <Image
-                  source={
-                    showPassword
-                      ? require('../../assets/visibility-on-icon.png')
-                      : require('../../assets/visibility-off-icon.png')
-                  }
-                  className="w-6 h-6 ml-2"
-                  resizeMode="contain"
+                <TextInput
+                  className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChangeText={text => {
+                    setConfirmPassword(text);
+                    if (!touched.confirmPassword)
+                      setTouched(t => ({ ...t, confirmPassword: true }));
+                  }}
+                  secureTextEntry={!showConfirmPassword}
                 />
-              </TouchableOpacity>
-            </View>
-            {touched.password && errors.password ? (
-              <Text className="text-[#ff6b6b] text-sm mb-3">
-                {errors.password}
-              </Text>
-            ) : null}
-          </View>
-          <View className="mb-4" />
-          <View
-            className={`relative mb-2 ${
-              touched.confirmPassword && errors.confirmPassword
-                ? 'border border-[#ff6b6b] rounded-md'
-                : ''
-            }`}
-          >
-            <TextInput
-              className="border border-lightGrey text-base rounded-md pl-4 font-normal text-black h-[68px]"
-              placeholder="Confirm new password"
-              value={confirmPassword}
-              onChangeText={text => {
-                setConfirmPassword(text);
-                if (!touched.confirmPassword)
-                  setTouched(t => ({ ...t, confirmPassword: true }));
-              }}
-              secureTextEntry={!showConfirmPassword}
-            />
-            <TouchableOpacity
-              onPress={() => setShowConfirmPassword(v => !v)}
-              className="absolute right-4 bottom-[30%]"
-            >
-              <Image
-                source={
-                  showConfirmPassword
-                    ? require('../../assets/visibility-on-icon.png')
-                    : require('../../assets/visibility-off-icon.png')
-                }
-                className="w-6 h-6 ml-2"
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
-          {touched.confirmPassword && errors.confirmPassword ? (
-            <Text className="text-[#ff6b6b] text-sm mb-3">
-              {errors.confirmPassword}
-            </Text>
-          ) : null}
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(v => !v)}
+                  className="absolute right-4 bottom-[30%]"
+                >
+                  <Image
+                    source={
+                      showConfirmPassword
+                        ? require('../../assets/visibility-on-icon.png')
+                        : require('../../assets/visibility-off-icon.png')
+                    }
+                    className="w-6 h-6 ml-2"
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </View>
+              {touched.confirmPassword && errors.confirmPassword ? (
+                <Text className="text-[#ff6b6b] text-sm mb-3">
+                  {errors.confirmPassword}
+                </Text>
+              ) : null}
+            </>
+          )}
           {/* Password hint with checkmark */}
           <View className="flex-row items-center justify-start mt-2 w-full">
             <View
