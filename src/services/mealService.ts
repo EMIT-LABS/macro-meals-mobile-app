@@ -481,21 +481,19 @@ export const mealService = {
   },
 
   /**
-   * Fetches map pins for restaurants with meals
-   * @param latitude - The latitude coordinate
-   * @param longitude - The longitude coordinate
-   * @param query - Optional search query term
-   * @param cuisines - Optional array of cuisine types to filter by
-   * @param matchingMode - Optional matching mode ('restaurant' or 'meal')
-   * @returns Promise with map pins data
-   * @throws Error if the request fails
+   * Fetches nearby restaurants as map pins with top meal recommendations.
+   * GET /meals/map-pins
+   * @param latitude - Latitude (required)
+   * @param longitude - Longitude (required)
+   * @param options - Optional: radius_km (default 5), limit (default 10), query, cuisines, matching_mode
    */
   getMapPins: async (
     latitude: number,
     longitude: number,
-    query?: string,
+    query?: string | null,
     cuisines?: string[],
-    matchingMode?: 'restaurant' | 'meal'
+    matchingMode?: string,
+    options?: { radius_km?: number; limit?: number }
   ): Promise<any> => {
     const token = useStore.getState().token;
 
@@ -504,9 +502,11 @@ export const mealService = {
     }
 
     try {
-      let url = `/meals/map-pins?latitude=${latitude}&longitude=${longitude}`;
-      if (query && query.trim().length > 0) {
-        url += `&query=${encodeURIComponent(query.trim())}`;
+      const radius_km = options?.radius_km ?? 5;
+      const limit = options?.limit ?? 10;
+      let url = `/meals/map-pins?latitude=${latitude}&longitude=${longitude}&radius_km=${radius_km}&limit=${limit}`;
+      if (query != null && String(query).trim().length > 0) {
+        url += `&query=${encodeURIComponent(String(query).trim())}`;
       }
       if (cuisines && cuisines.length > 0) {
         url += `&cuisine_types=${encodeURIComponent(cuisines.join(','))}`;
@@ -514,6 +514,7 @@ export const mealService = {
       if (matchingMode) {
         url += `&matching_mode=${encodeURIComponent(matchingMode)}`;
       }
+      console.log('[mealService.getMapPins] request:', url);
       const response = await axiosInstance.get(url);
       return response.data;
     } catch (error) {
