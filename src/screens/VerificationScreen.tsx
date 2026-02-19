@@ -1,32 +1,32 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from "react-native";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { authService } from "../services/authService";
-import CustomSafeAreaView from "../components/CustomSafeAreaView";
-import CustomTouchableOpacityButton from "../components/CustomTouchableOpacityButton";
-import BackButton from "../components/BackButton";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../types/navigation";
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   CodeField,
   Cursor,
   useBlurOnFulfill,
   useClearByFocusCell,
-} from "react-native-confirmation-code-field";
-import { useMixpanel } from "@macro-meals/mixpanel/src";
-import { usePosthog } from "@macro-meals/posthog_service/src";
+} from 'react-native-confirmation-code-field';
+import BackButton from '../components/BackButton';
+import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
+import { authService } from '../services/authService';
+import { RootStackParamList } from '../types/navigation';
 
 type VerificationScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "VerificationScreen"
+  'VerificationScreen'
 >;
 
 export const VerificationScreen: React.FC = () => {
@@ -34,11 +34,11 @@ export const VerificationScreen: React.FC = () => {
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const navigation = useNavigation<VerificationScreenNavigationProp>();
-  const route = useRoute<RouteProp<RootStackParamList, "VerificationScreen">>();
+  const route = useRoute<RouteProp<RootStackParamList, 'VerificationScreen'>>();
   const { email: routeEmail, source } = route.params;
 
   const mixpanel = useMixpanel();
-    const posthog = usePosthog();
+  const posthog = usePosthog();
 
   const eventsFired = useRef(false);
 
@@ -46,14 +46,14 @@ export const VerificationScreen: React.FC = () => {
     if (mixpanel && !eventsFired.current) {
       eventsFired.current = true;
       mixpanel.track({
-        name: "password_verification_screen_viewed",
+        name: 'password_verification_screen_viewed',
         properties: { platform: Platform.OS },
       });
     }
     if (posthog && !eventsFired.current) {
       eventsFired.current = true;
       posthog.track({
-        name: "password_verification_screen_viewed",
+        name: 'password_verification_screen_viewed',
         properties: { platform: Platform.OS },
       });
     }
@@ -64,9 +64,9 @@ export const VerificationScreen: React.FC = () => {
   };
 
   const CELL_COUNT = 6;
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
     setValue,
@@ -76,7 +76,7 @@ export const VerificationScreen: React.FC = () => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
       timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
+        setCountdown(prev => prev - 1);
       }, 1000);
     } else {
       setCanResend(true);
@@ -91,22 +91,22 @@ export const VerificationScreen: React.FC = () => {
   const handleVerifyCode = async () => {
     if (!routeEmail) {
       Alert.alert(
-        "Error",
-        "Please enter the email associated with your account"
+        'Error',
+        'Please enter the email associated with your account'
       );
       return;
     }
     mixpanel?.track({
-      name: "password_verification_submitted",
+      name: 'password_verification_submitted',
       properties: {
-        email_domain: routeEmail.split("@")[1] || "",
+        email_domain: routeEmail.split('@')[1] || '',
         platform: Platform.OS,
       },
     });
     posthog?.track({
-      name: "password_verification_submitted",
+      name: 'password_verification_submitted',
       properties: {
-        email_domain: routeEmail.split("@")[1] || "",
+        email_domain: routeEmail.split('@')[1] || '',
         platform: Platform.OS,
       },
     });
@@ -116,58 +116,69 @@ export const VerificationScreen: React.FC = () => {
       email: routeEmail,
       otp: value,
     };
-    console.log("The verification params are", value);
+    console.log('The verification params are', value);
     try {
       const data = await authService.verifyCode(params);
-      console.log("data", data);
+      console.log('data', data);
       const session_token = data.session_token;
-      console.log("The session token is", session_token);
+      console.log('The session token is', session_token);
       if (session_token) {
         mixpanel?.track({
-          name: "password_verification_successful",
+          name: 'password_verification_successful',
           properties: {
-            email_domain: routeEmail.split("@")[1] || "",
+            email_domain: routeEmail.split('@')[1] || '',
             platform: Platform.OS,
           },
         });
-         posthog?.track({
-          name: "password_verification_successful",
+        posthog?.track({
+          name: 'password_verification_successful',
           properties: {
-            email_domain: routeEmail.split("@")[1] || "",
+            email_domain: routeEmail.split('@')[1] || '',
             platform: Platform.OS,
           },
         });
-        navigation.navigate("ResetPassword", {
-          email: routeEmail,
-          session_token: session_token,
-          otp: value, // Pass the OTP code
-          source,
-        });
+        if (source === 'settings') {
+          navigation.navigate('ResetPassword', {
+            email: routeEmail,
+            session_token: session_token,
+            otp: value,
+            source,
+          });
+        } else {
+          navigation.navigate('ChangePassword', {
+            email: routeEmail,
+            session_token: session_token,
+          });
+        }
       } else {
-        Alert.alert("Error", "Invalid verification code");
+        Alert.alert('Error', 'Invalid verification code');
       }
     } catch (error) {
       mixpanel?.track({
-        name: "password_verification_failed",
+        name: 'password_verification_failed',
         properties: {
-          email_domain: routeEmail.split("@")[1] || "",
-          error_type: error instanceof Error ? error.message : "unknown_error",
+          email_domain: routeEmail.split('@')[1] || '',
+          error_type: error instanceof Error ? error.message : 'unknown_error',
           platform: Platform.OS,
         },
       });
-        posthog?.track({
-        name: "password_verification_failed",
+      posthog?.track({
+        name: 'password_verification_failed',
         properties: {
-          email_domain: routeEmail.split("@")[1] || "",
-          error_type: error instanceof Error ? error.message : "unknown_error",
+          email_domain: routeEmail.split('@')[1] || '',
+          error_type: error instanceof Error ? error.message : 'unknown_error',
           platform: Platform.OS,
         },
       });
-      setError(
-        error instanceof Error
-          ? `${error.message}: Code does not exist. Please try again`
-          : "Code does not exist. Please try again"
-      );
+      const detail = (error as any)?.response?.data?.detail;
+      const message =
+        typeof detail === 'string'
+          ? detail
+          : error instanceof Error
+            ? error.message
+            : 'Code does not exist. Please try again';
+      setError(message);
+      Alert.alert('Error', message);
     } finally {
       setIsLoading(false);
     }
@@ -177,12 +188,12 @@ export const VerificationScreen: React.FC = () => {
     if (!canResend) return;
 
     mixpanel?.track({
-      name: "password_verification_resend_requested",
+      name: 'password_verification_resend_requested',
       properties: { platform: Platform.OS },
     });
 
     posthog?.track({
-      name: "password_verification_resend_requested",
+      name: 'password_verification_resend_requested',
       properties: { platform: Platform.OS },
     });
 
@@ -191,12 +202,16 @@ export const VerificationScreen: React.FC = () => {
       await authService.forgotPassword(routeEmail);
       setCountdown(60);
       setCanResend(false);
-      Alert.alert("Success", "Verification code has been resent");
+      Alert.alert('Success', 'Verification code has been resent');
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error instanceof Error ? error.message : "Failed to resend code"
-      );
+      const detail = (error as any)?.response?.data?.detail;
+      const message =
+        typeof detail === 'string'
+          ? detail
+          : error instanceof Error
+            ? error.message
+            : 'Failed to resend code';
+      Alert.alert('Error', message);
     } finally {
       setIsLoading(false);
     }
@@ -205,11 +220,11 @@ export const VerificationScreen: React.FC = () => {
   return (
     <CustomSafeAreaView
       className="flex-1 items-start justify-start"
-      edges={["left", "right"]}
+      edges={['left', 'right']}
     >
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView className="flex-1 relative align-left p-6">
           <View className="flex-row items-center justify-start mb-3">
@@ -219,7 +234,8 @@ export const VerificationScreen: React.FC = () => {
             Enter verification code
           </Text>
           <Text className="text-[16px] font-normal text-textMediumGrey mb-8 leading-7">
-            We've sent a 6-digit code to {routeEmail}. If you don’t see it in your inbox, please check your spam or junk folder.
+            We've sent a 6-digit code to {routeEmail}. If you don’t see it in
+            your inbox, please check your spam or junk folder.
           </Text>
 
           <View className="w-full mb-5">
@@ -233,15 +249,15 @@ export const VerificationScreen: React.FC = () => {
                 rootStyle={{
                   marginTop: 20,
                   marginBottom: 20,
-                  flexDirection: "row",
-                  justifyContent: "space-between",
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
                 }}
                 keyboardType="number-pad"
                 renderCell={({ index, symbol, isFocused }) => (
                   <Text
                     key={index}
                     className={`w-[50px] h-[56px] border-2 border-gray-300 rounded justify-center items-center text-2xl bg-white text-center ${
-                      isFocused ? "border-[#19a28f]" : ""
+                      isFocused ? 'border-[#19a28f]' : ''
                     }`}
                     style={{ lineHeight: 56 }}
                     onLayout={getCellOnLayoutHandler(index)}
@@ -250,9 +266,9 @@ export const VerificationScreen: React.FC = () => {
                   </Text>
                 )}
               />
-              {error ? (
+              {/* {error ? (
                 <Text className="text-red-500 text-sm">{error}</Text>
-              ) : null}
+              ) : null} */}
             </View>
           </View>
         </ScrollView>
@@ -260,7 +276,7 @@ export const VerificationScreen: React.FC = () => {
           <View className="w-full items-center">
             <CustomTouchableOpacityButton
               className={`h-[56px] w-full items-center justify-center bg-primary rounded-[100px] ${
-                isDisabled() ? "opacity-30" : "opacity-100"
+                isDisabled() ? 'opacity-30' : 'opacity-100'
               }`}
               title="Verify code"
               textClassName="text-white text-[17px] font-semibold"

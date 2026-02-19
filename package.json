@@ -45,6 +45,7 @@
     "@macro-meals/crashlytics": "file:./packages/crashlytics",
     "@macro-meals/maps-service": "file:./packages/maps_service",
     "@macro-meals/mixpanel": "file:./packages/mixpanel",
+    "@macro-meals/chottulink-service": "file:./packages/chottulink_service",
     "@macro-meals/posthog-service": "file:./packages/posthog_service",
     "@macro-meals/push-notifications": "file:./packages/push_notifications",
     "@macro-meals/remote-config-service": "file:./packages/remote_config_service",

@@ -1,4 +1,6 @@
 # Android: Build and deploy via Fastlane (Firebase App Distribution for staging, Play Store for production)
+# - Push to main → Play Store production (or Firebase prod)
+# - Push to staging → Firebase App Distribution (staging)
 # Runs on ubuntu-latest; uses Java, Android SDK, Fastlane. No EAS.
 # Secrets: FIREBASE_ANDROID_APP_ID, FIREBASE_SERVICE_ACCOUNT_JSON; GOOGLE_PLAY_SERVICE_ACCOUNT_JSON (production).
 
@@ -6,7 +8,7 @@ name: Android Deploy (Fastlane)
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
     inputs:
       environment:
@@ -36,8 +38,12 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "profile=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
-          else
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "profile=production" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+            echo "profile=staging" >> $GITHUB_OUTPUT
+          else
+            echo "profile=staging" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup Node

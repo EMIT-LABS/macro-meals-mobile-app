@@ -1,0 +1,16 @@
+{
+  "name": "@macro-meals/chottulink-service",
+  "version": "1.0.0",
+  "description": "Configurable ChottuLink dynamic links & UTM attribution for React Native (PostHog-ready)",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "react-native-chottulink-sdk": "^1.0.6"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.1",
+    "react-native": ">=0.60.0"
+  }
+}

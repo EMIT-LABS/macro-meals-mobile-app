@@ -47,6 +47,8 @@ export const ENV_CONFIG = environments[currentEnv];
 
 // Export individual values for convenience
 export const API_BASE_URL = ENV_CONFIG.API_BASE_URL;
+/** Base URL for v2-only endpoints: /auth/reset-password, /auth/change-password */
+export const API_BASE_URL_V2 = API_BASE_URL.replace(/\/v1\/?$/, '/v2');
 export const APP_NAME = ENV_CONFIG.APP_NAME;
 export const ENVIRONMENT = ENV_CONFIG.ENVIRONMENT;
 export const DEBUG_MODE = ENV_CONFIG.DEBUG_MODE;

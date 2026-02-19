@@ -9,7 +9,8 @@ import useStore from '../store/useStore';
 import Config from 'react-native-config';
 import { clearSession } from './sessionService';
 
-// Define non-authenticated endpoints
+// Define non-authenticated endpoints (no Bearer token attached)
+// /auth/reset-password is NOT here — we send access_token for it (v2). /auth/change-password is here — we do not.
 const nonAuthEndpoints = [
   '/auth/login',
   '/auth/signup',
@@ -23,14 +24,11 @@ const nonAuthEndpoints = [
   '/auth/facebook',
 ];
 
-// Optional alternate base URL for password endpoints only (e.g. api/v2).
-// Set API_PASSWORD_BASE_URL in env to use a different host/path for /auth/reset-password and /auth/change-password.
-const PASSWORD_ENDPOINTS_BASE_URL =
-  (Config as { API_PASSWORD_BASE_URL?: string }).API_PASSWORD_BASE_URL;
-const PASSWORD_ENDPOINT_PATHS = ['/auth/reset-password', '/auth/change-password'];
-
-const isPasswordEndpoint = (url?: string) =>
-  url && PASSWORD_ENDPOINT_PATHS.some(path => url.includes(path));
+// 401 on these endpoints means "bad input" (e.g. wrong old password), not expired token — do not refresh/retry
+const skipRefreshOn401Endpoints = [
+  '/auth/reset-password',
+  '/auth/change-password',
+];
 
 console.log(`\n\n\n\n\n\nAPI_BASE_URL: ${Config.API_BASE_URL}\n\n\n\n\n\n`);
 
@@ -47,11 +45,6 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      // Use alternate base URL for password endpoints when configured
-      if (PASSWORD_ENDPOINTS_BASE_URL && isPasswordEndpoint(config.url)) {
-        config.baseURL = PASSWORD_ENDPOINTS_BASE_URL;
-      }
-
       const token = await AsyncStorage.getItem('my_token');
 
       // Only add token if endpoint requires auth and we have a token
@@ -142,6 +135,15 @@ axiosInstance.interceptors.response.use(
       // Don't handle auth errors for login/register endpoints
       if (
         nonAuthEndpoints.some(endpoint =>
+          originalRequest?.url?.includes(endpoint)
+        )
+      ) {
+        return Promise.reject(error);
+      }
+
+      // 401 on reset/change-password means wrong old password — do not refresh/retry (would loop)
+      if (
+        skipRefreshOn401Endpoints.some(endpoint =>
           originalRequest?.url?.includes(endpoint)
         )
       ) {

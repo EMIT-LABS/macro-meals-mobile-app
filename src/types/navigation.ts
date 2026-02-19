@@ -27,9 +27,9 @@ export type RootStackParamList = {
   };
   MealList: undefined;
   SettingsScreen: undefined;
-  ScanScreenType: { defaultDate?: string | undefined; };
+  ScanScreenType: { defaultDate?: string | undefined };
   MainTabs: { screen?: string } | undefined;
-  BarcodeScanScreen?: { defaultDate?: string; };
+  BarcodeScanScreen?: { defaultDate?: string };
   GoalSetupScreen: undefined;
   GoalsBasicInfo: undefined;
   AddMeal: undefined;
@@ -51,7 +51,7 @@ export type RootStackParamList = {
     defaultDate?: string;
     mealNameFromSearch?: string | null;
   };
-  SnapMeal?: { defaultDate?: string; };
+  SnapMeal?: { defaultDate?: string };
   MealLog: undefined;
   NearbyMeals: undefined;
   DashboardScreen: undefined;
@@ -63,17 +63,18 @@ export type RootStackParamList = {
   Notifications: undefined;
   TermsOfServiceScreen: undefined;
   About: undefined;
-  MealFinderScreen?: { defaultDate?: string; };
-  MealFinderBreakdownScreen?: { meal: any, defaultDate?: string; };
+  MealFinderScreen?: { defaultDate?: string };
+  MealFinderBreakdownScreen?: { meal: any; defaultDate?: string };
   SearchMealAndRestaurants: { defaultResults?: Meal[] } | undefined;
   PrivacyPolicy: undefined;
-  AiMealSuggestionsScreen?: { defaultDate?: string; };
+  AiMealSuggestionsScreen?: { defaultDate?: string };
   GoalsSetupFlow: undefined;
-  ChangePassword: undefined;
+  ChangePassword: { email: string; session_token: string };
+  ResetPasswordRequest: undefined;
   AdjustTargets: undefined;
   Progress: undefined;
   AccountSettingsScreen: undefined;
-  AISuggestedMealsDetailsScreen: { meal: any, defaultDate?: string; };
+  AISuggestedMealsDetailsScreen: { meal: any; defaultDate?: string };
   GoalSetupNav: undefined;
   NotificationsScreen: undefined;
   EditMealScreen: {
@@ -93,7 +94,11 @@ export type RootStackParamList = {
       read_only?: boolean;
     };
   };
-  EmailVerificationScreen: { email: string; password: string; referralCode?: string };
+  EmailVerificationScreen: {
+    email: string;
+    password: string;
+    referralCode?: string;
+  };
   AddSearchedLoggedMeal: {
     searchedMeal: {
       id: string;
@@ -109,13 +114,13 @@ export type RootStackParamList = {
       barcode?: string;
       notes?: string;
       photo_url?: string | null;
-    },
+    };
     defaultDate?: string;
   };
   HealthGuidelinesScreen: undefined;
   ManageSubscriptionsScreen: undefined;
-  ScannedMealBreakdownScreen?: { meal: any, defaultDate?: string };
-  AIRecipeDetailsScreen: { recipe: any, defaultDate?: string };
+  ScannedMealBreakdownScreen?: { meal: any; defaultDate?: string };
+  AIRecipeDetailsScreen: { recipe: any; defaultDate?: string };
   AdjustGoalsFlow: undefined;
   RequestRestaurantScreen: {
     restaurantName?: string;
