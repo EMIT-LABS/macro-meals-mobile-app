@@ -1,22 +1,22 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useMixpanel } from '@macro-meals/mixpanel/src';
+import { usePosthog } from '@macro-meals/posthog_service/src';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { authService } from '../services/authService';
+import { RootStackParamList } from 'src/types/navigation';
+import BackButton from '../components/BackButton';
 import CustomSafeAreaView from '../components/CustomSafeAreaView';
 import CustomTouchableOpacityButton from '../components/CustomTouchableOpacityButton';
-import BackButton from '../components/BackButton';
-import { RootStackParamList } from 'src/types/navigation';
-import { useMixpanel } from '@macro-meals/mixpanel/src';
-import { usePosthog } from '@macro-meals/posthog_service/src';
+import { authService } from '../services/authService';
 
 type ForgotPasswordScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -200,7 +200,7 @@ export const ForgotPasswordScreen: React.FC = () => {
 
           <View className="w-full">
             <View
-              className={`mb-6 ${
+              className={`mb-2 ${
                 touched && errors.email
                   ? 'border border-[#ff6b6b] rounded-md'
                   : ''
@@ -227,12 +227,10 @@ export const ForgotPasswordScreen: React.FC = () => {
                 spellCheck={false}
                 autoComplete="email"
               />
-              {touched && errors.email ? (
-                <Text className="text-red-500 text-sm mt-2">
-                  {errors.email}
-                </Text>
-              ) : null}
             </View>
+            {touched && errors.email ? (
+              <Text className="text-red-500 text-sm">{errors.email}</Text>
+            ) : null}
           </View>
         </ScrollView>
         <View className="absolute bottom-5 px-6 w-full">
