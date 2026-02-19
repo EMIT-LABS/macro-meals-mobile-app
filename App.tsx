@@ -418,16 +418,6 @@ export function App() {
 
         if (sessionValidation.isValid && sessionValidation.user) {
           const profile = sessionValidation.user;
-          console.log(
-            '🔍 App.tsx - Valid session found, setting authenticated state:',
-            {
-              has_macros: profile.has_macros,
-              is_pro: profile.is_pro,
-              email: profile.email,
-              id: profile.id,
-              sessionComplete: sessionValidation.isComplete,
-            }
-          );
 
           // Set states in correct order
           setHasMacros(profile.has_macros);
