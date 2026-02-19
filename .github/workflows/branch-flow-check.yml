@@ -1,0 +1,23 @@
+# Enforce branch flow: main can only be updated from staging (never from dev or feature branches).
+# Runs on PRs targeting main; fails if the source branch is not staging.
+# Require this check in branch protection for main so dev → main cannot be merged.
+
+name: Branch flow
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  require-staging-to-main:
+    name: Require staging → main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR source branch
+        run: |
+          SOURCE="${{ github.head_ref }}"
+          if [ "$SOURCE" != "staging" ]; then
+            echo "::error::PRs into main must come from branch 'staging'. This PR is from '$SOURCE'. Merge dev → staging first, then open a PR staging → main."
+            exit 1
+          fi
+          echo "OK: main is being updated from staging."
