@@ -25,7 +25,10 @@ const nonAuthEndpoints = [
 ];
 
 // 401 on these endpoints means "bad input" (e.g. wrong old password), not expired token — do not refresh/retry
-const skipRefreshOn401Endpoints = ['/auth/reset-password', '/auth/change-password'];
+const skipRefreshOn401Endpoints = [
+  '/auth/reset-password',
+  '/auth/change-password',
+];
 
 console.log(`\n\n\n\n\n\nAPI_BASE_URL: ${Config.API_BASE_URL}\n\n\n\n\n\n`);
 

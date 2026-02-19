@@ -413,6 +413,8 @@ export const AddMealScreen: React.FC = () => {
 
       // Send the request
       await mealService.logMeal(mealRequest);
+     navigation.navigate('MainTabs', { screen: 'Meals' });
+
       mixpanel?.track({
         name: 'meal_saved_from_meals',
         properties: {
@@ -475,7 +477,6 @@ export const AddMealScreen: React.FC = () => {
         },
       });
 
-      navigation.navigate('MainTabs', { screen: 'Meals' });
     } catch (error) {
       console.error('Error adding meal:', error);
       Alert.alert(
