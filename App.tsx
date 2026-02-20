@@ -1,5 +1,8 @@
 /** @jsxImportSource react */
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+} from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 // import firebase from '@react-native-firebase/app';
@@ -16,6 +19,7 @@ import { HasMacrosContext } from 'src/contexts/HasMacrosContext';
 import { RootStack } from './RootStack';
 import { OnboardingContext } from './src/contexts/OnboardingContext';
 import useStore, { shouldSkipPaywall } from './src/store/useStore';
+import type { RootStackParamList } from './src/types/navigation';
 
 // import { userService } from './src/services/userService';
 // import { authService } from './src/services/authService';
@@ -40,8 +44,8 @@ import {
 } from './src/services/sessionService';
 // Polyfill crypto.getRandomValues for Hermes before any Sentry/uuid usage in release
 import {
-  ChottuLinkProvider,
   buildPostHogAttributionHandler,
+  ChottuLinkProvider,
 } from '@macro-meals/chottulink-service';
 import { PosthogProvider, usePosthog } from '@macro-meals/posthog_service/src';
 // PostHog client is now created in PosthogProvider
@@ -157,24 +161,90 @@ function MixpanelIdentifier() {
   return null;
 }
 
-// Wraps children with ChottuLinkProvider and sends attribution to PostHog (first_open + UTM)
-function ChottuLinkWithPostHog({ children }: { children: React.ReactNode }) {
+/** Parse ChottuLink destination URL and return screen + params to navigate to. */
+function getChottuLinkNavigationTarget(
+  url: string
+): { screen: keyof RootStackParamList; params?: object } | null {
+  try {
+    const pathMatch = url.match(/^https?:\/\/[^/]+(\/[^?]*)/);
+    const path = (pathMatch ? pathMatch[1].replace(/\/$/, '') : '') || '/';
+    const pathLower = path.toLowerCase();
+    const segments = path.split('/').filter(Boolean);
+
+    if (
+      pathLower === '/referral' ||
+      pathLower === '/redeem' ||
+      segments[0]?.toLowerCase() === 'referral' ||
+      segments[0]?.toLowerCase() === 'redeem'
+    ) {
+      return { screen: 'RedeemReferralCodeScreen', params: undefined };
+    }
+    if (pathLower === '/progress')
+      return { screen: 'Progress', params: undefined };
+    if (pathLower === '/settings')
+      return { screen: 'MainTabs', params: { screen: 'Settings' } };
+    if (pathLower === '/notifications')
+      return { screen: 'MainTabs', params: { screen: 'Notifications' } };
+    if (
+      pathLower === '/dashboard' ||
+      pathLower === '/home' ||
+      pathLower === '/'
+    ) {
+      return { screen: 'MainTabs', params: undefined };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Wraps children with ChottuLinkProvider and sends attribution to PostHog (first_open + UTM).
+// When a ChottuLink is resolved, navigates to the screen matching the link's destination URL.
+function ChottuLinkWithPostHog({
+  children,
+  navigationRef,
+}: {
+  children: React.ReactNode;
+  navigationRef: React.RefObject<{
+    getRootState(): unknown;
+    navigate(...args: unknown[]): void;
+  } | null>;
+}) {
   const posthog = usePosthog();
-  const apiKey = (Config as Record<string, string>).CHOTTULINK_API_KEY ?? '';
+  const apiKey = (Config.CHOTTU_LINK_API_KEY as string) ?? '';
+
+  const onAttribution = React.useMemo(
+    () => (posthog ? buildPostHogAttributionHandler(posthog) : undefined),
+    [posthog]
+  );
+
+  const onNavigateFromLink = React.useCallback(
+    (data: { url?: string; metadata?: Record<string, unknown> }) => {
+      const url = data?.url;
+      if (!url?.trim() || !navigationRef?.current) return;
+      const target = getChottuLinkNavigationTarget(url);
+      if (target) {
+        (navigationRef.current as any).navigate(
+          target.screen as never,
+          target.params as never
+        );
+      }
+    },
+    [navigationRef]
+  );
+
   if (!apiKey) {
     return <>{children}</>;
   }
-  return (
-    <ChottuLinkProvider
-      apiKey={apiKey}
-      onAttribution={
-        posthog ? buildPostHogAttributionHandler(posthog) : undefined
-      }
-      debug={__DEV__}
-    >
-      {children}
-    </ChottuLinkProvider>
-  );
+  const providerProps = {
+    apiKey,
+    onAttribution,
+    onNavigateFromLink,
+    debug: __DEV__,
+    children,
+  };
+  return <ChottuLinkProvider {...providerProps} />;
 }
 
 // Component to manually start PostHog session replay
@@ -278,6 +348,8 @@ export function App() {
   const { isRestartRequired } = useStallionUpdate();
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showUpdateReminder, setShowUpdateReminder] = useState(false);
+
+  const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
   useEffect(() => {
     if (isRestartRequired) setShowUpdateModal(true);
@@ -642,7 +714,7 @@ export function App() {
               }}
             >
               <IsProContext.Provider value={{ isPro, setIsPro }}>
-                <NavigationContainer>
+                <NavigationContainer ref={navigationRef}>
                   <PosthogProvider
                     apiKey={(Config.POSTHOG_API_KEY as string) || ''}
                     host={(Config.POSTHOG_HOST as string) || ''}
@@ -657,7 +729,7 @@ export function App() {
                   >
                     <MixpanelIdentifier />
                     <PosthogSessionReplayStarter />
-                    <ChottuLinkWithPostHog>
+                    <ChottuLinkWithPostHog navigationRef={navigationRef}>
                       <RemoteConfigHandler />
                       <RootStack
                         isOnboardingCompleted={isOnboardingCompleted}

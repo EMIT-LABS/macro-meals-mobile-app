@@ -30,8 +30,6 @@ const skipRefreshOn401Endpoints = [
   '/auth/change-password',
 ];
 
-console.log(`\n\n\n\n\n\nAPI_BASE_URL: ${Config.API_BASE_URL}\n\n\n\n\n\n`);
-
 const axiosInstance = axios.create({
   baseURL: Config.API_BASE_URL,
   timeout: 30000,

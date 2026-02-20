@@ -40,23 +40,20 @@ export const VerificationScreen: React.FC = () => {
   const mixpanel = useMixpanel();
   const posthog = usePosthog();
 
-  const eventsFired = useRef(false);
+  const screenViewedTracked = useRef(false);
+  const canResendSetRef = useRef(false);
 
   useEffect(() => {
-    if (mixpanel && !eventsFired.current) {
-      eventsFired.current = true;
-      mixpanel.track({
-        name: 'password_verification_screen_viewed',
-        properties: { platform: Platform.OS },
-      });
-    }
-    if (posthog && !eventsFired.current) {
-      eventsFired.current = true;
-      posthog.track({
-        name: 'password_verification_screen_viewed',
-        properties: { platform: Platform.OS },
-      });
-    }
+    if (screenViewedTracked.current) return;
+    screenViewedTracked.current = true;
+    mixpanel?.track({
+      name: 'password_verification_screen_viewed',
+      properties: { platform: Platform.OS },
+    });
+    posthog?.track({
+      name: 'password_verification_screen_viewed',
+      properties: { platform: Platform.OS },
+    });
   }, [mixpanel, posthog]);
 
   const isDisabled = () => {
@@ -66,26 +63,23 @@ export const VerificationScreen: React.FC = () => {
   const CELL_COUNT = 6;
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
-  const [error, setError] = useState('');
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
     setValue,
   });
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown(prev => prev - 1);
-      }, 1000);
-    } else {
-      setCanResend(true);
-    }
-    return () => {
-      if (timer) {
-        clearInterval(timer);
+    if (countdown <= 0) {
+      if (!canResendSetRef.current) {
+        canResendSetRef.current = true;
+        setCanResend(true);
       }
-    };
+      return undefined;
+    }
+    const timer = setInterval(() => {
+      setCountdown(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
   }, [countdown]);
 
   const handleVerifyCode = async () => {
@@ -177,7 +171,6 @@ export const VerificationScreen: React.FC = () => {
           : error instanceof Error
             ? error.message
             : 'Code does not exist. Please try again';
-      setError(message);
       Alert.alert('Error', message);
     } finally {
       setIsLoading(false);

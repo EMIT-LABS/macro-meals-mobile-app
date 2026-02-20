@@ -12,6 +12,7 @@ export type {
   UTMAttribution,
   ChottuLinkConfig,
   ChottuLinkProviderProps,
-  CreateDynamicLinkConfig,
   ChottuLinkResolvedData,
+  ChottuLinkResolvedPayload,
+  CreateDynamicLinkConfig,
 } from './types';

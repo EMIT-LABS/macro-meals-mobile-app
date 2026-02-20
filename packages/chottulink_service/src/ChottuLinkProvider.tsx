@@ -14,6 +14,7 @@ const { ChottuLinkEventEmitter } = NativeModules;
 export const ChottuLinkProvider: React.FC<ChottuLinkProviderProps> = ({
   apiKey,
   onAttribution,
+  onNavigateFromLink,
   storageKeyPrefix,
   debug,
   children,
@@ -33,14 +34,12 @@ export const ChottuLinkProvider: React.FC<ChottuLinkProviderProps> = ({
 
   // Pass initial URL and URL events to the SDK
   useEffect(() => {
-    let subscription: { remove: () => void } | undefined;
-
     const handleUrl = (url: string | null) => {
       if (url) chottulinkService.handleLink(url);
     };
 
     Linking.getInitialURL().then(handleUrl);
-    subscription = Linking.addEventListener('url', (e) => handleUrl(e.url));
+    const subscription = Linking.addEventListener('url', (e) => handleUrl(e.url));
 
     return () => {
       subscription?.remove();
@@ -55,6 +54,7 @@ export const ChottuLinkProvider: React.FC<ChottuLinkProviderProps> = ({
       'ChottuLinkDeepLinkResolved',
       (data: { url?: string; metadata?: Record<string, unknown> }) => {
         chottulinkService.onDeepLinkResolved(data);
+        onNavigateFromLink?.(data);
       }
     );
     const subError = emitter.addListener('ChottuLinkDeepLinkError', (data: unknown) => {
@@ -66,7 +66,7 @@ export const ChottuLinkProvider: React.FC<ChottuLinkProviderProps> = ({
       subResolved.remove();
       subError.remove();
     };
-  }, [debug]);
+  }, [debug, onNavigateFromLink]);
 
   return <>{children}</>;
 };
