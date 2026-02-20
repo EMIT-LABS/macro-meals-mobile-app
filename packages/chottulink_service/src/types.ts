@@ -41,11 +41,19 @@ export interface CreateDynamicLinkConfig {
   utmTerm?: string;
 }
 
+/** Resolved deep link payload from ChottuLink native event */
+export interface ChottuLinkResolvedPayload {
+  url?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface ChottuLinkConfig {
   /** ChottuLink API key (required for init) */
   apiKey: string;
   /** Optional: called when attribution is resolved (first open or link open). Use to send to PostHog. */
   onAttribution?: (attribution: UTMAttribution) => void;
+  /** Optional: called when a deep link is resolved so the app can navigate to a screen based on data.url */
+  onNavigateFromLink?: (data: ChottuLinkResolvedPayload) => void;
   /** Optional: custom storage key prefix for persistence (default: ChottuLink_) */
   storageKeyPrefix?: string;
   /** If true, log debug messages */
@@ -54,4 +62,6 @@ export interface ChottuLinkConfig {
 
 export interface ChottuLinkProviderProps extends ChottuLinkConfig {
   children: React.ReactNode;
+  /** Optional: called when a deep link is resolved so the app can navigate. */
+  onNavigateFromLink?: (data: ChottuLinkResolvedPayload) => void;
 }

@@ -26,8 +26,6 @@ type ResetPasswordScreenNavigationProp = StackNavigationProp<
   'ResetPassword'
 >;
 
-const isFromSettings = (source: string | undefined) => source === 'settings';
-
 export const ResetPasswordScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'ResetPassword'>>();
   const {

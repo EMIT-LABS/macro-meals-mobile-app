@@ -34,8 +34,8 @@ import { RootStackParamList } from '../types/navigation';
 import { useMixpanel } from '@macro-meals/mixpanel';
 import { usePosthog } from '@macro-meals/posthog_service/src';
 import axiosInstance from 'src/services/axios';
-import { Profile } from '../store/useStore';
 import getMealIcons from 'src/utils/mealIcons';
+import { Profile } from '../store/useStore';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -134,7 +134,7 @@ export const DashboardScreen: React.FC = () => {
             platform: Platform.OS,
           },
         });
-        
+
         // Track regular events
         mixpanel.track({
           name: 'dashboard_viewed',
@@ -150,7 +150,7 @@ export const DashboardScreen: React.FC = () => {
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
-            entry_point:'dashboard_screen'
+            entry_point: 'dashboard_screen',
           },
         });
       }
@@ -165,7 +165,7 @@ export const DashboardScreen: React.FC = () => {
             first_name: profile?.first_name,
           },
         });
-          posthog.track({
+        posthog.track({
           name: 'greeting_displayed',
           properties: {
             $screen_name: 'DashboardScreen',
@@ -173,11 +173,9 @@ export const DashboardScreen: React.FC = () => {
             user_id: profile?.id,
             platform: Platform.OS,
             username: profile?.first_name,
-            greeting_type:getGreeting(profile?.first_name)
+            greeting_type: getGreeting(profile?.first_name),
           },
         });
-
-    
       }
 
       // Macro summary displayed tracking
@@ -201,12 +199,10 @@ export const DashboardScreen: React.FC = () => {
             $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
             user_id: profile?.id,
             platform: Platform.OS,
-            goal_calories:macros.calories,
-            remaining_calories:remaining.calories,
-            consumed_calories:todayProgress.calories,
-            goal_type:'',
-
-
+            goal_calories: macros.calories,
+            remaining_calories: remaining.calories,
+            consumed_calories: todayProgress.calories,
+            goal_type: '',
           },
         });
       }
@@ -236,7 +232,6 @@ export const DashboardScreen: React.FC = () => {
         });
       }
 
-     
       // Macro breakdown displayed tracking
       if (macros && todayMealsSum) {
         mixpanel.track({
@@ -253,11 +248,11 @@ export const DashboardScreen: React.FC = () => {
           },
         });
       }
-        if (macros && todayMealsSum) {
+      if (macros && todayMealsSum) {
         posthog.track({
           name: 'macro_breakdown_displayed',
           properties: {
-             $screen_name: 'DashboardScreen',
+            $screen_name: 'DashboardScreen',
             $current_url: 'DashboardScreen',
             user_id: profile?.id,
             platform: Platform.OS,
@@ -271,13 +266,7 @@ export const DashboardScreen: React.FC = () => {
         });
       }
     }
-  }, [
-    isLoading,
-    error,
-    profile?.id,
-    mixpanel,
-    posthog,
-  ]);
+  }, [isLoading, error, profile?.id, mixpanel, posthog]);
 
   // useEffect(() => {
   //     if (preferences.calories === 0 && preferences.protein === 0) {
@@ -313,7 +302,7 @@ export const DashboardScreen: React.FC = () => {
 
       // 1. Fetch user profile info
       const profileResponse = await userService.getProfile();
-      
+
       // Identify user in PostHog only once per session
       if (!userIdentified.current && profileResponse.id) {
         userIdentified.current = true;
@@ -323,10 +312,11 @@ export const DashboardScreen: React.FC = () => {
           signup_date: profileResponse.created_at || new Date().toISOString(),
           has_macros: profileResponse.has_macros,
           is_pro: profileResponse.is_pro || false,
-          meal_reminder_preferences_set: profileResponse.meal_reminder_preferences_set || false,
+          meal_reminder_preferences_set:
+            profileResponse.meal_reminder_preferences_set || false,
         });
       }
-      
+
       setStoreProfile(profileResponse);
       setProfile(profileResponse);
       // macroMealsCrashlytics.setUserAttributes({
@@ -415,14 +405,14 @@ export const DashboardScreen: React.FC = () => {
         platform: Platform.OS,
       },
     });
-     posthog?.track({
+    posthog?.track({
       name: 'see_nearby_meals_clicked',
       properties: {
-      $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
-      $screen_name: 'DashboardScreen',
+        $current_url: 'DashboardScreen', // Required for PostHog to show screen in dashboard
+        $screen_name: 'DashboardScreen',
         user_id: profile?.id,
         platform: Platform.OS,
-        entry_point:'dashboard_screen'
+        entry_point: 'dashboard_screen',
       },
     });
     mixpanel?.track({
@@ -432,15 +422,15 @@ export const DashboardScreen: React.FC = () => {
         platform: Platform.OS,
       },
     });
-      posthog?.track({
+    posthog?.track({
       name: 'meal_finder_opened_from_dashboard',
       properties: {
-       $current_url: 'DashboardScreen', 
+        $current_url: 'DashboardScreen',
         $screen_name: 'DashboardScreen',
         user_id: profile?.id,
         platform: Platform.OS,
-        entry_point:'dashboard',
-        has_location_permission:''
+        entry_point: 'dashboard',
+        has_location_permission: '',
       },
     });
     navigation.navigate('MealFinderScreen');
@@ -467,8 +457,9 @@ export const DashboardScreen: React.FC = () => {
         is_first_time_user: (loggedMeals?.length ?? 0) === 0,
       },
     });
-    const defaultDate =  new Date().toISOString();
-    navigation.navigate('ScanScreenType', {defaultDate: new Date().toISOString()});
+    navigation.navigate('ScanScreenType', {
+      defaultDate: new Date().toISOString(),
+    });
   };
 
   const handleRefresh = () => {
@@ -537,7 +528,6 @@ export const DashboardScreen: React.FC = () => {
     if (hour < 12) return `Good morning, ${first_name} 👋`;
     if (hour < 18) return `Good afternoon, ${first_name} 👋`;
     return `Good evening, ${first_name} 👋`;
-    
   }
 
   function getTimeOfDayEmoji() {
@@ -583,7 +573,7 @@ export const DashboardScreen: React.FC = () => {
                       unread_count: unreadCount,
                     },
                   });
-                   posthog?.track({
+                  posthog?.track({
                     name: 'notifications_icon_clicked',
                     properties: {
                       user_id: profile?.id,
@@ -832,12 +822,12 @@ export const DashboardScreen: React.FC = () => {
                         <TouchableOpacity
                           onPress={() => {
                             posthog.track({
-                              name:'edit_meal_clicked',
-                              properties:{
-                                meal_id:meal.id,
-                                entry_point:'dashboard'
-                              }
-                            })
+                              name: 'edit_meal_clicked',
+                              properties: {
+                                meal_id: meal.id,
+                                entry_point: 'dashboard',
+                              },
+                            });
                             navigation.navigate('EditMealScreen', {
                               analyzedData: {
                                 id: meal.id,
@@ -873,9 +863,7 @@ export const DashboardScreen: React.FC = () => {
                         <View className="w-[4px] h-[4px] rounded-full bg-[#253238] mr-2"></View>
                         <Image
                           tintColor="#000000"
-                          source={
-                            getMealIcons(meal.logging_mode)
-                          }
+                          source={getMealIcons(meal.logging_mode)}
                           className="w-[12px] h-[12px] object-fill mr-1"
                         />
                         <Text className="text-sm text-textMediumGrey text-center font-medium">
